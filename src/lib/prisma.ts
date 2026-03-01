@@ -1,16 +1,15 @@
 import { PrismaClient } from '@/generated/prisma/client'
-import { PrismaLibSql } from '@prisma/adapter-libsql'
-import path from 'path'
+import { PrismaMariaDb } from '@prisma/adapter-mariadb'
 
 function createPrismaClient() {
-  const dbPath = process.env.DATABASE_URL ?? 'file:./prisma/dev.db'
-  // Convert relative file: URL to absolute path for libsql
-  const filePath = dbPath.replace('file:', '')
-  const absolutePath = path.isAbsolute(filePath)
-    ? filePath
-    : path.resolve(process.cwd(), filePath)
-
-  const adapter = new PrismaLibSql({ url: `file:${absolutePath}` })
+  const url = new URL(process.env.DATABASE_URL!)
+  const adapter = new PrismaMariaDb({
+    host:     url.hostname,
+    port:     url.port ? parseInt(url.port) : 3306,
+    user:     decodeURIComponent(url.username),
+    password: decodeURIComponent(url.password),
+    database: url.pathname.slice(1),
+  })
   return new PrismaClient({ adapter })
 }
 

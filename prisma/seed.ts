@@ -1,15 +1,15 @@
 import { PrismaClient } from '../src/generated/prisma/client'
-import { PrismaLibSql } from '@prisma/adapter-libsql'
+import { PrismaMariaDb } from '@prisma/adapter-mariadb'
 import bcrypt from 'bcryptjs'
-import path from 'path'
 
-const dbUrl = process.env.DATABASE_URL ?? 'file:./prisma/dev.db'
-const filePath = dbUrl.replace('file:', '')
-const absolutePath = path.isAbsolute(filePath)
-  ? filePath
-  : path.resolve(process.cwd(), filePath)
-
-const adapter = new PrismaLibSql({ url: `file:${absolutePath}` })
+const url = new URL(process.env.DATABASE_URL!)
+const adapter = new PrismaMariaDb({
+  host:     url.hostname,
+  port:     url.port ? parseInt(url.port) : 3306,
+  user:     decodeURIComponent(url.username),
+  password: decodeURIComponent(url.password),
+  database: url.pathname.slice(1),
+})
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
