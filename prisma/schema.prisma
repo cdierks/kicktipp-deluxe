@@ -1,0 +1,97 @@
+// Prisma schema for Kicktipp-Deluxe
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum MatchdayStatus {
+  UPCOMING
+  ACTIVE
+  CLOSED
+  COMPLETED
+}
+
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  COMPLETED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  nickname     String   @unique
+  favoriteTeam String?
+  color        String?  // hex value from ColorPalette, e.g. "#2a61a1"
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tips         Tip[]
+}
+
+model ColorPalette {
+  id    String @id @default(cuid())
+  hex   String @unique // "#2a61a1"
+  label String
+  order Int    @default(0)
+}
+
+model Season {
+  id        String     @id @default(cuid())
+  year      String     @unique // "2024" = Saison 2024/25
+  active    Boolean    @default(false)
+  matchdays Matchday[]
+}
+
+model Matchday {
+  id             String         @id @default(cuid())
+  seasonId       String
+  matchdayNumber Int
+  status         MatchdayStatus @default(UPCOMING)
+  tippDeadline   DateTime
+  syncedAt       DateTime?
+  season         Season         @relation(fields: [seasonId], references: [id])
+  matches        Match[]
+
+  @@unique([seasonId, matchdayNumber])
+}
+
+model Match {
+  id              String      @id @default(cuid())
+  matchdayId      String
+  homeTeam        String
+  awayTeam        String
+  homeScore       Int?
+  awayScore       Int?
+  matchDate       DateTime
+  openligaMatchId Int         @unique
+  status          MatchStatus @default(SCHEDULED)
+  matchday        Matchday    @relation(fields: [matchdayId], references: [id])
+  tips            Tip[]
+}
+
+model Tip {
+  id        String  @id @default(cuid())
+  userId    String
+  matchId   String
+  homeScore Int
+  awayScore Int
+  points    Int?
+  isJoker   Boolean @default(false)
+  user      User    @relation(fields: [userId], references: [id])
+  match     Match   @relation(fields: [matchId], references: [id])
+
+  @@unique([userId, matchId])
+}
