@@ -3,6 +3,7 @@
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
+import { getRegistrationEnabled } from '@/lib/settings'
 
 const RegisterSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
@@ -19,6 +20,9 @@ const RegisterSchema = z.object({
 export type RegisterInput = z.infer<typeof RegisterSchema>
 
 export async function registerUser(data: RegisterInput) {
+  const regEnabled = await getRegistrationEnabled()
+  if (!regEnabled) return { error: 'Die Registrierung ist derzeit deaktiviert.' }
+
   const parsed = RegisterSchema.safeParse(data)
   if (!parsed.success) {
     return { error: parsed.error.issues[0].message }

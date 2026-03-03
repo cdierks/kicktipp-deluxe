@@ -95,3 +95,8 @@ model Tip {
 
   @@unique([userId, matchId])
 }
+
+model AppSetting {
+  key   String @id
+  value String
+}

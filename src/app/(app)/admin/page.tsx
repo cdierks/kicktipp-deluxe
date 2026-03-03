@@ -3,20 +3,23 @@ import Link from 'next/link'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CLUBS } from '@/lib/clubs'
+import { getRegistrationEnabled } from '@/lib/settings'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { IconUsers, IconCalendarEvent, IconBallFootball, IconShirt, IconPalette } from '@tabler/icons-react'
+import { IconUsers, IconCalendarEvent, IconBallFootball, IconShirt, IconPalette, IconUserPlus, IconUserOff } from '@tabler/icons-react'
 import { ClubsRefresh } from './clubs-refresh'
+import { RegistrationToggle } from './registration-toggle'
 
 export default async function AdminPage() {
   const session = await getSession()
   if (!session || session.user.role !== 'ADMIN') redirect('/dashboard')
 
-  const [userCount, seasonCount, activeMatchday, colorCount] = await Promise.all([
+  const [userCount, seasonCount, activeMatchday, colorCount, registrationEnabled] = await Promise.all([
     prisma.user.count(),
     prisma.season.count(),
     prisma.matchday.findFirst({ where: { status: 'ACTIVE' }, include: { season: true } }),
     prisma.colorPalette.count(),
+    getRegistrationEnabled(),
   ])
 
   return (
@@ -102,17 +105,36 @@ export default async function AdminPage() {
 
       <Separator className="my-6" />
 
-      <div className="glass rounded-2xl p-5 shadow-sm max-w-sm">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-            <IconShirt className="h-4 w-4 text-primary" strokeWidth={1.5} />
+      <div className="grid gap-4 sm:grid-cols-2 max-w-2xl">
+        {/* Clubs */}
+        <div className="glass rounded-2xl p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+              <IconShirt className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-sm font-bold tracking-wide text-foreground">Vereinsliste</p>
+              <p className="text-xs text-muted-foreground">BL1, BL2 & BL3 von OpenLigaDB</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-bold tracking-wide text-foreground">Vereinsliste</p>
-            <p className="text-xs text-muted-foreground">BL1, BL2 & BL3 von OpenLigaDB</p>
-          </div>
+          <ClubsRefresh currentCount={CLUBS.length} />
         </div>
-        <ClubsRefresh currentCount={CLUBS.length} />
+
+        {/* Registration */}
+        <div className="glass rounded-2xl p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+              {registrationEnabled
+                ? <IconUserPlus className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                : <IconUserOff className="h-4 w-4 text-primary" strokeWidth={1.5} />}
+            </div>
+            <div>
+              <p className="text-sm font-bold tracking-wide text-foreground">Registrierung</p>
+              <p className="text-xs text-muted-foreground">Zugang für neue Benutzer</p>
+            </div>
+          </div>
+          <RegistrationToggle enabled={registrationEnabled} />
+        </div>
       </div>
     </div>
   )

@@ -64,6 +64,14 @@ async function main() {
     await prisma.season.create({ data: { year, active: true } })
     console.log(`Season ${year}/${parseInt(year) + 1} created`)
   }
+
+  // Default app settings
+  await prisma.appSetting.upsert({
+    where:  { key: 'registrationEnabled' },
+    update: {},
+    create: { key: 'registrationEnabled', value: 'true' },
+  })
+  console.log('App settings seeded')
 }
 
 main()
