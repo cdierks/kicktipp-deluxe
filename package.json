@@ -23,6 +23,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "framer-motion": "^12.34.5",
     "lucide-react": "^0.575.0",
     "mariadb": "^3.5.1",
     "next": "16.1.6",
