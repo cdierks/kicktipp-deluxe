@@ -1,13 +1,15 @@
 'use client'
 
+import { useState } from 'react'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { StandingsTable } from './standings-table'
 import { StatsTab } from './stats-tab'
 import type { SeasonMatchdayStat } from './stats-tab'
 import { cn } from '@/lib/utils'
 import { getClubByName } from '@/lib/clubs'
+import { fadeUp, staggerContainer, popIn, spring } from '@/lib/motion'
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -66,24 +68,33 @@ interface Props {
   matchdayList: { matchdayNumber: number }[]
 }
 
-/* Points badge styling */
+/* Points badge with pop animation for ≥2P */
 function PointsBadge({ points, isJoker = false }: { points: number | null; isJoker?: boolean }) {
+  const shouldReduce = useReducedMotion()
   if (points === null) return <span className="text-muted-foreground text-xs">–</span>
   const base = isJoker && points > 0 ? points / 2 : points
-  return (
-    <span
-      className={cn(
-        'inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-md px-1 text-xs font-bold tabular-nums',
-        base === 4 && 'bg-primary text-primary-foreground',
-        base === 3 && 'bg-primary/70 text-primary-foreground',
-        base === 2 && 'border border-primary/40 text-primary',
-        base === 0 && 'bg-muted text-muted-foreground',
-        isJoker && points > 0 && 'ring-1 ring-amber-400/70',
-      )}
-    >
-      {points}
-    </span>
+  const className = cn(
+    'inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-md px-1 text-xs font-bold tabular-nums',
+    base === 4 && 'bg-primary text-primary-foreground',
+    base === 3 && 'bg-primary/70 text-primary-foreground',
+    base === 2 && 'border border-primary/40 text-primary',
+    base === 0 && 'bg-muted text-muted-foreground',
+    isJoker && points > 0 && 'ring-1 ring-amber-400/70',
   )
+  if (base >= 2) {
+    return (
+      <motion.span
+        className={className}
+        variants={popIn}
+        initial="hidden"
+        animate="show"
+        transition={shouldReduce ? { duration: 0 } : { type: 'spring', bounce: 0.35, duration: 0.35 }}
+      >
+        {points}
+      </motion.span>
+    )
+  }
+  return <span className={className}>{points}</span>
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -110,6 +121,52 @@ function RankIcon({ rank }: { rank: number }) {
   return <span className="text-sm font-bold tabular-nums text-muted-foreground">{rank + 1}.</span>
 }
 
+/* ── Animated Tab Pill ── */
+type TabValue = 'spiele' | 'tabelle' | 'stats'
+
+const tabDefs: { value: TabValue; label: string; icon: React.ReactNode }[] = [
+  { value: 'spiele',  label: 'Spiele & Tipps', icon: <IconBallFootball className="h-3.5 w-3.5" strokeWidth={1.5} /> },
+  { value: 'tabelle', label: 'Bundesliga',      icon: <IconTable       className="h-3.5 w-3.5" strokeWidth={1.5} /> },
+  { value: 'stats',   label: 'Statistiken',     icon: <IconChartBar    className="h-3.5 w-3.5" strokeWidth={1.5} /> },
+]
+
+function AnimatedTabsList({
+  tabs,
+  value,
+  onChange,
+}: {
+  tabs: typeof tabDefs
+  value: TabValue
+  onChange: (v: TabValue) => void
+}) {
+  return (
+    <div role="tablist" className="relative flex bg-muted/60 rounded-xl p-1 mb-4">
+      {tabs.map((tab) => (
+        <button
+          key={tab.value}
+          role="tab"
+          aria-selected={value === tab.value}
+          onClick={() => onChange(tab.value)}
+          className={cn(
+            'relative z-10 flex flex-1 items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors',
+            value === tab.value ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          {value === tab.value && (
+            <motion.div
+              layoutId="tab-indicator"
+              className="absolute inset-0 bg-white dark:bg-card rounded-lg shadow-sm"
+              transition={spring}
+            />
+          )}
+          <span className="relative z-10">{tab.icon}</span>
+          <span className="relative z-10">{tab.label}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function DashboardContent({
   matchday,
   users,
@@ -121,6 +178,9 @@ export function DashboardContent({
   deadlinePassed,
   matchdayList,
 }: Props) {
+  const [activeTab, setActiveTab] = useState<TabValue>('spiele')
+  const shouldReduce = useReducedMotion()
+
   const sortedMatchdays = [...matchdayList].sort((a, b) => a.matchdayNumber - b.matchdayNumber)
   const currentIndex = sortedMatchdays.findIndex((m) => m.matchdayNumber === matchday.matchdayNumber)
   const prevMd = currentIndex > 0 ? sortedMatchdays[currentIndex - 1].matchdayNumber : null
@@ -134,111 +194,123 @@ export function DashboardContent({
     <div className="space-y-6">
 
       {/* ── Hero Header ── */}
-      <div className="pb-2">
-        {/* Status + season row */}
-        <div className="flex items-center gap-2 mb-3">
-          <StatusBadge status={matchday.status} />
-          <span className="text-sm text-muted-foreground">
-            Saison {matchday.season.year}/{parseInt(matchday.season.year) + 1}
-          </span>
-        </div>
-
-        {/* Title row */}
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <h1 className="text-5xl font-bold tracking-tight text-foreground leading-none">
-            Spieltag <span className="text-primary">{matchday.matchdayNumber}</span>
-          </h1>
-
-          {/* Spieltag navigation */}
-          <div className="flex items-center gap-1.5">
-            <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl" asChild disabled={!prevMd}>
-              {prevMd
-                ? <Link href={`/dashboard/${prevMd}`}><IconChevronLeft className="h-4 w-4" strokeWidth={1.5} /></Link>
-                : <span><IconChevronLeft className="h-4 w-4" strokeWidth={1.5} /></span>}
-            </Button>
-            <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl" asChild disabled={!nextMd}>
-              {nextMd
-                ? <Link href={`/dashboard/${nextMd}`}><IconChevronRight className="h-4 w-4" strokeWidth={1.5} /></Link>
-                : <span><IconChevronRight className="h-4 w-4" strokeWidth={1.5} /></span>}
-            </Button>
-            {!deadlinePassed && matchday.status === 'ACTIVE' && (
-              <Button
-                asChild
-                size="sm"
-                className="ml-1 gap-1.5 font-semibold bg-gradient-to-r from-primary to-primary/80 rounded-xl shadow-sm shadow-primary/20"
-              >
-                <Link href="/tippen">
-                  <IconPencil className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  Jetzt tippen
-                </Link>
-              </Button>
-            )}
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        animate="show"
+        transition={{ duration: shouldReduce ? 0 : 0.4 }}
+      >
+        <div className="pb-2">
+          {/* Status + season row */}
+          <div className="flex items-center gap-2 mb-3">
+            <StatusBadge status={matchday.status} />
+            <span className="text-sm text-muted-foreground">
+              Saison {matchday.season.year}/{parseInt(matchday.season.year) + 1}
+            </span>
           </div>
-        </div>
 
-        <p className="mt-3 text-xs text-muted-foreground" suppressHydrationWarning>
-          Deadline: {new Date(matchday.tippDeadline).toLocaleString('de-DE', {
-            weekday: 'short', day: 'numeric', month: 'numeric',
-            hour: '2-digit', minute: '2-digit',
-          })}
-        </p>
-      </div>
+          {/* Title row */}
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <h1 className="text-5xl font-bold tracking-tight text-foreground leading-none">
+              Spieltag <span className="text-primary">{matchday.matchdayNumber}</span>
+            </h1>
+
+            {/* Spieltag navigation */}
+            <div className="flex items-center gap-1.5">
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl" asChild disabled={!prevMd}>
+                {prevMd
+                  ? <Link href={`/dashboard/${prevMd}`}><IconChevronLeft className="h-4 w-4" strokeWidth={1.5} /></Link>
+                  : <span><IconChevronLeft className="h-4 w-4" strokeWidth={1.5} /></span>}
+              </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl" asChild disabled={!nextMd}>
+                {nextMd
+                  ? <Link href={`/dashboard/${nextMd}`}><IconChevronRight className="h-4 w-4" strokeWidth={1.5} /></Link>
+                  : <span><IconChevronRight className="h-4 w-4" strokeWidth={1.5} /></span>}
+              </Button>
+              {!deadlinePassed && matchday.status === 'ACTIVE' && (
+                <Button
+                  asChild
+                  size="sm"
+                  className="ml-1 gap-1.5 font-semibold bg-gradient-to-r from-primary to-primary/80 rounded-xl shadow-sm shadow-primary/20"
+                >
+                  <Link href="/tippen">
+                    <IconPencil className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    Jetzt tippen
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <p className="mt-3 text-xs text-muted-foreground" suppressHydrationWarning>
+            Deadline: {new Date(matchday.tippDeadline).toLocaleString('de-DE', {
+              weekday: 'short', day: 'numeric', month: 'numeric',
+              hour: '2-digit', minute: '2-digit',
+            })}
+          </p>
+        </div>
+      </motion.div>
 
       {/* ── Split layout: Spiele + Rechts-Sidebar ── */}
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
 
         {/* LEFT: Spiele & Tipps */}
         <div className="flex-1 min-w-0">
-          <Tabs defaultValue="spiele">
-            <TabsList className="mb-4 h-auto p-1 rounded-xl bg-muted/60">
-              <TabsTrigger value="spiele" className="gap-1.5 font-semibold text-xs rounded-lg px-3 py-1.5 data-[state=active]:bg-white dark:data-[state=active]:bg-card data-[state=active]:shadow-sm">
-                <IconBallFootball className="h-3.5 w-3.5" strokeWidth={1.5} />
-                Spiele & Tipps
-              </TabsTrigger>
-              <TabsTrigger value="tabelle" className="gap-1.5 font-semibold text-xs rounded-lg px-3 py-1.5 data-[state=active]:bg-white dark:data-[state=active]:bg-card data-[state=active]:shadow-sm">
-                <IconTable className="h-3.5 w-3.5" strokeWidth={1.5} />
-                Bundesliga
-              </TabsTrigger>
-              <TabsTrigger value="stats" className="gap-1.5 font-semibold text-xs rounded-lg px-3 py-1.5 data-[state=active]:bg-white dark:data-[state=active]:bg-card data-[state=active]:shadow-sm">
-                <IconChartBar className="h-3.5 w-3.5" strokeWidth={1.5} />
-                Statistiken
-              </TabsTrigger>
-            </TabsList>
+          <AnimatedTabsList tabs={tabDefs} value={activeTab} onChange={setActiveTab} />
 
-            {/* Spiele */}
-            <TabsContent value="spiele" className="space-y-2.5">
-              {matchday.matches.map((match) => (
-                <MatchRow
-                  key={match.id}
-                  match={match}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: shouldReduce ? 0 : 0.15 }}
+            >
+              {activeTab === 'spiele' && (
+                <motion.ul
+                  variants={staggerContainer}
+                  initial="hidden"
+                  animate="show"
+                  transition={shouldReduce ? { staggerChildren: 0 } : undefined}
+                  className="space-y-2.5 list-none"
+                >
+                  {matchday.matches.map((match) => (
+                    <motion.li
+                      key={match.id}
+                      variants={fadeUp}
+                      transition={{ duration: shouldReduce ? 0 : 0.3 }}
+                    >
+                      <MatchRow
+                        match={match}
+                        users={users}
+                        tips={tipIndex[match.id] ?? {}}
+                        deadlinePassed={deadlinePassed}
+                        currentUserId={currentUserId}
+                      />
+                    </motion.li>
+                  ))}
+                </motion.ul>
+              )}
+
+              {activeTab === 'tabelle' && (
+                <div className="glass rounded-xl overflow-hidden">
+                  <StandingsTable year={matchday.season.year} />
+                </div>
+              )}
+
+              {activeTab === 'stats' && (
+                <StatsTab
+                  matchday={matchday}
                   users={users}
-                  tips={tipIndex[match.id] ?? {}}
-                  deadlinePassed={deadlinePassed}
+                  tipIndex={tipIndex}
+                  matchdayPointsMap={matchdayPointsMap}
+                  seasonPointsMap={seasonPointsMap}
+                  seasonStats={seasonStats}
                   currentUserId={currentUserId}
                 />
-              ))}
-            </TabsContent>
-
-            {/* Bundesliga table */}
-            <TabsContent value="tabelle">
-              <div className="glass rounded-xl overflow-hidden">
-                <StandingsTable year={matchday.season.year} />
-              </div>
-            </TabsContent>
-
-            {/* Stats */}
-            <TabsContent value="stats">
-              <StatsTab
-                matchday={matchday}
-                users={users}
-                tipIndex={tipIndex}
-                matchdayPointsMap={matchdayPointsMap}
-                seasonPointsMap={seasonPointsMap}
-                seasonStats={seasonStats}
-                currentUserId={currentUserId}
-              />
-            </TabsContent>
-          </Tabs>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {/* RIGHT: Punktetabelle */}
@@ -382,59 +454,67 @@ function PointsTable({
         </h2>
       </div>
       <div className="divide-y divide-white/10 dark:divide-white/5">
-        {users.map((u, i) => {
-          const isMe = u.id === currentUserId
-          const club = u.favoriteTeam ? getClubByName(u.favoriteTeam) : undefined
-          return (
-            <div
-              key={u.id}
-              className={cn(
-                'flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.03]',
-                isMe && 'bg-primary/5',
-              )}
-            >
-              {/* Rank */}
-              <span className="w-5 shrink-0 flex items-center justify-center">
-                <RankIcon rank={i} />
-              </span>
-
-              {/* User color dot or club icon */}
-              {u.color ? (
-                <span
-                  className="h-3.5 w-3.5 shrink-0 rounded-full ring-1 ring-white/20"
-                  style={{ backgroundColor: u.color }}
-                />
-              ) : club?.iconUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={club.iconUrl} alt="" className="h-4 w-4 shrink-0 object-contain" />
-              ) : (
-                <span className="h-3.5 w-3.5 shrink-0" />
-              )}
-
-              {/* Nickname as link */}
-              <Link
-                href={`/spieler/${u.nickname}`}
+        <AnimatePresence initial={false}>
+          {users.map((u, i) => {
+            const isMe = u.id === currentUserId
+            const club = u.favoriteTeam ? getClubByName(u.favoriteTeam) : undefined
+            return (
+              <motion.div
+                key={u.id}
+                layoutId={u.id}
+                layout
+                variants={fadeUp}
+                initial="hidden"
+                animate="show"
+                transition={{ duration: 0.3, delay: i * 0.04 }}
                 className={cn(
-                  'flex-1 truncate text-sm hover:underline underline-offset-4 transition-colors',
-                  isMe ? 'font-bold text-primary' : 'text-foreground font-medium',
+                  'flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.03]',
+                  isMe && 'bg-primary/5',
                 )}
               >
-                {u.nickname}
-                {isMe && <span className="ml-1 text-xs font-normal text-muted-foreground">(du)</span>}
-              </Link>
+                {/* Rank */}
+                <span className="w-5 shrink-0 flex items-center justify-center">
+                  <RankIcon rank={i} />
+                </span>
 
-              {/* Points */}
-              <div className="text-right shrink-0">
-                <span className="block text-base font-bold tabular-nums text-foreground">
-                  {seasonPoints[u.id] ?? 0}
-                </span>
-                <span className="block text-xs text-muted-foreground tabular-nums">
-                  +{matchdayPoints[u.id] ?? 0} ST
-                </span>
-              </div>
-            </div>
-          )
-        })}
+                {/* User color dot or club icon */}
+                {u.color ? (
+                  <span
+                    className="h-3.5 w-3.5 shrink-0 rounded-full ring-1 ring-white/20"
+                    style={{ backgroundColor: u.color }}
+                  />
+                ) : club?.iconUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={club.iconUrl} alt="" className="h-4 w-4 shrink-0 object-contain" />
+                ) : (
+                  <span className="h-3.5 w-3.5 shrink-0" />
+                )}
+
+                {/* Nickname as link */}
+                <Link
+                  href={`/spieler/${u.nickname}`}
+                  className={cn(
+                    'flex-1 truncate text-sm hover:underline underline-offset-4 transition-colors',
+                    isMe ? 'font-bold text-primary' : 'text-foreground font-medium',
+                  )}
+                >
+                  {u.nickname}
+                  {isMe && <span className="ml-1 text-xs font-normal text-muted-foreground">(du)</span>}
+                </Link>
+
+                {/* Points */}
+                <div className="text-right shrink-0">
+                  <span className="block text-base font-bold tabular-nums text-foreground">
+                    {seasonPoints[u.id] ?? 0}
+                  </span>
+                  <span className="block text-xs text-muted-foreground tabular-nums">
+                    +{matchdayPoints[u.id] ?? 0} ST
+                  </span>
+                </div>
+              </motion.div>
+            )
+          })}
+        </AnimatePresence>
       </div>
     </div>
   )

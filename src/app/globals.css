@@ -10,8 +10,8 @@
   --breakpoint-xs: 480px;
 
   /* Fonts */
-  --font-display: var(--font-space-grotesk);
-  --font-sans:    var(--font-inter);
+  --font-display: var(--font-barlow-condensed);
+  --font-sans:    var(--font-barlow);
 
   /* Radius */
   --radius-sm:  calc(var(--radius) - 4px);   /* 8px */
@@ -43,97 +43,113 @@
   /* Brand tokens usable as Tailwind utilities */
   --color-brand:        var(--brand);
   --color-brand-light:  var(--brand-light);
+
+  /* Semantische Kontextfarben als Tailwind-Utilities */
+  --color-success:            var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning:            var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info:               var(--info);
+  --color-info-foreground:    var(--info-foreground);
 }
 
 /* ─── Light Mode ─── */
 :root {
-  --radius: 0.75rem; /* 12px */
+  --radius: 0.75rem;
 
-  /* Kicktipp brand */
-  --brand:       oklch(0.37 0.20 264);    /* #172b9b */
-  --brand-light: oklch(0.50 0.18 264);   /* lighter variant for hover */
+  /* Kicktipp brand → Nexus Primary #5347CE */
+  --brand:       oklch(0.46 0.22 272);   /* #5347CE */
+  --brand-light: oklch(0.65 0.20 275);   /* #887CFD – für Hover */
 
-  /* Bundesliga standings colors */
-  --table-meister: oklch(0.78 0.17 82);   /* gold – Deutscher Meister */
-  --table-cl:      oklch(0.37 0.20 264);  /* blue – Champions League (= brand) */
-  --table-el:      oklch(0.60 0.15 148);  /* green – Europa/Conference League */
-  --table-warning: oklch(0.72 0.18 52);   /* orange – Relegation */
-  --table-danger:  oklch(0.54 0.25 28);   /* red – Direkter Abstieg */
+  /* Bundesliga standings colors – UNVERÄNDERT */
+  --table-meister: oklch(0.78 0.17 82);
+  --table-cl:      oklch(0.37 0.20 264);
+  --table-el:      oklch(0.60 0.15 148);
+  --table-warning: oklch(0.72 0.18 52);
+  --table-danger:  oklch(0.54 0.25 28);
 
-  /* Backgrounds */
-  --background:  oklch(0.966 0.008 254);  /* #F0F4F8 */
-  --foreground:  oklch(0.22 0.012 264);   /* dunkleres Blaugrau für mehr Kontrast */
+  /* Backgrounds – dezent lila-getönt */
+  --background:  oklch(0.965 0.006 272);
+  --foreground:  oklch(0.18 0.015 272);
 
-  /* Card */
-  --card:            oklch(0.992 0.002 254);  /* #FCFCFD */
-  --card-foreground: oklch(0.30 0.012 75);
+  /* Card – reinweiß */
+  --card:            oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.015 272);
 
   /* Popover */
-  --popover:            oklch(0.992 0.002 254);  /* #FCFCFD */
-  --popover-foreground: oklch(0.30 0.012 75);
+  --popover:            oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.015 272);
 
-  /* Primary = Deep Blue #172b9b */
-  --primary:            oklch(0.37 0.20 264);
+  /* Primary = #5347CE */
+  --primary:            oklch(0.46 0.22 272);
   --primary-foreground: oklch(1 0 0);
 
-  /* Secondary – soft blue tint */
-  --secondary:            oklch(0.94 0.02 264);
-  --secondary-foreground: oklch(0.37 0.20 264);
+  /* Secondary – heller Lavendel-Tint */
+  --secondary:            oklch(0.94 0.020 272);
+  --secondary-foreground: oklch(0.46 0.22 272);
 
   /* Muted */
-  --muted:            oklch(0.93 0.015 254);
-  --muted-foreground: oklch(0.50 0.04 264);
+  --muted:            oklch(0.93 0.010 272);
+  --muted-foreground: oklch(0.52 0.035 272);
 
-  /* Accent = Cyan #00e0dd */
-  --accent:            oklch(0.83 0.14 192);
-  --accent-foreground: oklch(0.20 0.02 192);
+  /* Accent = Teal #16C8C7 */
+  --accent:            oklch(0.73 0.13 192);
+  --accent-foreground: oklch(0.15 0.02 192);
 
-  /* Destructive */
+  /* Destructive – UNVERÄNDERT */
   --destructive: oklch(0.577 0.245 27.325);
 
   /* Border / Input */
-  --border: oklch(0.91 0.01 254);
-  --input:  oklch(0.91 0.01 254);
-  --ring:   oklch(0.37 0.20 264);
+  --border: oklch(0.91 0.008 272);
+  --input:  oklch(0.91 0.008 272);
+  --ring:   oklch(0.46 0.22 272);
+
+  /* ── Semantische Kontextfarben ── */
+  --success:            oklch(0.62 0.17 145);   /* Grün – Live, Erfolg */
+  --success-foreground: oklch(1 0 0);
+  --warning:            oklch(0.72 0.18 50);    /* Orange – Warnung, Joker */
+  --warning-foreground: oklch(0.15 0.02 50);
+  --info:               oklch(0.63 0.17 240);   /* Blau #4896FE – Info, Hinweis */
+  --info-foreground:    oklch(1 0 0);
 }
 
 /* ─── Dark Mode ─── */
 .dark {
-  /* Backgrounds */
-  --background:  oklch(0.13 0.02 254);    /* deep dark */
-  --foreground:  oklch(0.96 0.01 250);
+  --background:  oklch(0.12 0.025 272);
+  --foreground:  oklch(0.96 0.01 260);
 
-  /* Card */
-  --card:            oklch(0.18 0.03 254);
-  --card-foreground: oklch(0.96 0.01 250);
+  --card:            oklch(0.17 0.030 272);
+  --card-foreground: oklch(0.96 0.01 260);
 
-  /* Popover */
-  --popover:            oklch(0.18 0.03 254);
-  --popover-foreground: oklch(0.96 0.01 250);
+  --popover:            oklch(0.17 0.030 272);
+  --popover-foreground: oklch(0.96 0.01 260);
 
-  /* Primary – brighter on dark */
-  --primary:            oklch(0.60 0.18 264);
-  --primary-foreground: oklch(1 0 0);
+  /* Primary auf Dark: Lavendel #887CFD */
+  --primary:            oklch(0.68 0.19 275);
+  --primary-foreground: oklch(0.10 0.02 272);
 
-  /* Secondary */
-  --secondary:            oklch(0.22 0.03 254);
-  --secondary-foreground: oklch(0.96 0.01 250);
+  --secondary:            oklch(0.22 0.030 272);
+  --secondary-foreground: oklch(0.96 0.01 260);
 
-  /* Muted */
-  --muted:            oklch(0.20 0.03 254);
-  --muted-foreground: oklch(0.65 0.025 254);
+  --muted:            oklch(0.20 0.025 272);
+  --muted-foreground: oklch(0.65 0.025 272);
 
-  /* Accent = Cyan (same on dark) */
-  --accent:            oklch(0.83 0.14 192);
+  --accent:            oklch(0.73 0.13 192);    /* Teal – unverändert */
   --accent-foreground: oklch(0.15 0.02 192);
 
-  /* Destructive */
   --destructive: oklch(0.65 0.22 28);
 
-  /* Border / Input */
   --border: oklch(1 0 0 / 10%);
   --input:  oklch(1 0 0 / 12%);
-  --ring:   oklch(0.60 0.18 264);
+  --ring:   oklch(0.68 0.19 275);
+
+  /* Semantische Farben im Dark Mode */
+  --success:            oklch(0.54 0.16 145);
+  --success-foreground: oklch(1 0 0);
+  --warning:            oklch(0.65 0.16 50);
+  --warning-foreground: oklch(0.10 0.02 50);
+  --info:               oklch(0.66 0.17 240);
+  --info-foreground:    oklch(1 0 0);
 }
 
 /* ─── Base Styles ─── */
@@ -148,19 +164,11 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings:
-      "zero" 1, "ss01" 1, "ss07" 1, "ss08" 1,
-      "cv05" 1, "cv10" 1, "cv11" 1, "cv12" 1, "cv13" 1,
-      "dlig" 1;
+    font-feature-settings: "kern" 1;
   }
 
   h1 {
-    /*
-     * Use the next/font CSS variables directly.
-     * @theme inline does NOT emit runtime CSS variables, so var(--font-display)
-     * is undefined at runtime. Reference --font-space-grotesk directly instead.
-     */
-    font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
+    font-family: var(--font-barlow-condensed), sans-serif;
     font-weight: 700;
     letter-spacing: -0.01em;
   }
@@ -176,7 +184,7 @@
 /* Tabular numbers for scores, tables, points */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "zero" 1, "ss01" 1;
+  font-feature-settings: "tnum" 1;
 }
 
 /* Glassmorphism */

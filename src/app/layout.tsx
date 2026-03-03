@@ -1,22 +1,20 @@
 import type { Metadata, Viewport } from 'next'
-import localFont from 'next/font/local'
-import { Space_Grotesk } from 'next/font/google'
+import { Barlow, Barlow_Condensed } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers'
 import { Toaster } from '@/components/ui/sonner'
 
-const inter = localFont({
-  src: [
-    { path: '../../public/fonts/InterVariable.woff2', style: 'normal' },
-    { path: '../../public/fonts/InterVariable-Italic.woff2', style: 'italic' },
-  ],
-  variable: '--font-inter',
+const barlow = Barlow({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-barlow',
   display: 'swap',
 })
 
-const spaceGrotesk = Space_Grotesk({
+const barlowCondensed = Barlow_Condensed({
   subsets: ['latin'],
-  variable: '--font-space-grotesk',
+  weight: ['500', '600', '700', '800'],
+  variable: '--font-barlow-condensed',
   display: 'swap',
 })
 
@@ -44,7 +42,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="de" suppressHydrationWarning>
-      <body className={`${inter.variable} ${spaceGrotesk.variable} antialiased`}>
+      <body className={`${barlow.variable} ${barlowCondensed.variable} antialiased`}>
         <Providers>
           {children}
           <Toaster richColors />

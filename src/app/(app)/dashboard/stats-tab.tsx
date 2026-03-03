@@ -1,6 +1,8 @@
 'use client'
 
-import { useMemo, useCallback, useState } from 'react'
+import { useMemo, useCallback, useState, useEffect } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { fadeUp, staggerContainer } from '@/lib/motion'
 import Link from 'next/link'
 import {
   ResponsiveContainer,
@@ -158,6 +160,22 @@ function buildLineData(seasonStats: SeasonMatchdayStat[], users: User[]) {
 
 /* ── Sub-components (module-level to prevent remounting on parent re-render) ── */
 
+function CountUp({ to, duration = 900 }: { to: number; duration?: number }) {
+  const [val, setVal] = useState(0)
+  const shouldReduce = useReducedMotion()
+  useEffect(() => {
+    if (shouldReduce) { setVal(to); return }
+    const start = Date.now()
+    const tick = () => {
+      const p = Math.min((Date.now() - start) / duration, 1)
+      setVal(Math.round((1 - (1 - p) ** 3) * to * 10) / 10)
+      if (p < 1) requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  }, [to, duration, shouldReduce])
+  return <>{val}</>
+}
+
 function KpiCard({
   icon,
   label,
@@ -175,7 +193,9 @@ function KpiCard({
         {icon && <span className="text-muted-foreground">{icon}</span>}
         <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
       </div>
-      <p className="text-2xl font-bold tabular-nums text-foreground">{value}</p>
+      <p className="text-2xl font-bold tabular-nums text-foreground">
+        {typeof value === 'number' ? <CountUp to={value} /> : value}
+      </p>
       {sub && <p className="mt-0.5 text-xs text-muted-foreground font-sans truncate">{sub}</p>}
     </div>
   )
@@ -367,50 +387,61 @@ export function StatsTab({
 
       {/* ── KPI-Karten ── */}
       {(view === 'spieltag' || seasonStats.length > 0) && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <KpiCard
-            icon={<IconChartBar className="h-3.5 w-3.5" strokeWidth={1} />}
-            label="Ø Punkte"
-            value={view === 'spieltag' ? mdKpis.avg : seasonData.avg}
-            sub={view === 'saison' ? 'pro Spieltag' : undefined}
-          />
-          <KpiCard
-            icon={<IconTrophy className="h-3.5 w-3.5" strokeWidth={1} />}
-            label="Rekord"
-            value={
-              view === 'spieltag'
-                ? mdKpis.best ? `${mdKpis.best.points}P` : '–'
-                : seasonData.record ? `${seasonData.record.points}P` : '–'
-            }
-            sub={
-              view === 'spieltag'
-                ? (mdKpis.best && mdKpis.best.points > 0 ? mdKpis.best.nickname : undefined)
-                : seasonData.record
-                  ? `${seasonData.record.nickname} · ST ${seasonData.record.matchdayNumber}`
-                  : undefined
-            }
-          />
+        <motion.div
+          className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="show"
+        >
+          <motion.div variants={fadeUp} transition={{ duration: 0.3 }}>
+            <KpiCard
+              icon={<IconChartBar className="h-3.5 w-3.5" strokeWidth={1} />}
+              label="Ø Punkte"
+              value={view === 'spieltag' ? mdKpis.avg : seasonData.avg}
+              sub={view === 'saison' ? 'pro Spieltag' : undefined}
+            />
+          </motion.div>
+          <motion.div variants={fadeUp} transition={{ duration: 0.3 }}>
+            <KpiCard
+              icon={<IconTrophy className="h-3.5 w-3.5" strokeWidth={1} />}
+              label="Rekord"
+              value={
+                view === 'spieltag'
+                  ? mdKpis.best ? `${mdKpis.best.points}P` : '–'
+                  : seasonData.record ? `${seasonData.record.points}P` : '–'
+              }
+              sub={
+                view === 'spieltag'
+                  ? (mdKpis.best && mdKpis.best.points > 0 ? mdKpis.best.nickname : undefined)
+                  : seasonData.record
+                    ? `${seasonData.record.nickname} · ST ${seasonData.record.matchdayNumber}`
+                    : undefined
+              }
+            />
+          </motion.div>
           {/* Risikofaktor */}
-          <div className="rounded-lg border border-border bg-card px-4 py-3">
-            <div className="flex items-center gap-1.5 mb-1">
-              <span className="text-muted-foreground"><IconScale className="h-3.5 w-3.5" strokeWidth={1} /></span>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                Risikofaktor
-              </p>
+          <motion.div variants={fadeUp} transition={{ duration: 0.3 }}>
+            <div className="rounded-lg border border-border bg-card px-4 py-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-muted-foreground"><IconScale className="h-3.5 w-3.5" strokeWidth={1} /></span>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                  Risikofaktor
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-sans text-primary font-medium">
+                  Heim {activeRisk.home}%
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-sans text-accent font-medium">
+                  Auswärts {activeRisk.away}%
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-sans text-muted-foreground font-medium">
+                  Unentsch. {activeRisk.draw}%
+                </span>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-sans text-primary font-medium">
-                Heim {activeRisk.home}%
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-sans text-accent font-medium">
-                Auswärts {activeRisk.away}%
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-sans text-muted-foreground font-medium">
-                Unentsch. {activeRisk.draw}%
-              </span>
-            </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
 
       {/* ── Saison-Verlauf LineChart ── */}

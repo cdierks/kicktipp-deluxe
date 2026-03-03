@@ -43,10 +43,10 @@ export function Nav() {
 
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-primary">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-accent">
             <IconBallFootball className="h-4 w-4 text-white" strokeWidth={1.5} />
           </div>
-          <span className="font-display text-lg font-bold tracking-tight text-primary">
+          <span className="font-display text-2xl font-bold tracking-tight text-primary">
             Kicktipp<span className="text-accent">.</span>Deluxe
           </span>
         </Link>

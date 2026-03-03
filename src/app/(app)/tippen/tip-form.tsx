@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { fadeUp, staggerContainer } from '@/lib/motion'
 import { toast } from 'sonner'
 import { submitAllTips } from '@/actions/tip.actions'
 import { Button } from '@/components/ui/button'
@@ -102,6 +104,7 @@ export function TipForm({ matches, existingTips }: Props) {
   }
 
   return (
+    <motion.div variants={fadeUp} initial="hidden" animate="show" transition={{ duration: 0.4 }}>
     <form onSubmit={handleSubmit} className="space-y-3">
       {/* Quick score chips */}
       <div className="flex items-center gap-2 mb-4">
@@ -131,6 +134,12 @@ export function TipForm({ matches, existingTips }: Props) {
         )}
       </div>
 
+      <motion.ul
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show"
+        className="space-y-3 list-none"
+      >
       {matches.map((match) => {
         const tip = tips[match.id]
         const hasTip = tip.home !== '' && tip.away !== ''
@@ -140,8 +149,10 @@ export function TipForm({ matches, existingTips }: Props) {
         const awayIcon = getClubByName(match.awayTeam)?.iconUrl
 
         return (
-          <div
+          <motion.li
             key={match.id}
+            variants={fadeUp}
+            transition={{ duration: 0.3 }}
             className={cn(
               'glass rounded-xl px-4 py-3.5 transition-all',
               isActiveJoker
@@ -237,9 +248,10 @@ export function TipForm({ matches, existingTips }: Props) {
                 </span>
               </div>
             </div>
-          </div>
+          </motion.li>
         )
       })}
+      </motion.ul>
 
       <p className="text-xs px-0.5">
         {jokerMatchId
@@ -259,5 +271,6 @@ export function TipForm({ matches, existingTips }: Props) {
         </Button>
       </div>
     </form>
+    </motion.div>
   )
 }
