@@ -93,16 +93,24 @@ interface Props {
 /* ── Constants ── */
 
 // Hex values required since Recharts SVG doesn't support CSS variables
+// Fallback palette (used when a user has no chosen color) – mirrors the brand palette
 const CHART_COLORS = [
-  '#2a61a1', '#e20613', '#c8920a', '#2d7a45',
-  '#c97117', '#7b3fb5', '#0d9488', '#db2777',
+  '#5347CE', // Primary Indigo
+  '#16C8C7', // Teal Accent
+  '#4896FE', // Info Blue
+  '#F97316', // Warning Orange
+  '#887CFD', // Lavendel
+  '#22C55E', // Success Green
+  '#F6339A', // Pink
+  '#AD46FF', // Purple
 ]
 
+// Pie-chart segments for Treffer-Verteilung – brand scale from best to miss
 const HIT_COLORS = {
-  exact:   '#2a61a1',
-  diff:    '#4a80c0',
-  outcome: '#93afd4',
-  miss:    '#94a3b8',
+  exact:   '#5347CE', // 4P – Primary Indigo (best)
+  diff:    '#4896FE', // 3P – Info Blue
+  outcome: '#16C8C7', // 2P – Teal Accent
+  miss:    '#94a3b8', // 0P – Muted slate
 }
 
 const TICK_STYLE = { fontSize: 11, fill: 'var(--muted-foreground)', fontFamily: 'var(--font-sans)' } as const
