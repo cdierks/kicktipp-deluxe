@@ -115,10 +115,10 @@ export function PlayerCharts({
               <Line
                 type="monotone"
                 dataKey="cumulative"
-                stroke="#2a61a1"
+                stroke="#5347CE"
                 strokeWidth={2.5}
                 dot={false}
-                activeDot={{ r: 4, fill: '#2a61a1' }}
+                activeDot={{ r: 4, fill: '#5347CE' }}
               />
             </LineChart>
           </ResponsiveContainer>

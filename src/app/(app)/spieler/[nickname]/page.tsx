@@ -18,10 +18,10 @@ import { PlayerCharts } from './player-charts'
 import type { LinePoint, PieSlice } from './player-charts'
 
 const HIT_COLORS = {
-  exact:   '#2a61a1',
-  diff:    '#4a80c0',
-  outcome: '#93afd4',
-  miss:    '#94a3b8',
+  exact:   '#5347CE', // 4P – Primary Indigo
+  diff:    '#4896FE', // 3P – Info Blue
+  outcome: '#16C8C7', // 2P – Teal Accent
+  miss:    '#94a3b8', // 0P – Muted slate
 }
 
 export default async function SpielerPage({
