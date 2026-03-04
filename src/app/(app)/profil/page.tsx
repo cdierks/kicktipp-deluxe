@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getClubByName } from '@/lib/clubs'
-import { IconPalette, IconUser, IconMail, IconBallFootball, IconPokerChip } from '@tabler/icons-react'
+import { IconMoodSmileBeam, IconPalette, IconMail, IconBallFootball, IconPokerChip } from '@tabler/icons-react'
 import { ProfileForm } from './profile-form'
 import { ColorPicker } from './color-picker'
 
@@ -32,12 +32,6 @@ export default async function ProfilPage() {
 
   const club = user.favoriteTeam ? getClubByName(user.favoriteTeam) : undefined
   const colorLabel = palette.find((c) => c.hex === user.color)?.label
-  const initials = user.name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
 
   return (
     <div className="space-y-6">
@@ -88,7 +82,8 @@ export default async function ProfilPage() {
                 className="relative -mt-10 mb-4 h-20 w-20 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg ring-4 ring-white/20"
                 style={{ backgroundColor: user.color ?? 'var(--color-primary)' }}
               >
-                {initials}
+                
+                <IconMoodSmileBeam className='w-10 h-12' />
               </div>
 
               <h2 className="text-2xl font-bold tracking-tight text-foreground">

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { getClubByName } from '@/lib/clubs'
 import { cn } from '@/lib/utils'
 import {
+  IconMoodSmileBeam,
   IconPencil,
   IconTrophy,
   IconMedal,
@@ -42,13 +43,6 @@ export default async function SpielerPage({
 
   const isMe = session.user.id === user.id
   const club = user.favoriteTeam ? getClubByName(user.favoriteTeam) : undefined
-
-  const initials = user.name
-    .split(' ')
-    .map((w: string) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
 
   const activeSeason = await prisma.season.findFirst({
     where: { active: true },
@@ -177,7 +171,7 @@ export default async function SpielerPage({
               className="h-20 w-20 rounded-2xl shrink-0 flex items-center justify-center text-white text-2xl font-bold shadow-lg ring-4 ring-white/20"
               style={{ backgroundColor: user.color ?? 'var(--color-primary)' }}
             >
-              {initials}
+              <IconMoodSmileBeam className='w-10 h-12' />
             </div>
             {isMe && (
               <Link
