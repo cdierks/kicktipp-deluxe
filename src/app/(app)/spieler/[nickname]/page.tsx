@@ -167,8 +167,8 @@ export default async function SpielerPage({
           className="h-28 w-full"
           style={{
             background: user.color
-              ? `linear-gradient(135deg, ${user.color}cc 0%, ${user.color}33 100%)`
-              : 'linear-gradient(135deg, var(--color-primary) 0%, color-mix(in oklch, var(--color-primary) 40%, transparent) 100%)',
+              ? user.color
+              : 'var(--color-primary)',
           }}
         />
         <div className="px-6 pb-6">
