@@ -3,6 +3,8 @@ import { IconBallFootball, IconUserOff } from '@tabler/icons-react'
 import { getRegistrationEnabled } from '@/lib/settings'
 import { RegisterForm } from './register-form'
 
+export const dynamic = 'force-dynamic'
+
 export default async function RegisterPage() {
   const enabled = await getRegistrationEnabled()
 

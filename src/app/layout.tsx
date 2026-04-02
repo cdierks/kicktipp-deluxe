@@ -1,19 +1,28 @@
 import type { Metadata, Viewport } from 'next'
-import { Barlow, Barlow_Condensed } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 import { Providers } from '@/components/providers'
 import { Toaster } from '@/components/ui/sonner'
 
-const barlow = Barlow({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
+const barlow = localFont({
+  src: [
+    { path: '../../public/fonts/barlow-300.ttf', weight: '300', style: 'normal' },
+    { path: '../../public/fonts/barlow-400.ttf', weight: '400', style: 'normal' },
+    { path: '../../public/fonts/barlow-500.ttf', weight: '500', style: 'normal' },
+    { path: '../../public/fonts/barlow-600.ttf', weight: '600', style: 'normal' },
+    { path: '../../public/fonts/barlow-700.ttf', weight: '700', style: 'normal' },
+  ],
   variable: '--font-barlow',
   display: 'swap',
 })
 
-const barlowCondensed = Barlow_Condensed({
-  subsets: ['latin'],
-  weight: ['500', '600', '700', '800'],
+const barlowCondensed = localFont({
+  src: [
+    { path: '../../public/fonts/barlow-condensed-500.ttf', weight: '500', style: 'normal' },
+    { path: '../../public/fonts/barlow-condensed-600.ttf', weight: '600', style: 'normal' },
+    { path: '../../public/fonts/barlow-condensed-700.ttf', weight: '700', style: 'normal' },
+    { path: '../../public/fonts/barlow-condensed-800.ttf', weight: '800', style: 'normal' },
+  ],
   variable: '--font-barlow-condensed',
   display: 'swap',
 })

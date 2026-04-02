@@ -24,9 +24,9 @@ Bundesliga-Tippspiel für private Freundesrunden – als moderne Web-App mit Ech
 | Framework | Next.js 16 (App Router) |
 | Sprache | TypeScript |
 | Styling | Tailwind CSS v4 + shadcn/ui |
-| Datenbank | SQLite via Prisma 7 + libSQL-Adapter |
+| Datenbank | MySQL / MariaDB via Prisma 7 |
 | Authentifizierung | NextAuth v4 (Credentials) |
-| Fonts | Space Grotesk (Display) + Inter Variable (Body) |
+| Fonts | Barlow + Barlow Condensed (lokal eingebunden) |
 | Icons | Tabler Icons |
 | Charts | Recharts |
 | Externe API | OpenLigaDB (kostenlos, kein API-Key) |
@@ -36,7 +36,8 @@ Bundesliga-Tippspiel für private Freundesrunden – als moderne Web-App mit Ech
 ## Voraussetzungen
 
 - Node.js 20+
-- npm 10+ (oder pnpm / yarn)
+- npm 10+
+- Laufende MySQL- oder MariaDB-Instanz
 
 ---
 
@@ -54,13 +55,16 @@ npm install
 cp .env.example .env
 # .env anpassen (siehe unten)
 
-# 4. Datenbank migrieren
+# 4. Datenbank starten und `.env` prüfen
+# DATABASE_URL muss auf eine erreichbare MySQL/MariaDB-Datenbank zeigen
+
+# 5. Datenbank migrieren
 npx prisma migrate deploy
 
-# 5. Seed-Daten einspielen (Admin-User + Saison)
+# 6. Seed-Daten einspielen (Admin-User + Saison)
 npm run db:seed
 
-# 6. Entwicklungsserver starten
+# 7. Entwicklungsserver starten
 npm run dev
 ```
 
@@ -73,8 +77,8 @@ Die App ist dann unter [http://localhost:3000](http://localhost:3000) erreichbar
 Kopiere `.env.example` nach `.env` und trage die Werte ein:
 
 ```env
-# Absoluter Pfad zur SQLite-Datenbankdatei
-DATABASE_URL=file:./prisma/dev.db
+# MySQL/MariaDB-Verbindungsstring
+DATABASE_URL="mysql://user:password@localhost:3306/kicktipp_db"
 
 # Beliebiger langer Zufallsstring (z. B. openssl rand -base64 32)
 NEXTAUTH_SECRET=dein-geheimes-secret
@@ -147,7 +151,7 @@ prisma/
 ├── migrations/             # Migrationsverlauf
 └── seed.ts                 # Seed-Skript
 public/
-└── fonts/                  # Inter Variable (lokal eingebunden)
+└── fonts/                  # Lokale Barlow-Schriften
 ```
 
 ---

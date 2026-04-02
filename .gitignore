@@ -49,3 +49,6 @@ yarn-error.log*
 
 # ── Claude Code (lokale KI-Assistent-Einstellungen) ──────
 .claude/
+
+# ── Codex (lokale KI-Assistent-Einstellungen) ─────────────
+.codex

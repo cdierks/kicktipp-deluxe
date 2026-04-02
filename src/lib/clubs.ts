@@ -9,9 +9,9 @@ export interface Club {
 }
 
 export const CLUBS: Club[] = [
-  { name: "1. FC Heidenheim 1846", shortName: "Heidenheim", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/1._FC_Heidenheim_1846.svg/830px-1._FC_Heidenheim_1846.svg.png", league: 1 },
+  { name: "1. FC Heidenheim 1846", shortName: "Heidenheim", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/9/9d/1._FC_Heidenheim_1846.svg", league: 1 },
   { name: "1. FC Kaiserslautern", shortName: "Kaiserslautern", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d3/Logo_1_FC_Kaiserslautern.svg", league: 2 },
-  { name: "1. FC Köln", shortName: "Köln", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/1._FC_Koeln_Logo_2014–.svg/296px-1._FC_Koeln_Logo_2014–.svg.png", league: 1 },
+  { name: "1. FC Köln", shortName: "Köln", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/0/01/1._FC_Koeln_Logo_2014%E2%80%93.svg", league: 1 },
   { name: "1. FC Magdeburg", shortName: "Magdeburg", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/1._FC_Magdeburg.svg/210px-1._FC_Magdeburg.svg.png", league: 2 },
   { name: "1. FC Nürnberg", shortName: "Nürnberg", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/f/fa/1._FC_Nürnberg_logo.svg", league: 2 },
   { name: "1. FC Saarbrücken", shortName: "Saarbrücken", iconUrl: "http://upload.wikimedia.org/wikipedia/de/thumb/f/ff/1._FC_Saarbr%C3%BCcken.svg/150px-1._FC_Saarbr%C3%BCcken.svg.png", league: 3 },
@@ -54,7 +54,7 @@ export const CLUBS: Club[] = [
   { name: "SV Darmstadt 98", shortName: "Darmstadt", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/e/e5/SV_Darmstadt_98_Logo.svg", league: 2 },
   { name: "SV Waldhof Mannheim", shortName: "Mannheim", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Svwaldhof.svg/150px-Svwaldhof.svg.png", league: 3 },
   { name: "SV Wehen Wiesbaden", shortName: "Wiesbaden", iconUrl: "https://upload.wikimedia.org/wikipedia/de/thumb/3/3d/Logo_SV_Wehen_Wiesbaden.svg/240px-Logo_SV_Wehen_Wiesbaden.svg.png", league: 3 },
-  { name: "SV Werder Bremen", shortName: "Bremen", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/SV-Werder-Bremen-Logo.svg/681px-SV-Werder-Bremen-Logo.svg.png", league: 1 },
+  { name: "SV Werder Bremen", shortName: "Bremen", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/b/be/SV-Werder-Bremen-Logo.svg", league: 1 },
   { name: "TSG 1899 Hoffenheim II", shortName: "TSG 1899 Hoffenheim II", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Logo_TSG_Hoffenheim.svg/150px-Logo_TSG_Hoffenheim.svg.png", league: 3 },
   { name: "TSG Hoffenheim", shortName: "Hoffenheim", iconUrl: "https://i.imgur.com/gF0PfEl.png", league: 1 },
   { name: "TSV 1860 München", shortName: "1860 München", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/TSV_1860_M%C3%BCnchen.svg/192px-TSV_1860_M%C3%BCnchen.svg.png", league: 3 },
@@ -63,7 +63,7 @@ export const CLUBS: Club[] = [
   { name: "VfB Stuttgart II", shortName: "Stuttgart II", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/VfB_Stuttgart_1893_Logo.svg/221px-VfB_Stuttgart_1893_Logo.svg.png", league: 3 },
   { name: "VfL Bochum", shortName: "Bochum", iconUrl: "https://i.imgur.com/5jy3Gfr.png", league: 2 },
   { name: "VfL Osnabrück", shortName: "Osnabrück", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/VfL_Osnabrueck_Logo_2021%E2%80%93.svg/240px-VfL_Osnabrueck_Logo_2021%E2%80%93.svg.png", league: 3 },
-  { name: "VfL Wolfsburg", shortName: "Wolfsburg", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Logo-VfL-Wolfsburg.svg/316px-Logo-VfL-Wolfsburg.svg.png", league: 1 },
+  { name: "VfL Wolfsburg", shortName: "Wolfsburg", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/VfL_Wolfsburg_Logo.svg/120px-VfL_Wolfsburg_Logo.svg.png", league: 1 },
   { name: "Viktoria Köln", shortName: "Viktoria Köln", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/FC_Viktoria_K%C3%B6ln_1904_Logo.svg/1200px-FC_Viktoria_K%C3%B6ln_1904_Logo.svg.png", league: 3 },
 ]
 
