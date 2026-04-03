@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback, useState, useEffect } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { fadeUp, staggerContainer } from '@/lib/motion'
+import { listStagger, panelEnter } from '@/lib/motion'
 import Link from 'next/link'
 import {
   ResponsiveContainer,
@@ -600,11 +600,11 @@ export function StatsTab({
       {(view === 'spieltag' || seasonStats.length > 0) && (
         <motion.div
           className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
-          variants={staggerContainer}
+          variants={listStagger}
           initial="hidden"
           animate="show"
         >
-          <motion.div variants={fadeUp} transition={{ duration: 0.3 }} className="h-full">
+          <motion.div variants={panelEnter} className="h-full">
             <KpiCard
               icon={<IconChartBar className="h-3.5 w-3.5" strokeWidth={1} />}
               label="Ø Punkte"
@@ -612,7 +612,7 @@ export function StatsTab({
               sub={view === 'saison' ? 'pro Spieltag' : undefined}
             />
           </motion.div>
-          <motion.div variants={fadeUp} transition={{ duration: 0.3 }} className="h-full">
+          <motion.div variants={panelEnter} className="h-full">
             <KpiCard
               icon={<IconTrophy className="h-3.5 w-3.5" strokeWidth={1} />}
               label="Rekord"
@@ -631,7 +631,7 @@ export function StatsTab({
             />
           </motion.div>
           {/* Risikofaktor */}
-          <motion.div variants={fadeUp} transition={{ duration: 0.3 }} className="h-full">
+          <motion.div variants={panelEnter} className="h-full">
             <div className="surface flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-border/70 px-4 py-3">
               <div className="mb-3 flex items-center gap-2">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-background/80 text-muted-foreground">
@@ -672,7 +672,7 @@ export function StatsTab({
               </div>
             </div>
           </motion.div>
-          <motion.div variants={fadeUp} transition={{ duration: 0.3 }} className="h-full">
+          <motion.div variants={panelEnter} className="h-full">
             <KpiCard
               icon={<IconPokerChip className="h-3.5 w-3.5 text-amber-500" strokeWidth={1} />}
               label="Joker-Bonus"

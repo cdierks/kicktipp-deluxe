@@ -33,6 +33,7 @@ export const authOptions: NextAuthOptions = {
           nickname: user.nickname,
           role: user.role,
           color: user.color,
+          favoriteTeam: user.favoriteTeam,
         }
       },
     }),
@@ -46,11 +47,13 @@ export const authOptions: NextAuthOptions = {
         token.nickname = (user as { nickname?: string }).nickname ?? ''
         token.role = (user as { role?: string }).role ?? 'USER'
         token.color = (user as { color?: string | null }).color ?? null
+        token.favoriteTeam = (user as { favoriteTeam?: string | null }).favoriteTeam ?? null
       }
       if (trigger === 'update') {
         if (session?.email) token.email = session.email
         if (session?.name) token.name = session.name
         if (session?.nickname) token.nickname = session.nickname
+        if ('favoriteTeam' in (session ?? {})) token.favoriteTeam = session.favoriteTeam ?? null
       }
       return token
     },
@@ -62,6 +65,7 @@ export const authOptions: NextAuthOptions = {
         session.user.nickname = token.nickname as string
         session.user.role = token.role as string
         session.user.color = token.color as string | null
+        session.user.favoriteTeam = (token.favoriteTeam as string | null | undefined) ?? null
       }
       return session
     },

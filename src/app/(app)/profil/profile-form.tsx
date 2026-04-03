@@ -49,6 +49,7 @@ export function ProfileForm({ userId, user }: Props) {
           email: result.user.email,
           name: result.user.name,
           nickname: result.user.nickname,
+          favoriteTeam: result.user.favoriteTeam,
         })
       }
       form.reset()

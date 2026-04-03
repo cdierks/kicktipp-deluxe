@@ -7,6 +7,7 @@ declare module 'next-auth' {
       nickname: string
       role: string
       color: string | null
+      favoriteTeam: string | null
     } & DefaultSession['user']
   }
 }
@@ -17,5 +18,6 @@ declare module 'next-auth/jwt' {
     nickname: string
     role: string
     color: string | null
+    favoriteTeam: string | null
   }
 }

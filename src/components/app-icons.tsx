@@ -2,6 +2,7 @@ import type { ComponentProps, ComponentType } from 'react'
 import {
   ArrowClockwise,
   ArrowsDownUp,
+  BookmarkSimple,
   CalendarBlank,
   CaretLeft,
   CaretRight,
@@ -78,6 +79,7 @@ export const IconTarget = withWeight(Target)
 export const IconRefresh = withWeight(ArrowClockwise)
 export const IconTrash = withWeight(Trash)
 export const IconArrowsSort = withWeight(ArrowsDownUp)
+export const IconBookmark = withWeight(BookmarkSimple)
 export const IconDatabaseExport = withWeight(DownloadSimple)
 export const IconDatabaseImport = withWeight(UploadSimple)
 export const IconPalette = withWeight(Palette)

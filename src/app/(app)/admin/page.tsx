@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { CLUBS } from '@/lib/clubs'
 import { getRegistrationEnabled } from '@/lib/settings'
 import { Button } from '@/components/ui/button'
-import { IconUsers, IconCalendarEvent, IconBallFootball, IconShirt, IconPalette, IconUserPlus, IconUserOff, IconDatabaseExport } from '@/components/app-icons'
+import { IconUsers, IconCalendarEvent, IconBallFootball, IconShirt, IconPalette, IconUserPlus, IconUserOff, IconBookmark, IconChevronRight } from '@/components/app-icons'
 import { ClubsRefresh } from './clubs-refresh'
 import { RegistrationToggle } from './registration-toggle'
 import { BackupPanel } from './backup-panel'
@@ -136,16 +136,29 @@ export default async function AdminPage() {
         <div className="surface rounded-[1.5rem] p-5">
           <div className="mb-3 flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-              <IconDatabaseExport className="h-4 w-4 text-primary" strokeWidth={1.5} />
+              <IconBookmark className="h-4 w-4 text-primary" strokeWidth={1.5} />
             </div>
             <div>
-              <p className="text-sm font-bold tracking-wide text-foreground">Verwaltung</p>
-              <p className="text-xs text-muted-foreground">Saison-, Matchday- und Backup-Operationen bündeln</p>
+              <p className="text-sm font-bold tracking-wide text-foreground">Schnellzugriffe</p>
+              <p className="text-xs text-muted-foreground">Direkt zu den wichtigsten Admin-Bereichen</p>
             </div>
           </div>
-          <p className="text-sm leading-6 text-muted-foreground">
-            Die Admin-Konsole ist jetzt als konsistentes Kontrollraster organisiert. Zentrale Eingriffe sind ohne Layoutsprünge erreichbar.
-          </p>
+          <div className="space-y-2">
+            {[
+              { href: '/admin/benutzer', label: 'Benutzer' },
+              { href: '/admin/spieltage', label: 'Spieltage' },
+              { href: '/admin/ergebnisse', label: 'Ergebnisse' },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center justify-between rounded-xl border border-border/70 bg-background/65 px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary/70"
+              >
+                <span>{item.label}</span>
+                <IconChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>

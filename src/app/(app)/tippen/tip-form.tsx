@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { fadeUp, staggerContainer } from '@/lib/motion'
+import { listStagger, microPress, panelEnter, statusPulse } from '@/lib/motion'
 import { toast } from 'sonner'
 import { submitAllTips } from '@/actions/tip.actions'
 import { cn } from '@/lib/utils'
@@ -160,7 +160,7 @@ export function TipForm({ matches, existingTips }: Props) {
   )
 
   return (
-    <motion.div variants={fadeUp} initial="hidden" animate="show" transition={{ duration: 0.4 }}>
+    <motion.div variants={panelEnter} initial="hidden" animate="show">
       <div className="space-y-4">
         {!jokerMatchId && (
           <div className="rounded-[1.35rem] border border-amber-400/35 bg-amber-400/[0.08] px-4 py-3">
@@ -182,7 +182,7 @@ export function TipForm({ matches, existingTips }: Props) {
 
         <div className="surface rounded-[1.5rem] p-4 sm:p-5">
           <motion.ul
-            variants={staggerContainer}
+            variants={listStagger}
             initial="hidden"
             animate="show"
             className="list-none space-y-3"
@@ -199,8 +199,7 @@ export function TipForm({ matches, existingTips }: Props) {
               return (
                 <motion.li
                   key={match.id}
-                  variants={fadeUp}
-                  transition={{ duration: 0.3 }}
+                  variants={panelEnter}
                   className={cn(
                     'rounded-[1.35rem] border border-border/70 bg-background/70 px-4 py-4 transition-all',
                     isActiveJoker
@@ -286,10 +285,11 @@ export function TipForm({ matches, existingTips }: Props) {
                         )}
                         placeholder={activeField?.matchId === match.id && activeField?.field === 'away' ? '' : '–'}
                       />
-                      <button
+                      <motion.button
                         type="button"
                         onClick={() => toggleJoker(match.id)}
                         disabled={!hasTip}
+                        whileTap={hasTip ? microPress : undefined}
                         className={cn(
                           'ml-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition-all',
                           isActiveJoker
@@ -302,7 +302,7 @@ export function TipForm({ matches, existingTips }: Props) {
                         title="Joker – verdoppelt die Punkte"
                       >
                         <IconPokerChip className="h-5 w-5" strokeWidth={1.5} />
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
 
@@ -363,10 +363,11 @@ export function TipForm({ matches, existingTips }: Props) {
                         )}
                         placeholder={activeField?.matchId === match.id && activeField?.field === 'away' ? '' : '–'}
                       />
-                      <button
+                      <motion.button
                         type="button"
                         onClick={() => toggleJoker(match.id)}
                         disabled={!hasTip}
+                        whileTap={hasTip ? microPress : undefined}
                         className={cn(
                           'ml-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition-all',
                           isActiveJoker
@@ -379,7 +380,7 @@ export function TipForm({ matches, existingTips }: Props) {
                         title="Joker – verdoppelt die Punkte"
                       >
                         <IconPokerChip className="h-5 w-5" strokeWidth={1.5} />
-                      </button>
+                      </motion.button>
                     </div>
 
                     <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -413,7 +414,11 @@ export function TipForm({ matches, existingTips }: Props) {
               : <span className="text-muted-foreground">Kein Joker aktiv. Chip-Button drücken zum Aktivieren.</span>}
           </p>
           <p className={cn('inline-flex items-center gap-1.5', statusToneClass)}>
-            {saveState === 'saving' && <IconLoader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.75} />}
+            {saveState === 'saving' && (
+              <motion.span animate={statusPulse} className="inline-flex">
+                <IconLoader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.75} />
+              </motion.span>
+            )}
             {statusMessage}
           </p>
         </div>

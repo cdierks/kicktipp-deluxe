@@ -89,7 +89,6 @@ export function StandingsTable({ year }: { year: string }) {
                       className={cn(
                         'absolute bottom-0 left-0 top-0 w-1',
                         startsGroup && 'rounded-tr-sm',
-                        endsGroup && 'rounded-br-sm',
                       )}
                       style={{ backgroundColor: q.color }}
                     />
