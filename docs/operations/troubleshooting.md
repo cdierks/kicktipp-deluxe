@@ -31,37 +31,47 @@ curl -I --max-time 20 https://kicktipp.schultypografie.de/dashboard
 ### Behebung
 
 - lokalen Produktionsbuild verwenden
-- nur reduzierte `.next`-Artefakte hochladen
+- Standalone-Output plus `.next/static` hochladen
 - kein regulärer Server-Build auf diesem Host, solange keine Reserve bestätigt ist
 
-## Problem: zweites `node_modules` passt nicht mehr sauber auf den Host
+## Problem: Standalone-Artefakte im Release fehlen oder sind unvollständig
 
 ### Symptom
 
-- Quota-Probleme oder unnötig hoher Platzverbrauch während des Deploys
+- `supervisorctl start kicktipp` endet mit `spawn error` oder `FATAL`
+- `server.js` fehlt im Release
+- `.next/static` oder das Standalone-`node_modules` fehlen im aktiven Release
 
 ### Ursache
 
-- pro Release wird ein weiteres vollständiges `node_modules` angelegt
+- der Release wurde nicht mit dem Standalone-Output ausgeliefert
+- der Upload hat nur Teile von `.next` statt des Runtime-Artefakts übertragen
 
 ### Behebung
 
-- bestehende produktive `node_modules` für den Laufzeitbetrieb per Symlink wiederverwenden
+- lokalen Build erneut erzeugen
+- `.next/standalone` in den Release-Root entpacken
+- `.next/static` zusaetzlich nach `release/.next/static` uebertragen
+- vor dem Umschalten `server.js`, `.next/static`, `node_modules/` und `node_modules/@prisma/client` pruefen
 
-## Problem: Turbopack-Server-Build mit ausgelagertem `node_modules` scheitert
+## Problem: Altes externes-`node_modules`-Modell mischt sich noch in die Laufzeit
 
 ### Symptom
 
-- Buildfehler mit Hinweis auf ungültigen Symlink außerhalb des Filesystem-Roots
+- alte Releases enthalten `node_modules`-Symlinks auf andere Releases
+- ein Neustart haengt von frueheren Releases ab
+- der aktive Release ist nicht aus sich selbst heraus startfaehig
 
 ### Ursache
 
-- Symlinktes `node_modules` ist für diesen Build-Pfad ungeeignet
+- Altlast aus dem frueheren Runtime-Modell
+- versteckte Abhaengigkeit zu einer historischen Release-Kette
 
 ### Behebung
 
-- keinen Turbopack-Server-Build auf Basis des Laufzeit-Symlinks fahren
-- stattdessen lokalen Build plus Laufzeit-Symlink verwenden
+- aktiven Release auf echte Standalone-Artefakte umstellen
+- keine externe produktive `node_modules`-Basis mehr als Standard voraussetzen
+- alte Symlink-Ketten nur noch als Rollback-Artefakte behandeln oder bereinigen
 
 ## Problem: `/login` funktioniert, aber Auth- oder Server-Routen liefern `500`
 
@@ -73,9 +83,9 @@ curl -I --max-time 20 https://kicktipp.schultypografie.de/dashboard
 
 ### Bekannte Ursache
 
-Bei lokal erzeugten Turbopack-Artefakten kann im Release ein Prisma-Runtime-Link fehlen.
+Im Altmodell aus lokalem `.next` plus externer Runtime konnten Prisma-Runtime-Module im Release fehlen. AP2 stellt deshalb auf Standalone-Artefakte um, damit dieser Hotfix im Standardpfad entfaellt.
 
-Typischer Fehler im Log:
+Typischer Fehler im alten Modell:
 
 ```text
 Failed to load external module @prisma/client-<hash>/runtime/client
@@ -83,18 +93,11 @@ Failed to load external module @prisma/client-<hash>/runtime/client
 
 ### Behebung
 
-```bash
-ssh kicktipp@regulus.uberspace.de
+- sicherstellen, dass der Release aus `.next/standalone` gestartet wird
+- aktiven Release nicht mit externem `node_modules` mischen
+- Deploy erneut mit Standalone-Upload fahren
 
-rel=/home/kicktipp/releases/kicktipp-<timestamp>
-mkdir -p "$rel/.next/node_modules/@prisma"
-rm -f "$rel/.next/node_modules/@prisma/client-<hash>"
-ln -s ../../../node_modules/@prisma/client "$rel/.next/node_modules/@prisma/client-<hash>"
-
-supervisorctl restart kicktipp
-```
-
-Danach prüfen:
+Danach pruefen:
 
 ```bash
 curl -I --max-time 20 https://kicktipp.schultypografie.de/api/auth/signin
@@ -131,6 +134,28 @@ Erwartet:
 ### Zusatzhinweis
 
 Da der Credentials-Provider direkt gegen die Datenbank prüft, ist ein Loginfehler oft ein Datenbank- oder Datenproblem, nicht nur ein Frontend-Problem.
+
+## Problem: Funktionale Verifikation scheitert nach erfolgreichem Smoke-Check
+
+### Typische Symptome
+
+- `verify-functional.sh` bricht bei `credentials login` mit `401` ab
+- `/dashboard` oder `/admin/benutzer` liefern nach Login nicht `200`
+- die Verifikation bricht beim reversiblen Schreibtest ab
+
+### Pruefpunkte
+
+- wurde der Verifikationslauf mit expliziten `VERIFY_LOGIN_*`-Werten gegen veraltete oder falsche Zugangsdaten gestartet
+- kann das Skript auf dem Zielhost temporaer einen Verifikationsbenutzer in der Datenbank anlegen und wieder entfernen
+- existiert ein aktiver Spieltag fuer den bevorzugten Tipp-Schreibtest
+- ist der Datenbankzugriff aus dem aktiven Release ueber `DATABASE_URL` intakt
+
+### Behebung
+
+- Funktionstest ohne explizite Login-Daten erneut starten, damit ein temporaerer Admin-Benutzer automatisch angelegt wird
+- bei Fehlschlag des Tipp-Schreibtests pruefen, ob aktive Spieltage und Matches vorhanden sind
+- bei Datenbankfehlern zuerst `DATABASE_URL` und die Erreichbarkeit des MySQL-Servers validieren
+- Deploy nicht bereinigen; Rollback-Kandidaten erhalten, bis der Funktionstest grün ist
 
 ## Problem: Daten nach Import oder Restore unplausibel
 

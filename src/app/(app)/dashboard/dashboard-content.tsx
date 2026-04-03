@@ -138,6 +138,7 @@ type TabValue = 'spiele' | 'tabelle' | 'stats'
 type PlaySubtabValue = 'matches' | 'tips'
 type TipsSortKey = 'matchDate' | 'fixture' | 'result'
 type SortDirection = 'asc' | 'desc'
+type ComparisonState = 'locked' | 'field' | 'settled'
 
 const tabDefs: { value: TabValue; label: string; mobileLabel: string; icon: React.ReactNode }[] = [
   { value: 'spiele',  label: 'Spiele & Tipps', mobileLabel: 'Spiele',     icon: <IconBallFootball className="h-3.5 w-3.5" strokeWidth={1.5} /> },
@@ -149,6 +150,238 @@ const playSubtabs: { value: PlaySubtabValue; label: string }[] = [
   { value: 'matches', label: 'Spiele' },
   { value: 'tips', label: 'Tipps' },
 ]
+
+function formatTipLabel(tip: Pick<TipEntry, 'homeScore' | 'awayScore'>) {
+  return `${tip.homeScore}:${tip.awayScore}`
+}
+
+function summarizeTipGroups(tips: TipEntry[]) {
+  const counts = new Map<string, number>()
+
+  for (const tip of tips) {
+    const key = formatTipLabel(tip)
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+
+  const sorted = [...counts.entries()].sort((a, b) => {
+    if (b[1] !== a[1]) return b[1] - a[1]
+    return a[0].localeCompare(b[0], 'de')
+  })
+
+  const [top, second] = sorted
+  const uniqueLeader = Boolean(top) && (!second || top[1] > second[1])
+
+  return {
+    counts,
+    total: tips.length,
+    topLabel: uniqueLeader ? top[0] : null,
+    topCount: uniqueLeader ? top[1] : 0,
+  }
+}
+
+function getComparisonSummary({
+  tips,
+  currentUserId,
+  deadlinePassed,
+  hasResult,
+}: {
+  tips: Record<string, TipEntry>
+  currentUserId: string
+  deadlinePassed: boolean
+  hasResult: boolean
+}) {
+  const myTip = tips[currentUserId] ?? null
+  const allTips = Object.values(tips)
+  const grouped = summarizeTipGroups(allTips)
+
+  if (!deadlinePassed) {
+    return {
+      state: 'locked' as ComparisonState,
+      eyebrow: 'Vergleich',
+      title: 'Vergleich öffnet nach Tippschluss',
+      detail: myTip
+        ? `Dein Tipp ${formatTipLabel(myTip)} bleibt bis dahin der einzige sichtbare Bezugspunkt.`
+        : 'Bis zum Tippschluss bleibt das Feld verborgen. Sichtbar wird nur dein eigener Tipp.',
+      tone: 'slate' as const,
+      myTip,
+      fieldLeader: null,
+    }
+  }
+
+  const fieldLeader = grouped.topLabel && grouped.topCount >= 2
+    ? { label: grouped.topLabel, count: grouped.topCount }
+    : null
+  const matchingCount = myTip ? grouped.counts.get(formatTipLabel(myTip)) ?? 0 : 0
+
+  if (!hasResult) {
+    if (!myTip) {
+      return {
+        state: 'field' as ComparisonState,
+        eyebrow: 'Dein Tipp im Feld',
+        title: 'Noch kein eigener Tipp im Vergleich',
+        detail: fieldLeader
+          ? `Feldtrend aktuell: ${fieldLeader.label} von ${fieldLeader.count} Spielern.`
+          : grouped.total > 0
+            ? 'Das Feld ist noch ohne klaren Schwerpunkt.'
+            : 'Noch keine sichtbaren Feldtendenzen.',
+        tone: 'slate' as const,
+        myTip,
+        fieldLeader,
+      }
+    }
+
+    const myLabel = formatTipLabel(myTip)
+    const detailParts: string[] = []
+
+    if (matchingCount >= 2) {
+      detailParts.push(`${matchingCount} Spieler liegen auf ${myLabel}.`)
+    } else {
+      detailParts.push(`Dein Tipp ${myLabel} steht aktuell eher allein.`)
+    }
+
+    if (fieldLeader && fieldLeader.label !== myLabel) {
+      detailParts.push(`Feldtrend ist ${fieldLeader.label}.`)
+      return {
+        state: 'field' as ComparisonState,
+        eyebrow: 'Dein Tipp im Feld',
+        title: 'Du weichst vom Feldtrend ab',
+        detail: detailParts.join(' '),
+        tone: 'amber' as const,
+        myTip,
+        fieldLeader,
+      }
+    }
+
+    if (fieldLeader && fieldLeader.label === myLabel) {
+      detailParts.push('Du liegst auf dem aktuell häufigsten Tipp.')
+      return {
+        state: 'field' as ComparisonState,
+        eyebrow: 'Dein Tipp im Feld',
+        title: 'Dein Tipp entspricht dem Feldtrend',
+        detail: detailParts.join(' '),
+        tone: 'blue' as const,
+        myTip,
+        fieldLeader,
+      }
+    }
+
+    return {
+      state: 'field' as ComparisonState,
+      eyebrow: 'Dein Tipp im Feld',
+      title: matchingCount >= 2 ? 'Dein Tipp hat Rückendeckung' : 'Dein Tipp bleibt eine Einzelmeinung',
+      detail: detailParts.join(' '),
+      tone: matchingCount >= 2 ? 'blue' as const : 'slate' as const,
+      myTip,
+      fieldLeader,
+    }
+  }
+
+  const bestPoints = Math.max(0, ...allTips.map((tip) => tip.points ?? 0))
+  const myPoints = myTip?.points ?? null
+  const distanceToBest = myPoints === null ? null : Math.max(0, bestPoints - myPoints)
+  const settledDetail: string[] = []
+
+  if (fieldLeader) {
+    settledDetail.push(`Feldtrend war ${fieldLeader.label}.`)
+  }
+
+  if (!myTip) {
+    return {
+      state: 'settled' as ComparisonState,
+      eyebrow: 'Dein Ergebnis im Vergleich',
+      title: 'Kein eigener Tipp zur Wertung',
+      detail: bestPoints > 0
+        ? `Im Feld wurden bis zu ${bestPoints} Punkte erreicht.`
+        : 'Dieses Spiel hat im Feld keinen positiven Bestwert erzeugt.',
+      tone: 'slate' as const,
+      myTip,
+      fieldLeader,
+    }
+  }
+
+  if (bestPoints === 0) {
+    settledDetail.push('In diesem Spiel hat niemand Punkte geholt.')
+    return {
+      state: 'settled' as ComparisonState,
+      eyebrow: 'Dein Ergebnis im Vergleich',
+      title: 'Kein Tipp lag im Vorteil',
+      detail: settledDetail.join(' '),
+      tone: 'slate' as const,
+      myTip,
+      fieldLeader,
+    }
+  }
+
+  if (myPoints === bestPoints && myPoints > 0) {
+    settledDetail.push(`Du liegst mit ${myPoints} Punkten am Bestwert.`)
+    return {
+      state: 'settled' as ComparisonState,
+      eyebrow: 'Dein Ergebnis im Vergleich',
+      title: 'Du liegst am Bestwert',
+      detail: settledDetail.join(' '),
+      tone: 'blue' as const,
+      myTip,
+      fieldLeader,
+    }
+  }
+
+  if ((myPoints ?? 0) === 0) {
+    settledDetail.push(`Bestwert im Feld: ${bestPoints} Punkte.`)
+    return {
+      state: 'settled' as ComparisonState,
+      eyebrow: 'Dein Ergebnis im Vergleich',
+      title: 'Du bleibst in diesem Spiel ohne Treffer',
+      detail: settledDetail.join(' '),
+      tone: 'amber' as const,
+      myTip,
+      fieldLeader,
+    }
+  }
+
+  settledDetail.push(`Dir fehlen ${distanceToBest} Punkte auf den Bestwert von ${bestPoints}.`)
+  return {
+    state: 'settled' as ComparisonState,
+    eyebrow: 'Dein Ergebnis im Vergleich',
+    title: 'Du liegst unter dem Bestwert',
+    detail: settledDetail.join(' '),
+    tone: 'slate' as const,
+    myTip,
+    fieldLeader,
+  }
+}
+
+function ComparisonHeadline({
+  summary,
+}: {
+  summary: ReturnType<typeof getComparisonSummary>
+}) {
+  const toneClass = {
+    blue: 'border-primary/15 bg-primary/[0.07] text-primary',
+    amber: 'border-amber-400/20 bg-amber-400/[0.08] text-amber-600 dark:text-amber-400',
+    slate: 'border-border/70 bg-background/65 text-foreground',
+  }[summary.tone]
+
+  return (
+    <div className={cn('rounded-xl border px-3 py-2.5', toneClass)}>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] opacity-70">
+          {summary.eyebrow}
+        </span>
+        {summary.fieldLeader && summary.state !== 'locked' && (
+          <span className="rounded-full border border-current/15 bg-background/55 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]">
+            Feldtrend {summary.fieldLeader.label}
+          </span>
+        )}
+      </div>
+      <p className="mt-1 text-sm font-semibold leading-5">
+        {summary.title}
+      </p>
+      <p className="mt-1 text-xs leading-5 opacity-80">
+        {summary.detail}
+      </p>
+    </div>
+  )
+}
 
 function AnimatedTabsList({
   tabs,
@@ -571,9 +804,9 @@ function TipsMatrix({
         </div>
       </div>
       <Table className="min-w-max">
-        <TableHeader className="[&_th]:sticky [&_th]:top-0 [&_th]:z-10 [&_th]:bg-transparent">
+        <TableHeader className="sm:[&_th]:sticky sm:[&_th]:top-0 sm:[&_th]:z-10 sm:[&_th]:bg-background/95 sm:[&_th]:backdrop-blur-xl">
           <TableRow>
-            <TableHead className="sticky left-0 z-30 min-w-[8.75rem] border-r border-border/50 px-2 sm:min-w-[16rem] sm:px-2.5">
+            <TableHead className="min-w-[8.75rem] border-r border-border/50 px-2 sm:sticky sm:left-0 sm:z-30 sm:min-w-[16rem] sm:bg-background/95 sm:px-2.5">
               Spiel
             </TableHead>
             {users.map((user, index) => {
@@ -583,14 +816,15 @@ function TipsMatrix({
                 <TableHead
                   key={user.id}
                   className={cn(
-                    'min-w-[5.1rem] border-r border-border/50 bg-transparent px-2 text-center',
+                    'min-w-[5.1rem] border-r border-border/50 px-2 py-2 text-center align-middle sm:bg-background/95',
                     index === 0 && 'border-l border-border/50',
+                    isMe && 'sm:bg-[color-mix(in_oklab,var(--color-primary)_10%,var(--color-background))]',
                   )}
                 >
                   <Link
                     href={`/spieler/${user.nickname}`}
                     className={cn(
-                      'mx-auto flex w-fit max-w-full flex-col items-center gap-1 transition-colors hover:text-foreground',
+                      'mx-auto flex w-full max-w-[7rem] flex-col items-center gap-0.5 transition-colors hover:text-foreground',
                       isMe ? 'text-primary' : 'text-muted-foreground',
                     )}
                   >
@@ -602,11 +836,20 @@ function TipsMatrix({
                       ) : (
                         <span className="h-2.5 w-2.5 rounded-full bg-border" />
                       )}
-                      {isMe && <span className="text-[10px] font-bold uppercase tracking-[0.16em]">Du</span>}
+                      <span className={cn('max-w-[4.5rem] truncate text-[11px] font-semibold normal-case tracking-normal', isMe && 'text-foreground')}>
+                        {user.nickname}
+                      </span>
+                      {isMe && (
+                        <span className="rounded-full border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-primary">
+                          Du
+                        </span>
+                      )}
                     </span>
-                    <span className={cn('max-w-full truncate text-[11px] font-semibold normal-case tracking-normal', isMe && 'text-foreground')}>
-                      {user.nickname}
-                    </span>
+                    {isMe && (
+                      <span className="text-[9px] font-medium uppercase tracking-[0.12em] text-primary/75">
+                        Bezugspunkt
+                      </span>
+                    )}
                   </Link>
                 </TableHead>
               )
@@ -619,11 +862,18 @@ function TipsMatrix({
             const hasResult = match.homeScore !== null
             const homeClub = getClubByName(match.homeTeam)
             const awayClub = getClubByName(match.awayTeam)
+            const summary = getComparisonSummary({
+              tips,
+              currentUserId,
+              deadlinePassed,
+              hasResult,
+            })
 
             return (
               <TableRow key={match.id} className="group odd:bg-gray-500/[0.035]">
-                <TableCell className="sticky left-0 z-20 min-w-[8.75rem] border-r border-border/50 px-2 py-2 sm:min-w-[16rem] sm:px-2.5">
+                <TableCell className="min-w-[8.75rem] border-r border-border/50 px-2 py-2 sm:sticky sm:left-0 sm:z-20 sm:min-w-[16rem] sm:bg-background sm:px-2.5">
                   <div className="space-y-2">
+                    <ComparisonHeadline summary={summary} />
                     <div className="text-[11px] text-muted-foreground tabular-nums">
                       {new Date(match.matchDate).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' })}{' '}
                       {new Date(match.matchDate).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
@@ -666,24 +916,45 @@ function TipsMatrix({
                   const tip = tips[user.id]
                   const showTip = deadlinePassed || user.id === currentUserId
                   const isMe = user.id === currentUserId
+                  const myTipLabel = summary.myTip ? formatTipLabel(summary.myTip) : null
+                  const tipLabel = tip ? formatTipLabel(tip) : null
+                  const matchesMine = Boolean(
+                    deadlinePassed &&
+                    myTipLabel &&
+                    tipLabel &&
+                    tipLabel === myTipLabel &&
+                    !isMe,
+                  )
+                  const divergesFromMine = Boolean(
+                    deadlinePassed &&
+                    myTipLabel &&
+                    tipLabel &&
+                    tipLabel !== myTipLabel &&
+                    !isMe,
+                  )
 
                   return (
                     <TableCell
                       key={user.id}
                       className={cn(
-                        'min-w-[5.1rem] border-r border-border/50 px-2 py-2 text-center',
+                        'min-w-[5.1rem] border-r border-border/50 px-2 py-2 text-center transition-colors',
                         index === 0 && 'border-l border-border/50',
+                        isMe && 'bg-primary/[0.08]',
+                        matchesMine && 'bg-primary/[0.05]',
+                        divergesFromMine && 'bg-background/25',
                       )}
                     >
                       {showTip && tip ? (
                         <div className="flex flex-col items-center gap-1">
                           <span
                             className={cn(
-                              'inline-flex min-w-[3.15rem] items-center justify-center rounded-md border border-transparent px-1.5 py-0.5 text-sm font-bold tabular-nums',
+                              'inline-flex min-w-[3.15rem] items-center justify-center rounded-md border border-transparent px-1.5 py-0.5 text-sm font-bold tabular-nums transition-colors',
                               tip.isJoker
                                 ? 'bg-amber-300/12 text-amber-500'
                                 : 'bg-transparent text-foreground',
                               isMe && !tip.isJoker && 'text-primary',
+                              matchesMine && !tip.isJoker && 'border-primary/20 bg-primary/[0.08]',
+                              divergesFromMine && 'text-muted-foreground',
                             )}
                           >
                             {tip.homeScore}:{tip.awayScore}

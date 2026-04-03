@@ -4,12 +4,14 @@
 
 Die aktuelle Produktion läuft als `supervisord`-Programm mit dem Namen `kicktipp`.
 
+Der Service startet den Standalone-Server des aktiven Releases. Ein produktiver Release muss deshalb seine komplette Node-Laufzeit selbst mitbringen.
+
 Versionierte Service-Definition:
 
 ```ini
 [program:kicktipp]
 directory=/home/kicktipp/kicktipp-deluxe
-command=/usr/bin/node_modules/.bin/next start --port 3000
+command=/usr/bin/node /home/kicktipp/kicktipp-deluxe/server.js
 autostart=yes
 autorestart=yes
 startsecs=15
@@ -33,6 +35,8 @@ Im Normalbetrieb gilt:
 - aktiver App-Pfad: `/home/kicktipp/kicktipp-deluxe`
 - Release-Verzeichnisse: `/home/kicktipp/releases/kicktipp-*`
 - vorheriger aktiver Stand: `/home/kicktipp/kicktipp-deluxe-predeploy-*`
+- Standalone-Entrypoint im aktiven Release: `/home/kicktipp/kicktipp-deluxe/server.js`
+- Standalone-Static-Dateien: `/home/kicktipp/kicktipp-deluxe/.next/static`
 - Supervisor-Logs:
   - `/home/kicktipp/logs/supervisord/kicktipp.log`
   - `/home/kicktipp/logs/supervisord/kicktipp.err`
@@ -64,10 +68,13 @@ supervisorctl start kicktipp
 - ein kurzer Startvorlauf wegen `startsecs=15`
 - `307`-Redirects auf geschützten Seiten ohne Session
 - erfolgreiche Antworten auf `/login` und `/api/auth/signin`
+- erfolgreicher Session-Aufbau ueber den Credentials-Login
+- authentifizierter Zugriff auf Dashboard und Admin-Bereich
 
 ## Was ein Warnsignal ist
 
 - `BACKOFF`, `FATAL` oder dauerhaftes Neustarten im Supervisor-Status
+- fehlendes `server.js` oder fehlende `.next/static` im aktiven Release
 - `500` auf `/api/auth/signin`
 - `500` auf Server-Routen nach ansonsten erfolgreichem Start
 - App startet, aber geschützte Seiten oder Auth-Endpunkte brechen weg
@@ -92,5 +99,6 @@ Betrieblich relevant:
 3. `curl -I --max-time 20 https://kicktipp.schultypografie.de/api/auth/signin`
 4. Supervisor-Logs prüfen
 5. aktives Release und Symlink-Ziel prüfen
+6. Standalone-Entrypoint und Static-Artefakte im aktiven Release prüfen
 
 Wenn `/login` funktioniert, aber Server-Routen oder Auth-Endpunkte `500` liefern, ist ein Release-spezifisches Laufzeitproblem wahrscheinlich, nicht zwingend ein kompletter Prozessausfall.

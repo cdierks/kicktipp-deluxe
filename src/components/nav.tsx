@@ -125,7 +125,7 @@ export function Nav() {
       className="fixed inset-x-3 z-50 mx-auto max-w-7xl"
       style={{ top: 'calc(env(safe-area-inset-top) + 0.9rem)' }}
     >
-      <div className="h-16 rounded-[1.4rem] border border-border/48 bg-card/34 px-3 shadow-[0_12px_34px_rgb(15_23_42_/_0.07)] backdrop-blur-2xl md:px-4 dark:bg-card/22 dark:shadow-[0_18px_40px_rgb(0_0_0_/_0.20)]">
+      <div className="h-16 rounded-[1.4rem] border border-border/80 bg-card/34 px-3 shadow-[0_12px_34px_rgb(15_23_42_/_0.07)] backdrop-blur-2xl md:px-4 dark:border-border/45 dark:bg-card/22 dark:shadow-[0_18px_40px_rgb(0_0_0_/_0.20)]">
         <div className="grid h-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 lg:grid-cols-[minmax(16rem,1fr)_auto_minmax(16rem,1fr)]">
           <div className="min-w-0">
             <BrandLockup className="flex min-w-0 shrink-0" compact />
@@ -135,7 +135,7 @@ export function Nav() {
             variants={panelEnter}
             initial="hidden"
             animate="show"
-            className="hidden items-center gap-1 rounded-2xl border border-white/24 bg-background/34 p-1 shadow-[0_1px_0_rgb(255_255_255_/_0.24),0_-1px_0_rgb(15_23_42_/_0.12)] backdrop-blur-xl lg:flex dark:border-white/12 dark:bg-background/24 dark:shadow-[0_1px_0_rgb(255_255_255_/_0.08),0_-1px_0_rgb(0_0_0_/_0.28)]"
+            className="hidden items-center gap-1 rounded-2xl border border-border/75 bg-background/34 p-1 shadow-[0_1px_0_rgb(255_255_255_/_0.24),0_-1px_0_rgb(15_23_42_/_0.12)] backdrop-blur-xl lg:flex dark:border-white/12 dark:bg-background/24 dark:shadow-[0_1px_0_rgb(255_255_255_/_0.08),0_-1px_0_rgb(0_0_0_/_0.28)]"
           >
             {allNavItems.map((item) => {
               const active = pathname === item.href || pathname.startsWith(item.href + '/')
