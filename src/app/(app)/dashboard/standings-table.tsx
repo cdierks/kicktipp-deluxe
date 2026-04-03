@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ClubIcon } from '@/components/club-icon'
+import { getClubByName } from '@/lib/clubs'
 import { fetchTable, OpenligaTable } from '@/lib/openligadb'
 import { cn } from '@/lib/utils'
 import {
@@ -76,6 +78,7 @@ export function StandingsTable({ year }: { year: string }) {
             const startsGroup = q?.color !== prevQ
             const endsGroup = q?.color !== nextQ
             const diff = team.goalDiff
+            const club = getClubByName(team.teamName)
 
             return (
               <TableRow key={team.teamInfoId}>
@@ -100,8 +103,12 @@ export function StandingsTable({ year }: { year: string }) {
                 <TableCell className="font-sans font-medium text-sm">
                   <div className="flex items-center gap-2">
                     {team.teamIconUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={team.teamIconUrl} alt="" className="h-4 w-4 object-contain shrink-0" />
+                      <ClubIcon
+                        src={club?.iconUrl ?? team.teamIconUrl}
+                        fallbackSrc={club?.iconSourceUrl ?? team.teamIconUrl}
+                        label={club?.name ?? (team.shortName || team.teamName)}
+                        className="h-4 w-4 object-contain shrink-0"
+                      />
                     )}
                     {team.shortName || team.teamName}
                   </div>

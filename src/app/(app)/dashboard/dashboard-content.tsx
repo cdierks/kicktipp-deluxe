@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { ClubIcon } from '@/components/club-icon'
 import {
   Table,
   TableBody,
@@ -418,8 +419,8 @@ function MatchOverviewRow({
   const hasResult = match.homeScore !== null
   const isLive = match.status === 'ACTIVE'
   const matchDate = new Date(match.matchDate)
-  const homeIcon = getClubByName(match.homeTeam)?.iconUrl
-  const awayIcon = getClubByName(match.awayTeam)?.iconUrl
+  const homeClub = getClubByName(match.homeTeam)
+  const awayClub = getClubByName(match.awayTeam)
   const myTip = tips[currentUserId]
   const bestPoints =
     deadlinePassed && hasResult
@@ -436,8 +437,8 @@ function MatchOverviewRow({
         <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
           <span className="flex-1 truncate text-right text-sm font-semibold">{match.homeTeam}</span>
           <div className="flex shrink-0 items-center gap-2">
-            {homeIcon
-              ? <img src={homeIcon} alt="" className="h-6 w-6 object-contain" />
+            {homeClub
+              ? <ClubIcon src={homeClub.iconUrl} fallbackSrc={homeClub.iconSourceUrl} label={match.homeTeam} className="h-6 w-6 object-contain" />
               : <span className="h-6 w-6" />}
             <div className="relative flex items-center">
               <span className={cn(
@@ -448,8 +449,8 @@ function MatchOverviewRow({
               </span>
               {isLive && <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-emerald-500 animate-live-pulse" />}
             </div>
-            {awayIcon
-              ? <img src={awayIcon} alt="" className="h-6 w-6 object-contain" />
+            {awayClub
+              ? <ClubIcon src={awayClub.iconUrl} fallbackSrc={awayClub.iconSourceUrl} label={match.awayTeam} className="h-6 w-6 object-contain" />
               : <span className="h-6 w-6" />}
           </div>
           <span className="flex-1 truncate text-sm font-semibold">{match.awayTeam}</span>
@@ -595,7 +596,7 @@ function TipsMatrix({
                   >
                     <span className="flex items-center gap-1.5">
                       {club?.iconUrl ? (
-                        <img src={club.iconUrl} alt="" className="h-3.5 w-3.5 object-contain" />
+                        <ClubIcon src={club.iconUrl} fallbackSrc={club.iconSourceUrl} label={club.name} className="h-3.5 w-3.5 object-contain" />
                       ) : user.color ? (
                         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: user.color }} />
                       ) : (
@@ -616,8 +617,8 @@ function TipsMatrix({
           {rows.map((match) => {
             const tips = tipIndex[match.id] ?? {}
             const hasResult = match.homeScore !== null
-            const homeIcon = getClubByName(match.homeTeam)?.iconUrl
-            const awayIcon = getClubByName(match.awayTeam)?.iconUrl
+            const homeClub = getClubByName(match.homeTeam)
+            const awayClub = getClubByName(match.awayTeam)
 
             return (
               <TableRow key={match.id} className="group odd:bg-gray-500/[0.035]">
@@ -628,7 +629,7 @@ function TipsMatrix({
                       {new Date(match.matchDate).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                     <div className="flex items-center justify-center gap-1.5 sm:hidden">
-                      {homeIcon ? <img src={homeIcon} alt="" className="h-5 w-5 shrink-0 object-contain" /> : <span className="h-5 w-5 shrink-0" />}
+                      {homeClub ? <ClubIcon src={homeClub.iconUrl} fallbackSrc={homeClub.iconSourceUrl} label={match.homeTeam} className="h-5 w-5 shrink-0 object-contain" /> : <span className="h-5 w-5 shrink-0" />}
                       <span
                         className={cn(
                           'shrink-0 rounded-lg px-1.5 py-0.5 text-sm font-bold tabular-nums',
@@ -637,16 +638,16 @@ function TipsMatrix({
                       >
                         {hasResult ? `${match.homeScore}:${match.awayScore}` : '–:–'}
                       </span>
-                      {awayIcon ? <img src={awayIcon} alt="" className="h-5 w-5 shrink-0 object-contain" /> : <span className="h-5 w-5 shrink-0" />}
+                      {awayClub ? <ClubIcon src={awayClub.iconUrl} fallbackSrc={awayClub.iconSourceUrl} label={match.awayTeam} className="h-5 w-5 shrink-0 object-contain" /> : <span className="h-5 w-5 shrink-0" />}
                     </div>
                     <div className="hidden items-center justify-between gap-3 sm:flex">
                       <div className="min-w-0 space-y-1 text-sm font-semibold">
                         <div className="flex min-w-0 items-center gap-2">
-                          {homeIcon ? <img src={homeIcon} alt="" className="h-5 w-5 shrink-0 object-contain" /> : <span className="h-5 w-5 shrink-0" />}
+                          {homeClub ? <ClubIcon src={homeClub.iconUrl} fallbackSrc={homeClub.iconSourceUrl} label={match.homeTeam} className="h-5 w-5 shrink-0 object-contain" /> : <span className="h-5 w-5 shrink-0" />}
                           <span className="truncate">{match.homeTeam}</span>
                         </div>
                         <div className="flex min-w-0 items-center gap-2">
-                          {awayIcon ? <img src={awayIcon} alt="" className="h-5 w-5 shrink-0 object-contain" /> : <span className="h-5 w-5 shrink-0" />}
+                          {awayClub ? <ClubIcon src={awayClub.iconUrl} fallbackSrc={awayClub.iconSourceUrl} label={match.awayTeam} className="h-5 w-5 shrink-0 object-contain" /> : <span className="h-5 w-5 shrink-0" />}
                           <span className="truncate">{match.awayTeam}</span>
                         </div>
                       </div>
@@ -765,8 +766,7 @@ function PointsTable({
                     style={{ backgroundColor: u.color }}
                   />
                 ) : club?.iconUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={club.iconUrl} alt="" className="h-4 w-4 shrink-0 object-contain" />
+                  <ClubIcon src={club.iconUrl} fallbackSrc={club.iconSourceUrl} label={club.name} className="h-4 w-4 shrink-0 object-contain" />
                 ) : (
                   <span className="h-3.5 w-3.5 shrink-0" />
                 )}

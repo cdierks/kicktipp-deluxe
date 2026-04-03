@@ -21,11 +21,15 @@ Diese Anleitung beschreibt den produktiven Deploy-Workflow für `kicktipp.schult
 ## Wichtige Realität auf diesem Host
 
 - `npm ci` kann auf Uberspace wegen Speicherlimits sterben.
-- Der Build lief erfolgreich, indem die bestehenden produktiven `node_modules` in das neue Release kopiert wurden.
-- Deshalb gilt auf diesem Host aktuell:
-  - Erst Release hochladen
-  - Dann produktive `node_modules` in das Release kopieren
-  - Danach `npm run build` und `npm run db:migrate`
+- Ein zweites vollständiges `node_modules` pro Release kann zusätzlich an der Disk-Quota scheitern.
+- `next build` auf dem Server ist deshalb nicht mehr der Standardpfad.
+- Der robuste Deploy-Weg auf diesem Host ist aktuell:
+  - Release-Quellstand hochladen
+  - Produktionsbuild lokal erzeugen
+  - nur die produktionsrelevanten `.next`-Artefakte hochladen
+  - Release auf die bestehenden produktiven `node_modules` zeigen lassen
+  - danach `supervisorctl` umschalten
+- Bei Turbopack-/Prisma-Builds kann zusätzlich ein Prisma-Runtime-Link im Release fehlen. Das ist unten dokumentiert.
 
 ## 1. Serverzustand prüfen
 
@@ -87,7 +91,7 @@ Beispiel-Release-Pfad:
 
 ## 4. Build auf dem Server
 
-Auf diesem Uberspace nicht mit frischem `npm ci` starten, wenn es bereits einmal an Speichergrenzen gescheitert ist.
+Nur verwenden, wenn klar ist, dass ausreichend RAM und Disk-Quota frei sind.
 
 ```bash
 ssh kicktipp@regulus.uberspace.de
@@ -110,6 +114,82 @@ npm ci
 ```
 
 Wenn der Prozess mit `Killed` endet, wieder auf das Kopieren von `~/kicktipp-deluxe/node_modules` zurückgehen.
+
+## 4a. Bevorzugter Produktionspfad: lokaler Build, reduzierter `.next`-Upload
+
+Lokal:
+
+```bash
+npm run build
+```
+
+Danach nur die produktionsrelevanten `.next`-Artefakte hochladen, nicht den Dev-/Cache-Ballast:
+
+```bash
+tar \
+  --exclude='.next/dev' \
+  --exclude='.next/cache' \
+  --exclude='.next/standalone' \
+  --exclude='.next/build' \
+  --exclude='.next/node_modules' \
+  -czf - .next \
+| ssh kicktipp@regulus.uberspace.de "rel=\$HOME/releases/kicktipp-<timestamp>; rm -rf \$rel/.next; tar -xzf - -C \$rel"
+```
+
+Danach den Release auf die bestehenden produktiven Abhängigkeiten zeigen lassen:
+
+```bash
+ssh kicktipp@regulus.uberspace.de
+
+rel=/home/kicktipp/releases/kicktipp-<timestamp>
+current=$(readlink -f ~/kicktipp-deluxe)
+
+rm -rf "$rel/node_modules"
+ln -s "$current/node_modules" "$rel/node_modules"
+```
+
+Wichtig:
+
+- Kein zweites komplettes `node_modules` in den Release kopieren, wenn die Disk-Quota knapp ist.
+- Kein `node_modules`-Symlink für einen Server-Build mit Turbopack verwenden; das kann mit
+  `Symlink node_modules is invalid, it points out of the filesystem root`
+  scheitern.
+- Der Symlink ist für den Laufzeitbetrieb nach lokalem Build geeignet, nicht als Ersatz für einen Turbopack-Server-Build.
+
+## 4b. Prisma-Runtime-Fix für Turbopack-Builds
+
+Bei lokal gebauten Turbopack-Artefakten kann der Release nach dem Umschalten mit 500ern auf Server-Routen starten, obwohl `/login` noch funktioniert.
+
+Typischer Fehler im Supervisor-Log:
+
+```text
+Failed to load external module @prisma/client-<hash>/runtime/client
+```
+
+Dann im aktiven Release den fehlenden Prisma-Link ergänzen:
+
+```bash
+ssh kicktipp@regulus.uberspace.de
+
+rel=/home/kicktipp/releases/kicktipp-<timestamp>
+mkdir -p "$rel/.next/node_modules/@prisma"
+rm -f "$rel/.next/node_modules/@prisma/client-<hash>"
+ln -s ../../../node_modules/@prisma/client "$rel/.next/node_modules/@prisma/client-<hash>"
+
+supervisorctl restart kicktipp
+```
+
+Danach prüfen:
+
+```bash
+curl -I --max-time 20 https://kicktipp.schultypografie.de/api/auth/signin
+curl -I --max-time 20 https://kicktipp.schultypografie.de/dashboard
+```
+
+Erwartet:
+
+- `/api/auth/signin` liefert keinen `500` mehr
+- geschützte Seiten wie `/dashboard` liefern ohne Session korrekt `307` auf den Sign-in-Flow
 
 ## 5. Produktiv umschalten
 
@@ -134,12 +214,16 @@ Serverseitig:
 ```bash
 curl -I --max-time 20 http://127.0.0.1:3000/login
 curl -I --max-time 20 https://kicktipp.schultypografie.de/login
+curl -I --max-time 20 https://kicktipp.schultypografie.de/api/auth/signin
+curl -I --max-time 20 https://kicktipp.schultypografie.de/dashboard
 ```
 
 Erwartet:
 
 - lokaler Backend-Check: `HTTP/1.1 200 OK`
 - öffentliche URL: `HTTP/2 200`
+- `/api/auth/signin`: kein `500`
+- `/dashboard` ohne Session: `307` auf den Sign-in-Flow
 - `supervisorctl status kicktipp` zeigt `RUNNING`
 
 Danach manuell prüfen:
@@ -188,15 +272,14 @@ DB-Rollback nur verwenden, wenn wirklich Daten- oder Migrationsprobleme vorliege
 
 - Service-Datei: `/home/kicktipp/etc/services.d/kicktipp.ini`
 - Logs:
-  - `/home/kicktipp/logs/supervisord/kicktipp.log`
-  - `/home/kicktipp/logs/supervisord/kicktipp.err`
+  - `/home/kicktipp/logs/supervisord.log`
 - Produktive `.env`: `/home/kicktipp/kicktipp-deluxe/.env`
 - Release-Ordner: `/home/kicktipp/releases/`
 - Backups: `/home/kicktipp/backups/`
 
 ## 9. Aktuell zuletzt erfolgreich deployed
 
-- Release: `/home/kicktipp/releases/kicktipp-20260403-003441`
-- Vorheriger Stand: `/home/kicktipp/kicktipp-deluxe-predeploy-20260403-003715`
-- App-Backup: `/home/kicktipp/backups/kicktipp-app-20260403-003230.tar.gz`
-- DB-Backup: `/home/kicktipp/backups/kicktipp-db-20260403-003230.sql.gz`
+- Release: `/home/kicktipp/releases/kicktipp-20260403-142822`
+- Vorheriger produktiver Stand: `/home/kicktipp/releases/kicktipp-20260403-135359`
+- App-Backup: `/home/kicktipp/backups/kicktipp-app-20260403-143412.tar.gz`
+- DB-Backup: `/home/kicktipp/backups/kicktipp-db-20260403-143153.sql.gz`

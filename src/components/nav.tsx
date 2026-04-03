@@ -8,6 +8,7 @@ import { signOut, useSession } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
 import { BrandLockup } from '@/components/brand-lockup'
+import { ClubIcon } from '@/components/club-icon'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { getClubByName } from '@/lib/clubs'
 import { microHover, microPress, overlayEnter, panelEnter } from '@/lib/motion'
@@ -170,8 +171,7 @@ export function Nav() {
                   style={{ backgroundColor: session.user.color ?? 'var(--color-primary)' }}
                 >
                   {favoriteClub?.iconUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={favoriteClub.iconUrl} alt="" className="h-4 w-4 object-contain" />
+                    <ClubIcon src={favoriteClub.iconUrl} fallbackSrc={favoriteClub.iconSourceUrl} label={favoriteClub.name} className="h-4 w-4 object-contain" />
                   ) : (
                     <IconUser className="h-3.5 w-3.5 text-white" strokeWidth={1.5} />
                   )}

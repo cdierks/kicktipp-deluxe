@@ -17,6 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { ClubIcon } from '@/components/club-icon'
 import { CLUBS } from '@/lib/clubs'
 
 interface Props {
@@ -47,10 +48,10 @@ export function ClubCombobox({ value, onChange, name }: Props) {
             {selected ? (
               <span className="flex items-center gap-2 truncate">
                 {selected.iconUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <ClubIcon
                     src={selected.iconUrl}
-                    alt=""
+                    fallbackSrc={selected.iconSourceUrl}
+                    label={selected.name}
                     className="h-4 w-4 object-contain shrink-0"
                   />
                 )}
@@ -98,10 +99,10 @@ export function ClubCombobox({ value, onChange, name }: Props) {
                       className={cn('mr-2 h-4 w-4 shrink-0', club.name === value ? 'opacity-100' : 'opacity-0')}
                     />
                     {club.iconUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <ClubIcon
                         src={club.iconUrl}
-                        alt=""
+                        fallbackSrc={club.iconSourceUrl}
+                        label={club.name}
                         className="mr-2 h-4 w-4 object-contain shrink-0"
                       />
                     )}

@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
+import { ClubIcon } from '@/components/club-icon'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getClubByName } from '@/lib/clubs'
@@ -228,8 +229,7 @@ export default async function SpielerPage({
                 style={{ backgroundColor: playerColor }}
               >
                 {club?.iconUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={club.iconUrl} alt="" className="h-11 w-11 object-contain" />
+                  <ClubIcon src={club.iconUrl} fallbackSrc={club.iconSourceUrl} label={club.name} className="h-11 w-11 object-contain" />
                 ) : (
                   <IconUser className="h-9 w-9 text-white" />
                 )}
@@ -258,8 +258,7 @@ export default async function SpielerPage({
             {club ? (
               <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
                 <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-1.5">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={club.iconUrl} alt="" className="h-4.5 w-4.5 object-contain shrink-0" />
+                  <ClubIcon src={club.iconUrl} fallbackSrc={club.iconSourceUrl} label={club.name} className="h-4.5 w-4.5 object-contain shrink-0" />
                   <span className="font-medium text-foreground">{club.name}</span>
                   <span className="text-xs text-muted-foreground">BL{club.league}</span>
                 </span>

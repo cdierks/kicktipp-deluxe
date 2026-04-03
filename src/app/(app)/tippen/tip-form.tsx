@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { listStagger, microPress, panelEnter, statusPulse } from '@/lib/motion'
 import { toast } from 'sonner'
 import { submitAllTips } from '@/actions/tip.actions'
+import { ClubIcon } from '@/components/club-icon'
 import { cn } from '@/lib/utils'
 import { getClubByName } from '@/lib/clubs'
 import { IconCheck, IconCircleCheckFilled, IconLoader2, IconPokerChip, IconAlertTriangle } from '@/components/app-icons'
@@ -193,8 +194,8 @@ export function TipForm({ matches, existingTips }: Props) {
               const isActiveJoker = jokerMatchId === match.id
               const isComplete = tip.home !== '' && tip.away !== ''
               const matchDate = new Date(match.matchDate)
-              const homeIcon = getClubByName(match.homeTeam)?.iconUrl
-              const awayIcon = getClubByName(match.awayTeam)?.iconUrl
+              const homeClub = getClubByName(match.homeTeam)
+              const awayClub = getClubByName(match.awayTeam)
 
               return (
                 <motion.li
@@ -213,16 +214,16 @@ export function TipForm({ matches, existingTips }: Props) {
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          {homeIcon
-                            ? <img src={homeIcon} alt="" className="h-5 w-5 shrink-0 object-contain" />
+                          {homeClub
+                            ? <ClubIcon src={homeClub.iconUrl} fallbackSrc={homeClub.iconSourceUrl} label={match.homeTeam} className="h-5 w-5 shrink-0 object-contain" />
                             : <span className="h-5 w-5 shrink-0" />}
                           <span className="min-w-0 text-sm font-semibold text-foreground break-words">
                             {match.homeTeam}
                           </span>
                         </div>
                         <div className="mt-1 flex items-center gap-2">
-                          {awayIcon
-                            ? <img src={awayIcon} alt="" className="h-5 w-5 shrink-0 object-contain" />
+                          {awayClub
+                            ? <ClubIcon src={awayClub.iconUrl} fallbackSrc={awayClub.iconSourceUrl} label={match.awayTeam} className="h-5 w-5 shrink-0 object-contain" />
                             : <span className="h-5 w-5 shrink-0" />}
                           <span className="min-w-0 text-sm font-semibold text-foreground break-words">
                             {match.awayTeam}
@@ -320,8 +321,8 @@ export function TipForm({ matches, existingTips }: Props) {
                       <span className="truncate text-right text-sm font-semibold text-foreground">
                         {match.homeTeam}
                       </span>
-                      {homeIcon
-                        ? <img src={homeIcon} alt="" className="h-6 w-6 shrink-0 object-contain" />
+                      {homeClub
+                        ? <ClubIcon src={homeClub.iconUrl} fallbackSrc={homeClub.iconSourceUrl} label={match.homeTeam} className="h-6 w-6 shrink-0 object-contain" />
                         : <span className="h-6 w-6 shrink-0" />}
                     </div>
 
@@ -384,8 +385,8 @@ export function TipForm({ matches, existingTips }: Props) {
                     </div>
 
                     <div className="flex min-w-0 flex-1 items-center gap-2">
-                      {awayIcon
-                        ? <img src={awayIcon} alt="" className="h-6 w-6 shrink-0 object-contain" />
+                      {awayClub
+                        ? <ClubIcon src={awayClub.iconUrl} fallbackSrc={awayClub.iconSourceUrl} label={match.awayTeam} className="h-6 w-6 shrink-0 object-contain" />
                         : <span className="h-6 w-6 shrink-0" />}
                       <span className="truncate text-sm font-semibold text-foreground">
                         {match.awayTeam}

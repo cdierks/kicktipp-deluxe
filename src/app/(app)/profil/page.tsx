@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getClubByName } from '@/lib/clubs'
 import { cn } from '@/lib/utils'
+import { ClubIcon } from '@/components/club-icon'
 import { IconPalette, IconMail, IconBallFootball, IconPokerChip, IconUser } from '@/components/app-icons'
 import { Button } from '@/components/ui/button'
 import { ProfileForm } from './profile-form'
@@ -91,8 +92,7 @@ export default async function ProfilPage() {
                 style={{ backgroundColor: user.color ?? 'var(--color-primary)' }}
               >
                 {club?.iconUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={club.iconUrl} alt="" className="h-9 w-9 object-contain" />
+                  <ClubIcon src={club.iconUrl} fallbackSrc={club.iconSourceUrl} label={club.name} className="h-9 w-9 object-contain" />
                 ) : (
                   <IconUser className="h-7 w-7 text-white" strokeWidth={1.5} />
                 )}
@@ -116,8 +116,7 @@ export default async function ProfilPage() {
 
               {club ? (
                 <div className="flex items-center gap-2.5 text-sm">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={club.iconUrl} alt="" className="h-5 w-5 shrink-0 object-contain" />
+                  <ClubIcon src={club.iconUrl} fallbackSrc={club.iconSourceUrl} label={club.name} className="h-5 w-5 shrink-0 object-contain" />
                   <span className="font-medium text-foreground">{club.shortName}</span>
                   <span className="text-xs text-muted-foreground">Lieblingsclub</span>
                 </div>

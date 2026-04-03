@@ -1,6 +1,6 @@
 {
   "name": "kicktipp-deluxe",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,7 +9,11 @@
     "db:seed": "npx tsx prisma/seed.ts",
     "db:migrate": "npx prisma migrate deploy",
     "db:studio": "npx prisma studio",
-    "generate:clubs": "npx tsx scripts/generate-clubs.ts"
+    "generate:clubs": "npx tsx scripts/generate-clubs.ts",
+    "localize:clubs": "node scripts/localize-clubs.mjs",
+    "mirror:club-icons": "node scripts/mirror-club-icons.mjs",
+    "list:missing-club-icons": "node scripts/list-missing-club-icons.mjs",
+    "generate:missing-club-icon-placeholders": "node scripts/generate-missing-club-icon-placeholders.mjs"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

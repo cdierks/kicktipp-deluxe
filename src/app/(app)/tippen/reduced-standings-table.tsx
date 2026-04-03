@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ClubIcon } from '@/components/club-icon'
+import { getClubByName } from '@/lib/clubs'
 import { fetchTable, OpenligaTable } from '@/lib/openligadb'
 import { cn } from '@/lib/utils'
 
@@ -31,6 +33,7 @@ export function ReducedStandingsTable({ year }: { year: string }) {
       {table.map((team, index) => {
         const rank = index + 1
         const diff = team.goalDiff
+        const club = getClubByName(team.teamName)
         return (
           <div
             key={team.teamInfoId}
@@ -39,8 +42,12 @@ export function ReducedStandingsTable({ year }: { year: string }) {
             <span className="text-sm font-semibold tabular-nums text-muted-foreground">{rank}</span>
             <div className="flex min-w-0 items-center gap-2">
               {team.teamIconUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={team.teamIconUrl} alt="" className="h-4 w-4 shrink-0 object-contain" />
+                <ClubIcon
+                  src={club?.iconUrl ?? team.teamIconUrl}
+                  fallbackSrc={club?.iconSourceUrl ?? team.teamIconUrl}
+                  label={club?.name ?? (team.shortName || team.teamName)}
+                  className="h-4 w-4 shrink-0 object-contain"
+                />
               )}
               <span className="truncate text-sm font-medium text-foreground">
                 {team.shortName || team.teamName}
