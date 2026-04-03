@@ -8,8 +8,6 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -481,7 +479,7 @@ export function StatsTab({
     }
 
     const lineData = buildLineData(seasonStats, users)
-    const barData = seasonStats.slice(-8).map((md) => {
+    const barData = seasonStats.map((md) => {
       const entry: Record<string, number | string> = { st: String(md.matchdayNumber) }
       for (const u of users) entry[u.id] = md.pointsPerUser[u.id] ?? 0
       return entry
@@ -576,7 +574,7 @@ export function StatsTab({
             key={v}
             onClick={() => setView(v)}
             className={cn(
-              'rounded-md px-3 py-1 text-xs uppercase tracking-wide transition-all',
+              'rounded-md px-3 py-1 text-xs font-semibold uppercase tracking-wide transition-all',
               view === v
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',
@@ -825,30 +823,32 @@ export function StatsTab({
         </div>
       )}
 
-      {/* ── Punkte/Spieltag BarChart ── */}
+      {/* ── Punkte/Spieltag LineChart ── */}
       {view === 'saison' && seasonData.barData.length > 0 && (
         <div className="rounded-lg border border-border bg-card p-4">
           <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-foreground">
-            Punkte / Spieltag (letzte {seasonData.barData.length})
+            Punkte / Spieltag ({seasonData.barData.length})
           </h3>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={seasonData.barData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+            <LineChart data={seasonData.barData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="st" tick={TICK_STYLE} tickLine={false} axisLine={false} />
               <YAxis tick={TICK_STYLE} tickLine={false} axisLine={false} />
               <Tooltip content={tooltipContent} />
               <Legend formatter={legendFormatter} wrapperStyle={{ fontSize: 11, fontFamily: 'var(--font-sans)' }} />
               {users.map((u) => (
-                <Bar
+                <Line
                   key={u.id}
+                  type="monotone"
                   dataKey={u.id}
                   name={u.id}
-                  fill={userColorMap.get(u.id)}
-                  radius={[2, 2, 0, 0]}
-                  maxBarSize={20}
+                  stroke={userColorMap.get(u.id)}
+                  strokeWidth={u.id === currentUserId ? 3 : 2}
+                  dot={false}
+                  activeDot={{ r: 4 }}
                 />
               ))}
-            </BarChart>
+            </LineChart>
           </ResponsiveContainer>
         </div>
       )}
