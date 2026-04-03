@@ -4,7 +4,7 @@ import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getClubByName } from '@/lib/clubs'
 import { cn } from '@/lib/utils'
-import { IconMoodSmileBeam, IconPalette, IconMail, IconBallFootball, IconPokerChip, IconUser } from '@/components/app-icons'
+import { IconPalette, IconMail, IconBallFootball, IconPokerChip, IconUser } from '@/components/app-icons'
 import { Button } from '@/components/ui/button'
 import { ProfileForm } from './profile-form'
 import { ColorPicker } from './color-picker'
@@ -55,11 +55,14 @@ export default async function ProfilPage() {
     <div className="space-y-6">
       <div className="surface rounded-[1.75rem] p-5 sm:p-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-          Player Settings
+          Dein Bereich
         </p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground">
           Profil
         </h1>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+          Verwalte deine Angaben, deine Farbe und die öffentliche Ansicht in einer klaren Oberfläche.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:items-start">
@@ -81,65 +84,75 @@ export default async function ProfilPage() {
         </div>
 
         <div className="space-y-4 lg:sticky lg:top-24">
-          <div className="surface overflow-hidden rounded-[1.5rem]">
-            <div
-              className="h-24 w-full"
-              style={{
-                background: user.color
-                  ? user.color
-                  : 'var(--color-primary)',
-              }}
-            />
-            <div className="px-6 pb-6">
+          <div className="surface rounded-[1.5rem] p-5">
+            <div className="flex items-start gap-4">
               <div
-                className="relative -mt-10 mb-4 h-20 w-20 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg ring-4 ring-white/20"
+                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.2rem] text-white ring-1 ring-white/14"
                 style={{ backgroundColor: user.color ?? 'var(--color-primary)' }}
               >
-                <IconMoodSmileBeam className='w-10 h-12' />
-              </div>
-
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">
-                {user.nickname}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-0.5">{user.name}</p>
-
-              <div className="mt-5 space-y-3">
-                <div className="flex items-center gap-2.5 text-sm">
-                  <IconMail className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.5} />
-                  <span className="text-muted-foreground truncate">{user.email}</span>
-                </div>
-
-                {club ? (
-                  <div className="flex items-center gap-2.5 text-sm">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={club.iconUrl} alt="" className="h-5 w-5 object-contain shrink-0" />
-                    <span className="text-foreground font-medium">{club.shortName}</span>
-                    <span className="text-xs text-muted-foreground">Lieblingsclub</span>
-                  </div>
+                {club?.iconUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={club.iconUrl} alt="" className="h-9 w-9 object-contain" />
                 ) : (
-                  <div className="flex items-center gap-2.5 text-sm">
-                    <IconBallFootball className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.5} />
-                    <span className="text-muted-foreground">Kein Lieblingsclub</span>
-                  </div>
-                )}
-
-                {user.color && (
-                  <div className="flex items-center gap-2.5 text-sm">
-                    <span
-                      className="h-4 w-4 shrink-0 rounded-full ring-1 ring-white/20"
-                      style={{ backgroundColor: user.color }}
-                    />
-                    <span className="text-foreground font-medium">{colorLabel ?? user.color}</span>
-                    <span className="text-xs text-muted-foreground">Spielerfarbe</span>
-                  </div>
+                  <IconUser className="h-7 w-7 text-white" strokeWidth={1.5} />
                 )}
               </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+                  Öffentliche Ansicht
+                </p>
+                <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+                  {user.nickname}
+                </h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">{user.name}</p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              <div className="flex items-center gap-2.5 text-sm">
+                <IconMail className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.5} />
+                <span className="truncate text-muted-foreground">{user.email}</span>
+              </div>
+
+              {club ? (
+                <div className="flex items-center gap-2.5 text-sm">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={club.iconUrl} alt="" className="h-5 w-5 shrink-0 object-contain" />
+                  <span className="font-medium text-foreground">{club.shortName}</span>
+                  <span className="text-xs text-muted-foreground">Lieblingsclub</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2.5 text-sm">
+                  <IconBallFootball className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.5} />
+                  <span className="text-muted-foreground">Kein Lieblingsclub</span>
+                </div>
+              )}
+
+              {user.color && (
+                <div className="flex items-center gap-2.5 text-sm">
+                  <span
+                    className="h-4 w-4 shrink-0 rounded-full ring-1 ring-white/20"
+                    style={{ backgroundColor: user.color }}
+                  />
+                  <span className="font-medium text-foreground">{colorLabel ?? user.color}</span>
+                  <span className="text-xs text-muted-foreground">Spielerfarbe</span>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-5">
+              <Button asChild variant="outline" size="sm" className="gap-1.5">
+                <Link href={`/spieler/${user.nickname}`}>
+                  <IconUser className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  Öffentliches Profil öffnen
+                </Link>
+              </Button>
             </div>
           </div>
 
           <div className="surface rounded-[1.5rem] p-5">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-              Vorschau – Tipp-Zeile
+              Ansicht im Spiel
             </p>
             <div className="space-y-2.5">
               <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/8 px-2.5 py-1.5">
@@ -168,16 +181,8 @@ export default async function ProfilPage() {
               </div>
             </div>
             <p className="text-xs text-muted-foreground mt-3">
-              So sehen dich andere Spieler in der Dashboard-Ansicht.
+              So erscheinst du in der Übersicht und im Vergleich mit den anderen Spielern.
             </p>
-            <div className="mt-4">
-              <Button asChild variant="outline" size="sm" className="gap-1.5">
-                <Link href={`/spieler/${user.nickname}`}>
-                  <IconUser className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  Eigenes Profil ansehen
-                </Link>
-              </Button>
-            </div>
           </div>
 
         </div>

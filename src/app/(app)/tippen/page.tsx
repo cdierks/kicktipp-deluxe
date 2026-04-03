@@ -38,7 +38,7 @@ export default async function TippenPage() {
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-              Tipp Workspace
+              Tippen
             </p>
             <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground">
               Spieltag {matchday.matchdayNumber}

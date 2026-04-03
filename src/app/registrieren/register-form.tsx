@@ -39,13 +39,13 @@ export function RegisterForm() {
   return (
     <AuthShell
       eyebrow="Registrierung"
-      title="Tritt der Tipp-Runde ohne Reibung bei."
-      description="Ein Konto reicht, um Dashboard, Spieltags-Tipps und persönliche Spielerfarbe in einer kompakten Workspace-Oberfläche zu verwalten."
+      title="Konto für die Tipp-Runde anlegen."
+      description="Mit einem Konto verwaltest du Tipps, Spielerfarbe und Profil in einer klaren Oberfläche."
     >
       <div>
         <div className="mb-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Onboarding
+            Zugang
           </p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground">
             Konto erstellen

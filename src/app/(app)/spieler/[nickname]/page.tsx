@@ -5,7 +5,6 @@ import { prisma } from '@/lib/prisma'
 import { getClubByName } from '@/lib/clubs'
 import { cn } from '@/lib/utils'
 import {
-  IconMoodSmileBeam,
   IconPencil,
   IconTrophy,
   IconMedal,
@@ -15,6 +14,7 @@ import {
   IconBallFootball,
   IconScale,
   IconPokerChip,
+  IconUser,
 } from '@/components/app-icons'
 import { PlayerCharts } from './player-charts'
 import type { LinePoint, QualitySlice } from './player-charts'
@@ -227,7 +227,12 @@ export default async function SpielerPage({
                 className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[1.55rem] text-white shadow-lg ring-4 ring-white/20"
                 style={{ backgroundColor: playerColor }}
               >
-                <IconMoodSmileBeam className="h-10 w-10" />
+                {club?.iconUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={club.iconUrl} alt="" className="h-11 w-11 object-contain" />
+                ) : (
+                  <IconUser className="h-9 w-9 text-white" />
+                )}
               </div>
               {isMe && (
                 <Link
@@ -242,7 +247,7 @@ export default async function SpielerPage({
 
             <div className="space-y-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-                Player Control Center
+                Spielerprofil
               </p>
               <h1 className="text-4xl leading-none text-foreground sm:text-5xl">
                 {user.nickname}

@@ -35,9 +35,9 @@ export default function LoginPage() {
 
   return (
     <AuthShell
-      eyebrow="Login"
-      title="Zurück in deinen Matchday-Workspace."
-      description="Melde dich an, um Tipps, Live-Spieltag und Tabellen ohne Umwege in einer klaren Arbeitsoberfläche zu steuern."
+      eyebrow="Anmeldung"
+      title="Zurück ins Tippspiel."
+      description="Melde dich an, um Tipps, Tabellen und Spieltage in einer klaren Oberfläche zu steuern."
     >
       <div>
         <div className="mb-6">

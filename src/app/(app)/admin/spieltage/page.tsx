@@ -21,7 +21,7 @@ export default async function SpieltageAdminPage() {
     <div className="space-y-6">
       <div className="surface rounded-[1.75rem] p-5 sm:p-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-          Admin Matchdays
+          Adminbereich
         </p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground">
           Spieltage verwalten

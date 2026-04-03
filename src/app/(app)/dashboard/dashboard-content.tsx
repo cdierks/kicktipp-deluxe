@@ -247,7 +247,7 @@ export function DashboardContent({
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-                    Matchday Control Center
+                    Spieltag im Blick
                   </p>
                   <h1 className="mt-3 text-5xl leading-none text-foreground">
                     Spieltag <span className="text-primary">{matchday.matchdayNumber}</span>

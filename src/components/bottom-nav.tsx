@@ -42,19 +42,19 @@ export function BottomNav() {
                 <Link
                   href={item.href}
                   className={cn(
-                    'flex flex-1 flex-col items-center gap-1 rounded-xl px-1 py-2.5 transition-all duration-200',
+                    'flex flex-1 flex-col items-center gap-1 rounded-[1.05rem] border px-1 py-2.5 transition-all duration-200',
                     active
-                      ? 'bg-primary text-white shadow-md shadow-primary/25'
-                      : 'text-muted-foreground active:scale-95 hover:bg-background/38 dark:hover:bg-background/30',
+                      ? 'border-white/30 bg-card/92 text-foreground shadow-[0_-1px_0_rgb(255_255_255_/_0.3),0_1px_0_rgb(15_23_42_/_0.14)] backdrop-blur-xl dark:border-white/14 dark:bg-card/82 dark:shadow-[0_-1px_0_rgb(255_255_255_/_0.08),0_1px_0_rgb(0_0_0_/_0.28)]'
+                      : 'border-transparent text-muted-foreground active:scale-95 hover:bg-background/38 dark:hover:bg-background/30',
                   )}
                 >
                   <item.icon
-                    className="h-5.5 w-5.5"
-                    strokeWidth={active ? 2 : 1.5}
+                    className={cn('h-5.5 w-5.5', active ? 'text-primary' : 'text-current')}
+                    strokeWidth={1.6}
                   />
                   <span className={cn(
                     'text-[10px] font-semibold uppercase tracking-[0.14em] leading-none',
-                    active ? 'text-white' : 'text-muted-foreground',
+                    active ? 'text-foreground' : 'text-muted-foreground',
                   )}>
                     {item.label}
                   </span>

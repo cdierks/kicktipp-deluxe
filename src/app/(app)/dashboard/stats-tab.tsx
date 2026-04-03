@@ -115,7 +115,7 @@ const HIT_COLORS = {
   exact:   '#1d4ed8',
   diff:    '#3b82f6',
   outcome: '#93c5fd',
-  miss:    '#dc2626',
+  miss:    '#9ca3af',
 }
 
 const JOKER_COLORS = {
