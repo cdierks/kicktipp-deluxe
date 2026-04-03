@@ -30,6 +30,8 @@ Diese Anleitung beschreibt den produktiven Deploy-Workflow für `kicktipp.schult
   - Release auf die bestehenden produktiven `node_modules` zeigen lassen
   - danach `supervisorctl` umschalten
 - Bei Turbopack-/Prisma-Builds kann zusätzlich ein Prisma-Runtime-Link im Release fehlen. Das ist unten dokumentiert.
+- Alte Releases, echte Predeploy-Verzeichnisse, große App-Backups und `~/.npm` koennen die
+  10-GB-Quota sehr schnell sprengen. Cleanup ist deshalb fester Teil des Deploys.
 
 ## 1. Serverzustand prüfen
 
@@ -66,6 +68,12 @@ ls -lh ~/backups/kicktipp-app-$ts.tar.gz ~/backups/kicktipp-db-$ts.sql.gz
 ```
 
 Ohne diese beiden Backups kein Deploy.
+
+Wichtig:
+
+- Die App-Backups koennen schnell mehrere hundert MB bis mehrere GB gross werden.
+- Nach erfolgreichem Deploy muessen alte grosse App-Backups aktiv ausgeduennt werden.
+- Kleine DB-Dumps koennen deutlich laenger behalten werden als App-Tarballs.
 
 ## 3. Neues Release hochladen
 
@@ -207,6 +215,54 @@ sleep 5
 supervisorctl status kicktipp
 ```
 
+## 5a. Pflicht-Cleanup nach erfolgreichem Deploy
+
+Sobald das neue Release stabil laeuft, aufraeumen. Sonst wachsen `~/releases`, `~/backups`,
+alte echte Predeploy-Verzeichnisse und `~/.npm` unkontrolliert an.
+
+### Retention-Regel
+
+Behalten:
+
+- den aktiven Release
+- genau einen vorherigen kleinen Release als schnellen Fallback
+- die juengsten 1-2 DB-Backups
+- hoechstens ein frisches App-Backup direkt nach einem riskanten Eingriff
+
+Loeschen:
+
+- alte grosse Releases mit eigenen `node_modules` oder schweren Build-Artefakten
+- echte alte Predeploy-Verzeichnisse, sobald sie nicht mehr fuer einen Rollback gebraucht werden
+- alte grosse App-Backups
+- `~/.npm`, wenn kein unmittelbar bevorstehender Server-Build geplant ist
+
+### Groessen schnell pruefen
+
+```bash
+ssh kicktipp@regulus.uberspace.de
+
+du -sh ~/* ~/.[!.]* 2>/dev/null | sort -h
+du -sh ~/releases/* 2>/dev/null | sort -h
+du -sh ~/backups/* 2>/dev/null | sort -h | tail -n 20
+```
+
+### Typischer Cleanup
+
+```bash
+ssh kicktipp@regulus.uberspace.de
+
+rm -rf ~/releases/kicktipp-<old-1> ~/releases/kicktipp-<old-2>
+rm -rf ~/kicktipp-deluxe-predeploy-<timestamp>
+rm -rf ~/.npm
+rm -f ~/backups/kicktipp-app-<old>.tar.gz
+```
+
+Vor dem Loeschen immer pruefen:
+
+- ist der Release aktuell nicht aktiv
+- ist das Predeploy-Ziel kein benoetigter Rollback-Kandidat mehr
+- bleibt mindestens ein sinnvoller Rueckfallstand erhalten
+
 ## 6. Verifikation
 
 Serverseitig:
@@ -272,14 +328,16 @@ DB-Rollback nur verwenden, wenn wirklich Daten- oder Migrationsprobleme vorliege
 
 - Service-Datei: `/home/kicktipp/etc/services.d/kicktipp.ini`
 - Logs:
-  - `/home/kicktipp/logs/supervisord.log`
+  - aktueller Stand pruefen mit `supervisorctl status`
+  - Logpfade koennen vom versionierten Beispiel abweichen
 - Produktive `.env`: `/home/kicktipp/kicktipp-deluxe/.env`
 - Release-Ordner: `/home/kicktipp/releases/`
 - Backups: `/home/kicktipp/backups/`
+- npm-Cache: `/home/kicktipp/.npm`
 
 ## 9. Aktuell zuletzt erfolgreich deployed
 
-- Release: `/home/kicktipp/releases/kicktipp-20260403-142822`
-- Vorheriger produktiver Stand: `/home/kicktipp/releases/kicktipp-20260403-135359`
-- App-Backup: `/home/kicktipp/backups/kicktipp-app-20260403-143412.tar.gz`
-- DB-Backup: `/home/kicktipp/backups/kicktipp-db-20260403-143153.sql.gz`
+- Release: `/home/kicktipp/releases/kicktipp-20260403-153810`
+- Vorheriger kleiner Fallback-Stand: `/home/kicktipp/releases/kicktipp-20260403-142822`
+- App-Backup: `/home/kicktipp/backups/kicktipp-app-20260403-153712.tar.gz`
+- DB-Backup: `/home/kicktipp/backups/kicktipp-db-20260403-153712.sql.gz`
