@@ -8,7 +8,7 @@ import { recalculatePointsForMatch } from '@/actions/points.actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { IconCheck } from '@tabler/icons-react'
+import { IconCheck } from '@/components/app-icons'
 import {
   Select,
   SelectContent,

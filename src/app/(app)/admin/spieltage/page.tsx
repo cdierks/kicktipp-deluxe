@@ -18,10 +18,15 @@ export default async function SpieltageAdminPage() {
   })
 
   return (
-    <div>
-      <h1 className="mb-6 text-3xl font-bold uppercase tracking-wider text-foreground">
-        Spieltage verwalten
-      </h1>
+    <div className="space-y-6">
+      <div className="surface rounded-[1.75rem] p-5 sm:p-6">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+          Admin Matchdays
+        </p>
+        <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground">
+          Spieltage verwalten
+        </h1>
+      </div>
       <SpieltagVerwaltung seasons={seasons} />
     </div>
   )

@@ -47,6 +47,7 @@ export async function registerUser(data: RegisterInput) {
 }
 
 const ProfileSchema = z.object({
+  email: z.string().email('Ungültige E-Mail-Adresse'),
   name: z.string().min(2, 'Name muss mindestens 2 Zeichen haben'),
   nickname: z
     .string()
@@ -54,6 +55,7 @@ const ProfileSchema = z.object({
     .max(20)
     .regex(/^[a-zA-Z0-9_]+$/),
   favoriteTeam: z.string().optional(),
+  currentPassword: z.string().optional(),
 })
 
 export async function updateProfile(
@@ -65,19 +67,52 @@ export async function updateProfile(
     return { error: parsed.error.issues[0].message }
   }
 
-  const { name, nickname, favoriteTeam } = parsed.data
+  const { email, name, nickname, favoriteTeam, currentPassword } = parsed.data
 
   const existingNickname = await prisma.user.findFirst({
     where: { nickname, NOT: { id: userId } },
   })
   if (existingNickname) return { error: 'Nickname bereits vergeben' }
 
-  await prisma.user.update({
+  const user = await prisma.user.findUnique({
     where: { id: userId },
-    data: { name, nickname, favoriteTeam: favoriteTeam || null },
+    select: { id: true, email: true, passwordHash: true },
+  })
+  if (!user) return { error: 'Benutzer nicht gefunden' }
+
+  const normalizedEmail = email.trim().toLowerCase()
+  const emailChanged = normalizedEmail !== user.email
+
+  if (emailChanged) {
+    if (!currentPassword) return { error: 'Bitte gib dein aktuelles Passwort ein, um die E-Mail zu ändern' }
+
+    const validPassword = await bcrypt.compare(currentPassword, user.passwordHash)
+    if (!validPassword) return { error: 'Aktuelles Passwort falsch' }
+
+    const existingEmail = await prisma.user.findFirst({
+      where: { email: normalizedEmail, NOT: { id: userId } },
+      select: { id: true },
+    })
+    if (existingEmail) return { error: 'E-Mail bereits registriert' }
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      email: normalizedEmail,
+      name,
+      nickname,
+      favoriteTeam: favoriteTeam || null,
+    },
+    select: {
+      email: true,
+      name: true,
+      nickname: true,
+      favoriteTeam: true,
+    },
   })
 
-  return { success: true }
+  return { success: true, user: updatedUser }
 }
 
 const PasswordSchema = z.object({

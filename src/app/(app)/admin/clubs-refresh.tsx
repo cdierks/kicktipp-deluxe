@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { regenerateClubs } from '@/actions/clubs.actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { IconRefresh } from '@tabler/icons-react'
+import { IconRefresh } from '@/components/app-icons'
 
 interface Props {
   currentCount: number

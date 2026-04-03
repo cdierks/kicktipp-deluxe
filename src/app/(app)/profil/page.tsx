@@ -1,10 +1,28 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getClubByName } from '@/lib/clubs'
-import { IconMoodSmileBeam, IconPalette, IconMail, IconBallFootball, IconPokerChip } from '@tabler/icons-react'
+import { cn } from '@/lib/utils'
+import { IconMoodSmileBeam, IconPalette, IconMail, IconBallFootball, IconPokerChip, IconUser } from '@/components/app-icons'
+import { Button } from '@/components/ui/button'
 import { ProfileForm } from './profile-form'
 import { ColorPicker } from './color-picker'
+
+function PreviewPointsBadge({ points, isJoker = false }: { points: number; isJoker?: boolean }) {
+  const className = cn(
+    'inline-flex h-7 min-w-[1.85rem] items-center justify-center rounded-xl border px-2 text-xs font-bold tabular-nums shadow-sm',
+    !isJoker && points === 4 && 'border-blue-700 bg-blue-700 text-white',
+    !isJoker && points === 3 && 'border-blue-600 bg-blue-600 text-white',
+    !isJoker && points === 2 && 'border-blue-300 bg-blue-300/20 text-blue-300',
+    points === 0 && 'border-gray-500/35 bg-gray-500/12 text-gray-300',
+    isJoker && points === 8 && 'border-amber-400 bg-amber-400 text-gray-950',
+    isJoker && points === 6 && 'border-amber-500 bg-amber-500/80 text-gray-950',
+    isJoker && points === 4 && 'border-amber-300 bg-amber-300/20 text-amber-300',
+  )
+
+  return <span className={className}>{points}</span>
+}
 
 export default async function ProfilPage() {
   const session = await getSession()
@@ -35,18 +53,18 @@ export default async function ProfilPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-4xl font-bold tracking-tight text-foreground">
-        Profil
-      </h1>
+      <div className="surface rounded-[1.75rem] p-5 sm:p-6">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+          Player Settings
+        </p>
+        <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground">
+          Profil
+        </h1>
+      </div>
 
-      {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:items-start">
-
-        {/* ── Left column: Settings ── */}
         <div className="space-y-5">
-
-          {/* Color picker */}
-          <div className="glass rounded-2xl p-5">
+          <div className="surface rounded-[1.5rem] p-5">
             <div className="flex items-center gap-2 mb-4">
               <IconPalette className="h-4 w-4 text-primary" strokeWidth={1.5} />
               <h2 className="text-sm font-bold tracking-wide text-foreground">
@@ -62,12 +80,8 @@ export default async function ProfilPage() {
           <ProfileForm userId={session.user.id} user={user} />
         </div>
 
-        {/* ── Right column: Profile preview ── */}
         <div className="space-y-4 lg:sticky lg:top-24">
-
-          {/* Hero card */}
-          <div className="glass rounded-2xl overflow-hidden">
-            {/* Color accent strip */}
+          <div className="surface overflow-hidden rounded-[1.5rem]">
             <div
               className="h-24 w-full"
               style={{
@@ -77,12 +91,10 @@ export default async function ProfilPage() {
               }}
             />
             <div className="px-6 pb-6">
-              {/* Avatar – overlaps the banner */}
               <div
                 className="relative -mt-10 mb-4 h-20 w-20 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg ring-4 ring-white/20"
                 style={{ backgroundColor: user.color ?? 'var(--color-primary)' }}
               >
-                
                 <IconMoodSmileBeam className='w-10 h-12' />
               </div>
 
@@ -125,39 +137,47 @@ export default async function ProfilPage() {
             </div>
           </div>
 
-          {/* Preview: wie du in der Tipp-Übersicht erscheinst */}
-          <div className="glass rounded-2xl p-5">
+          <div className="surface rounded-[1.5rem] p-5">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
               Vorschau – Tipp-Zeile
             </p>
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Own entry */}
-              <div className="flex items-center gap-1.5">
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/8 px-2.5 py-1.5">
                 {user.color && (
                   <span
-                    className="h-2 w-2 rounded-full shrink-0"
+                    className="h-2.5 w-2.5 rounded-full shrink-0"
                     style={{ backgroundColor: user.color }}
                   />
                 )}
-                <span className="text-xs font-semibold text-primary">{user.nickname}</span>
-                <span className="text-sm font-bold tabular-nums text-foreground">2:1</span>
-                <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-md px-1 text-xs font-bold bg-primary text-primary-foreground">
-                  4
-                </span>
+                <span className="min-w-0 flex-1 truncate text-xs font-semibold text-primary">{user.nickname}</span>
+                <div className="grid shrink-0 grid-cols-[3.25rem_2rem] items-center gap-1.5">
+                  <span className="rounded-lg bg-background/80 px-2 py-0.5 text-center text-sm font-bold tabular-nums text-foreground">2:1</span>
+                  <PreviewPointsBadge points={4} />
+                </div>
               </div>
-              {/* Joker example */}
-              <div className="flex items-center gap-1.5 opacity-40">
-                <span className="text-xs text-muted-foreground">Mitspieler</span>
-                <span className="text-sm font-bold tabular-nums text-foreground">1:0</span>
-                <IconPokerChip className="h-3.5 w-3.5 text-amber-500" strokeWidth={1.5} />
-                <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-md px-1 text-xs font-bold border border-primary/40 text-primary">
-                  2
-                </span>
+              <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/55 px-2.5 py-1.5">
+                <span className="h-2.5 w-2.5 rounded-full shrink-0 bg-yellow-300" />
+                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">Mitspieler</span>
+                <div className="grid shrink-0 grid-cols-[3.25rem_auto_2rem] items-center gap-1.5">
+                  <span className="rounded-lg bg-background/80 px-2 py-0.5 text-center text-sm font-bold tabular-nums text-foreground">3:2</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/10">
+                    <IconPokerChip className="h-3.5 w-3.5 text-amber-500" strokeWidth={1.5} />
+                  </span>
+                  <PreviewPointsBadge points={8} isJoker />
+                </div>
               </div>
             </div>
             <p className="text-xs text-muted-foreground mt-3">
               So sehen dich andere Spieler in der Dashboard-Ansicht.
             </p>
+            <div className="mt-4">
+              <Button asChild variant="outline" size="sm" className="gap-1.5">
+                <Link href={`/spieler/${user.nickname}`}>
+                  <IconUser className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  Eigenes Profil ansehen
+                </Link>
+              </Button>
+            </div>
           </div>
 
         </div>

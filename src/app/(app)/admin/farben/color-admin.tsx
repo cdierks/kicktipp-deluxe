@@ -6,7 +6,7 @@ import { addPaletteColor, removePaletteColor } from '@/actions/color.actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { IconTrash, IconPlus } from '@tabler/icons-react'
+import { IconTrash, IconPlus } from '@/components/app-icons'
 
 interface PaletteColor {
   id: string

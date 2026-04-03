@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth'
 import { getActiveMatchday } from '@/lib/matchday'
 import { prisma } from '@/lib/prisma'
 import { TipForm } from './tip-form'
+import { ReducedStandingsTable } from './reduced-standings-table'
 
 export default async function TippenPage() {
   const session = await getSession()
@@ -32,40 +33,78 @@ export default async function TippenPage() {
   const deadlinePassed = new Date() > matchday.tippDeadline
 
   return (
-    <div className="max-w-2xl">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-4xl font-bold tracking-tight text-foreground">
-          Spieltag {matchday.matchdayNumber}
-        </h1>
-        {/* Deadline banner */}
-        <div className={`mt-3 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm ${
-          deadlinePassed
-            ? 'bg-destructive/10 text-destructive'
-            : 'bg-primary/5 text-foreground border border-primary/10'
-        }`}>
-          <span className="font-semibold uppercase tracking-wide text-[11px]">
-            {deadlinePassed ? 'Deadline abgelaufen' : 'Deadline:'}
-          </span>
-          {!deadlinePassed && (
-            <span className="font-medium" suppressHydrationWarning>
+    <div className="mx-auto max-w-7xl space-y-6">
+      <div className="surface rounded-[1.75rem] p-5 sm:p-6">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+              Tipp Workspace
+            </p>
+            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground">
+              Spieltag {matchday.matchdayNumber}
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Triff deine Tipps, sichere den Joker und nutze die Tabelle rechts als schnellen Form- und Punkte-Kontext.
+            </p>
+          </div>
+          <div
+            className={
+              deadlinePassed
+                ? 'rounded-[1.4rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-destructive'
+                : 'rounded-[1.4rem] border border-primary/15 bg-primary/[0.07] px-4 py-3 text-foreground'
+            }
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              {deadlinePassed ? 'Deadline abgelaufen' : 'Tipp-Deadline'}
+            </p>
+            <p className={deadlinePassed ? 'mt-2 text-lg font-bold' : 'mt-2 text-lg font-bold text-foreground'} suppressHydrationWarning>
               {new Date(matchday.tippDeadline).toLocaleString('de-DE', {
-                weekday: 'long', day: 'numeric', month: 'long',
-                hour: '2-digit', minute: '2-digit',
+                weekday: 'short',
+                day: 'numeric',
+                month: 'long',
+                hour: '2-digit',
+                minute: '2-digit',
               })}
-            </span>
-          )}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {deadlinePassed
+                ? 'Dieser Spieltag ist bereits gesperrt.'
+                : 'Danach werden alle Eingaben geschlossen.'}
+            </p>
+          </div>
         </div>
       </div>
 
       {deadlinePassed ? (
-        <div className="glass rounded-2xl px-5 py-6">
+        <div className="surface rounded-[1.5rem] px-5 py-6">
           <p className="text-base font-bold tracking-tight text-muted-foreground">
             Für diesen Spieltag können keine Tipps mehr abgegeben werden.
           </p>
         </div>
       ) : (
-        <TipForm matches={matchday.matches} existingTips={tipMap} />
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <TipForm matches={matchday.matches} existingTips={tipMap} />
+          <aside className="surface h-fit rounded-[1.5rem] p-4 sm:p-5">
+            <div className="mb-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Bundesliga
+              </p>
+              <h2 className="mt-2 text-lg font-bold tracking-tight text-foreground">
+                Tabellenstand
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Platz, Punkte und Differenz als schnelle Orientierung für deine Tipps.
+              </p>
+            </div>
+            <div className="mb-3 grid grid-cols-[2rem_minmax(0,1fr)_3.5rem_3.25rem] gap-2 px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <span>#</span>
+              <span>Verein</span>
+              <span className="text-right">Diff</span>
+              <span className="text-right">Pkt</span>
+            </div>
+            <ReducedStandingsTable year={matchday.season.year} />
+          </aside>
+        </div>
       )}
     </div>
   )

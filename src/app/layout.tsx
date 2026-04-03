@@ -4,26 +4,21 @@ import './globals.css'
 import { Providers } from '@/components/providers'
 import { Toaster } from '@/components/ui/sonner'
 
-const barlow = localFont({
+const ibmPlexSans = localFont({
   src: [
-    { path: '../../public/fonts/barlow-300.ttf', weight: '300', style: 'normal' },
-    { path: '../../public/fonts/barlow-400.ttf', weight: '400', style: 'normal' },
-    { path: '../../public/fonts/barlow-500.ttf', weight: '500', style: 'normal' },
-    { path: '../../public/fonts/barlow-600.ttf', weight: '600', style: 'normal' },
-    { path: '../../public/fonts/barlow-700.ttf', weight: '700', style: 'normal' },
+    { path: '../../public/fonts/ibm-plex-sans-variable.ttf', weight: '100 700', style: 'normal' },
   ],
-  variable: '--font-barlow',
+  variable: '--font-ibm-plex-sans',
   display: 'swap',
 })
 
-const barlowCondensed = localFont({
+const ibmPlexSansCondensed = localFont({
   src: [
-    { path: '../../public/fonts/barlow-condensed-500.ttf', weight: '500', style: 'normal' },
-    { path: '../../public/fonts/barlow-condensed-600.ttf', weight: '600', style: 'normal' },
-    { path: '../../public/fonts/barlow-condensed-700.ttf', weight: '700', style: 'normal' },
-    { path: '../../public/fonts/barlow-condensed-800.ttf', weight: '800', style: 'normal' },
+    { path: '../../public/fonts/ibm-plex-sans-condensed-500.ttf', weight: '500', style: 'normal' },
+    { path: '../../public/fonts/ibm-plex-sans-condensed-600.ttf', weight: '600', style: 'normal' },
+    { path: '../../public/fonts/ibm-plex-sans-condensed-700.ttf', weight: '700', style: 'normal' },
   ],
-  variable: '--font-barlow-condensed',
+  variable: '--font-ibm-plex-sans-condensed',
   display: 'swap',
 })
 
@@ -59,7 +54,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="de" suppressHydrationWarning>
-      <body className={`${barlow.variable} ${barlowCondensed.variable} antialiased`}>
+      <body className={`${ibmPlexSans.variable} ${ibmPlexSansCondensed.variable} antialiased`}>
         <Providers>
           {children}
           <Toaster richColors />

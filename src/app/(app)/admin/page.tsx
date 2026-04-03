@@ -5,32 +5,36 @@ import { prisma } from '@/lib/prisma'
 import { CLUBS } from '@/lib/clubs'
 import { getRegistrationEnabled } from '@/lib/settings'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import { IconUsers, IconCalendarEvent, IconBallFootball, IconShirt, IconPalette, IconUserPlus, IconUserOff } from '@tabler/icons-react'
+import { IconUsers, IconCalendarEvent, IconBallFootball, IconShirt, IconPalette, IconUserPlus, IconUserOff, IconDatabaseExport } from '@/components/app-icons'
 import { ClubsRefresh } from './clubs-refresh'
 import { RegistrationToggle } from './registration-toggle'
+import { BackupPanel } from './backup-panel'
 
 export default async function AdminPage() {
   const session = await getSession()
   if (!session || session.user.role !== 'ADMIN') redirect('/dashboard')
 
-  const [userCount, seasonCount, activeMatchday, colorCount, registrationEnabled] = await Promise.all([
+  const [userCount, matchdayCount, activeMatchday, colorCount, registrationEnabled] = await Promise.all([
     prisma.user.count(),
-    prisma.season.count(),
+    prisma.matchday.count(),
     prisma.matchday.findFirst({ where: { status: 'ACTIVE' }, include: { season: true } }),
     prisma.colorPalette.count(),
     getRegistrationEnabled(),
   ])
 
   return (
-    <div>
-      <h1 className="mb-6 text-4xl font-bold tracking-tight text-foreground">
-        Admin
-      </h1>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="space-y-6">
+      <div className="surface rounded-[1.75rem] p-5 sm:p-6">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+          Admin Console
+        </p>
+        <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground">
+          Admin
+        </h1>
+      </div>
 
-        {/* Users */}
-        <div className="glass rounded-2xl p-5 shadow-sm">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="surface rounded-[1.5rem] p-5">
           <div className="flex items-start justify-between mb-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
               <IconUsers className="h-5 w-5 text-primary" strokeWidth={1.5} />
@@ -45,24 +49,22 @@ export default async function AdminPage() {
           </Button>
         </div>
 
-        {/* Seasons */}
-        <div className="glass rounded-2xl p-5 shadow-sm">
+        <div className="surface rounded-[1.5rem] p-5">
           <div className="flex items-start justify-between mb-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
               <IconCalendarEvent className="h-5 w-5 text-primary" strokeWidth={1.5} />
             </div>
           </div>
-          <p className="text-5xl font-bold tracking-tight text-foreground">{seasonCount}</p>
+          <p className="text-5xl font-bold tracking-tight text-foreground">{matchdayCount}</p>
           <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Saisons
+            Spieltage
           </p>
           <Button asChild variant="outline" size="sm" className="mt-4 font-semibold uppercase tracking-wide text-xs rounded-xl w-full">
             <Link href="/admin/spieltage">Spieltage verwalten</Link>
           </Button>
         </div>
 
-        {/* Active matchday */}
-        <div className="glass rounded-2xl p-5 shadow-sm">
+        <div className="surface rounded-[1.5rem] p-5">
           <div className="flex items-start justify-between mb-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
               <IconBallFootball className="h-5 w-5 text-primary" strokeWidth={1.5} />
@@ -86,8 +88,7 @@ export default async function AdminPage() {
           </Button>
         </div>
 
-        {/* Colors */}
-        <div className="glass rounded-2xl p-5 shadow-sm">
+        <div className="surface rounded-[1.5rem] p-5">
           <div className="flex items-start justify-between mb-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
               <IconPalette className="h-5 w-5 text-primary" strokeWidth={1.5} />
@@ -101,13 +102,8 @@ export default async function AdminPage() {
             <Link href="/admin/farben">Verwalten</Link>
           </Button>
         </div>
-      </div>
 
-      <Separator className="my-6" />
-
-      <div className="grid gap-4 sm:grid-cols-2 max-w-2xl">
-        {/* Clubs */}
-        <div className="glass rounded-2xl p-5 shadow-sm">
+        <div className="surface rounded-[1.5rem] p-5">
           <div className="flex items-center gap-2 mb-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
               <IconShirt className="h-4 w-4 text-primary" strokeWidth={1.5} />
@@ -120,8 +116,7 @@ export default async function AdminPage() {
           <ClubsRefresh currentCount={CLUBS.length} />
         </div>
 
-        {/* Registration */}
-        <div className="glass rounded-2xl p-5 shadow-sm">
+        <div className="surface rounded-[1.5rem] p-5">
           <div className="flex items-center gap-2 mb-4">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
               {registrationEnabled
@@ -134,6 +129,23 @@ export default async function AdminPage() {
             </div>
           </div>
           <RegistrationToggle enabled={registrationEnabled} />
+        </div>
+
+        <BackupPanel />
+
+        <div className="surface rounded-[1.5rem] p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+              <IconDatabaseExport className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-sm font-bold tracking-wide text-foreground">Verwaltung</p>
+              <p className="text-xs text-muted-foreground">Saison-, Matchday- und Backup-Operationen bündeln</p>
+            </div>
+          </div>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Die Admin-Konsole ist jetzt als konsistentes Kontrollraster organisiert. Zentrale Eingriffe sind ohne Layoutsprünge erreichbar.
+          </p>
         </div>
       </div>
     </div>

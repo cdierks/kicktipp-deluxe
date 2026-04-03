@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ClubCombobox } from '@/components/club-combobox'
-import { IconBallFootball } from '@tabler/icons-react'
+import { AuthShell } from '@/components/auth-shell'
 
 export function RegisterForm() {
   const router = useRouter()
@@ -37,91 +37,81 @@ export function RegisterForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/10 p-4">
-      <div className="w-full max-w-sm">
-
-        {/* Brand header */}
-        <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent shadow-lg shadow-primary/25">
-            <IconBallFootball className="h-7 w-7 text-white" strokeWidth={1.5} />
-          </div>
-          <div className="text-center">
-            <h1 className="text-3xl font-bold tracking-tight text-primary">
-              Kicktipp<span className="text-accent">.</span>Deluxe
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Bundesliga-Tippspiel für Freunde
-            </p>
-          </div>
-        </div>
-
-        {/* Glass card */}
-        <div className="glass rounded-2xl p-8 shadow-xl shadow-black/5">
-          <h2 className="mb-6 text-xl font-bold tracking-tight text-foreground">
+    <AuthShell
+      eyebrow="Registrierung"
+      title="Tritt der Tipp-Runde ohne Reibung bei."
+      description="Ein Konto reicht, um Dashboard, Spieltags-Tipps und persönliche Spielerfarbe in einer kompakten Workspace-Oberfläche zu verwalten."
+    >
+      <div>
+        <div className="mb-6">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            Onboarding
+          </p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground">
             Konto erstellen
           </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="name" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Vorname
-                </Label>
-                <Input id="name" name="name" required minLength={2} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="nickname" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Nickname
-                </Label>
-                <Input
-                  id="nickname" name="nickname"
-                  required minLength={2} maxLength={20}
-                  pattern="[a-zA-Z0-9_]+"
-                  title="Buchstaben, Zahlen, Unterstriche"
-                />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                E-Mail
-              </Label>
-              <Input id="email" name="email" type="email" autoComplete="email" required />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Passwort
-              </Label>
-              <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Lieblingsclub{' '}
-                <span className="normal-case font-normal text-muted-foreground/60">(optional)</span>
-              </Label>
-              <ClubCombobox value={favoriteTeam} onChange={setFavoriteTeam} />
-            </div>
-
-            {error && (
-              <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {error}
-              </p>
-            )}
-            <Button
-              type="submit"
-              className="w-full bg-gradient-to-r from-primary to-primary/80 font-bold tracking-wide shadow-sm shadow-primary/20 hover:shadow-md hover:shadow-primary/25 transition-shadow"
-              disabled={loading}
-            >
-              {loading ? 'Registrieren…' : 'Konto erstellen'}
-            </Button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Bereits ein Konto?{' '}
-            <Link href="/login" className="font-semibold text-primary underline-offset-4 hover:underline">
-              Anmelden
-            </Link>
-          </p>
         </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="name" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Vorname
+              </Label>
+              <Input id="name" name="name" required minLength={2} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="nickname" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Nickname
+              </Label>
+              <Input
+                id="nickname" name="nickname"
+                required minLength={2} maxLength={20}
+                pattern="[a-zA-Z0-9_]+"
+                title="Buchstaben, Zahlen, Unterstriche"
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              E-Mail
+            </Label>
+            <Input id="email" name="email" type="email" autoComplete="email" required />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Passwort
+            </Label>
+            <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Lieblingsclub{' '}
+              <span className="normal-case font-normal text-muted-foreground/60">(optional)</span>
+            </Label>
+            <ClubCombobox value={favoriteTeam} onChange={setFavoriteTeam} />
+          </div>
+
+          {error && (
+            <p className="rounded-2xl border border-destructive/15 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <Button
+            type="submit"
+            className="w-full font-bold tracking-wide"
+            disabled={loading}
+          >
+            {loading ? 'Registrieren…' : 'Konto erstellen'}
+          </Button>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          Bereits ein Konto?{' '}
+          <Link href="/login" className="font-semibold text-primary underline-offset-4 hover:underline">
+            Anmelden
+          </Link>
+        </p>
       </div>
-    </div>
+    </AuthShell>
   )
 }

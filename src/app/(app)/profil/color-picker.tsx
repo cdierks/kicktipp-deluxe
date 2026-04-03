@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { setUserColor } from '@/actions/color.actions'
-import { IconCheck, IconX } from '@tabler/icons-react'
+import { IconCheck, IconX } from '@/components/app-icons'
 import { cn } from '@/lib/utils'
 
 interface PaletteColor {

@@ -1,13 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { toast } from 'sonner'
 import { updateProfile, changePassword } from '@/actions/auth.actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ClubCombobox } from '@/components/club-combobox'
-import { IconUser, IconLock } from '@tabler/icons-react'
+import { IconUser, IconLock } from '@/components/app-icons'
 
 interface Props {
   userId: string
@@ -20,6 +22,8 @@ interface Props {
 }
 
 export function ProfileForm({ userId, user }: Props) {
+  const router = useRouter()
+  const { update: updateSession } = useSession()
   const [profileLoading, setProfileLoading] = useState(false)
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [favoriteTeam, setFavoriteTeam] = useState(user.favoriteTeam ?? '')
@@ -27,16 +31,28 @@ export function ProfileForm({ userId, user }: Props) {
   async function handleProfile(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setProfileLoading(true)
-    const formData = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const formData = new FormData(form)
     const result = await updateProfile(userId, {
+      email: formData.get('email') as string,
       name: formData.get('name') as string,
       nickname: formData.get('nickname') as string,
       favoriteTeam: favoriteTeam || undefined,
+      currentPassword: (formData.get('currentPassword') as string) || undefined,
     })
     setProfileLoading(false)
     if (result.error) {
       toast.error(result.error)
     } else {
+      if (result.user) {
+        await updateSession({
+          email: result.user.email,
+          name: result.user.name,
+          nickname: result.user.nickname,
+        })
+      }
+      form.reset()
+      router.refresh()
       toast.success('Profil gespeichert')
     }
   }
@@ -67,9 +83,7 @@ export function ProfileForm({ userId, user }: Props) {
 
   return (
     <div className="space-y-5">
-
-      {/* Profildaten */}
-      <div className="glass rounded-2xl p-5">
+      <div className="surface rounded-[1.5rem] p-5">
         <div className="flex items-center gap-2 mb-5">
           <IconUser className="h-4 w-4 text-primary" strokeWidth={1.5} />
           <h2 className="text-sm font-bold tracking-wide text-foreground">
@@ -81,7 +95,7 @@ export function ProfileForm({ userId, user }: Props) {
             <Label htmlFor="email" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
               E-Mail
             </Label>
-            <Input id="email" value={user.email} disabled className="bg-muted/50 opacity-70" />
+            <Input id="email" name="email" type="email" defaultValue={user.email} autoComplete="email" required />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="name" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -110,18 +124,29 @@ export function ProfileForm({ userId, user }: Props) {
             </Label>
             <ClubCombobox value={favoriteTeam} onChange={setFavoriteTeam} />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="currentPasswordForEmail" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Aktuelles Passwort{' '}
+              <span className="normal-case font-normal text-muted-foreground/60">(nur für E-Mail-Änderung)</span>
+            </Label>
+            <Input
+              id="currentPasswordForEmail"
+              name="currentPassword"
+              type="password"
+              autoComplete="current-password"
+            />
+          </div>
           <Button
             type="submit"
             disabled={profileLoading}
-            className="bg-gradient-to-r from-primary to-primary/80 font-semibold rounded-xl shadow-sm shadow-primary/20"
+            className="font-semibold"
           >
             {profileLoading ? 'Speichern…' : 'Speichern'}
           </Button>
         </form>
       </div>
 
-      {/* Passwort */}
-      <div className="glass rounded-2xl p-5">
+      <div className="surface rounded-[1.5rem] p-5">
         <div className="flex items-center gap-2 mb-5">
           <IconLock className="h-4 w-4 text-primary" strokeWidth={1.5} />
           <h2 className="text-sm font-bold tracking-wide text-foreground">
@@ -150,13 +175,12 @@ export function ProfileForm({ userId, user }: Props) {
           <Button
             type="submit"
             disabled={passwordLoading}
-            className="bg-gradient-to-r from-primary to-primary/80 font-semibold rounded-xl shadow-sm shadow-primary/20"
+            className="font-semibold"
           >
             {passwordLoading ? 'Ändern…' : 'Passwort ändern'}
           </Button>
         </form>
       </div>
-
     </div>
   )
 }

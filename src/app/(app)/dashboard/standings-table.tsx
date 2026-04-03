@@ -71,16 +71,29 @@ export function StandingsTable({ year }: { year: string }) {
           {table.map((team, i) => {
             const rank = i + 1
             const q = getQualifier(rank)
+            const prevQ = i > 0 ? getQualifier(i)?.color : null
+            const nextQ = i < table.length - 1 ? getQualifier(i + 2)?.color : null
+            const startsGroup = q?.color !== prevQ
+            const endsGroup = q?.color !== nextQ
             const diff = team.goalDiff
 
             return (
               <TableRow key={team.teamInfoId}>
-                {/* Rank cell – colored left border as qualifier indicator */}
                 <TableCell
-                  className="pl-3 font-bold text-sm tabular-nums text-muted-foreground"
-                  style={{ borderLeft: `4px solid ${q ? q.color : 'transparent'}` }}
+                  className="relative pl-4 font-bold text-sm tabular-nums text-muted-foreground"
                   title={q?.label}
                 >
+                  {q && (
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        'absolute bottom-0 left-0 top-0 w-1',
+                        startsGroup && 'rounded-tr-sm',
+                        endsGroup && 'rounded-br-sm',
+                      )}
+                      style={{ backgroundColor: q.color }}
+                    />
+                  )}
                   {rank}
                 </TableCell>
 

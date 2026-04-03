@@ -20,7 +20,7 @@ import {
   IconTable,
   IconChartBar,
   IconPokerChip,
-} from '@tabler/icons-react'
+} from '@/components/app-icons'
 
 interface Match {
   id: string
@@ -72,16 +72,18 @@ interface Props {
 function PointsBadge({ points, isJoker = false }: { points: number | null; isJoker?: boolean }) {
   const shouldReduce = useReducedMotion()
   if (points === null) return <span className="text-muted-foreground text-xs">–</span>
-  const base = isJoker && points > 0 ? points / 2 : points
+  const value = points
   const className = cn(
-    'inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-md px-1 text-xs font-bold tabular-nums',
-    base === 4 && 'bg-primary text-primary-foreground',
-    base === 3 && 'bg-primary/70 text-primary-foreground',
-    base === 2 && 'border border-primary/40 text-primary',
-    base === 0 && 'bg-muted text-muted-foreground',
-    isJoker && points > 0 && 'ring-1 ring-amber-400/70',
+    'inline-flex h-7 min-w-[1.85rem] items-center justify-center rounded-xl border px-2 text-xs font-bold tabular-nums shadow-sm',
+    !isJoker && value === 4 && 'border-blue-700 bg-blue-700 text-white',
+    !isJoker && value === 3 && 'border-blue-600 bg-blue-600 text-white',
+    !isJoker && value === 2 && 'border-blue-300 bg-blue-300/20 text-blue-300',
+    value === 0 && 'border-gray-500/35 bg-gray-500/12 text-gray-300',
+    isJoker && value === 8 && 'border-amber-400 bg-amber-400 text-gray-950',
+    isJoker && value === 6 && 'border-amber-500 bg-amber-500/80 text-gray-950',
+    isJoker && value === 4 && 'border-amber-300 bg-amber-300/20 text-amber-300',
   )
-  if (base >= 2) {
+  if (value >= 2) {
     return (
       <motion.span
         className={className}
@@ -99,15 +101,15 @@ function PointsBadge({ points, isJoker = false }: { points: number | null; isJok
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string; dot?: boolean }> = {
-    ACTIVE:    { label: 'Live', cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20', dot: true },
-    UPCOMING:  { label: 'Ausstehend', cls: 'bg-muted text-muted-foreground' },
-    CLOSED:    { label: 'Geschlossen', cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' },
-    COMPLETED: { label: 'Abgeschlossen', cls: 'bg-muted/70 text-muted-foreground' },
+    ACTIVE:    { label: 'Aktiv', cls: 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', dot: true },
+    UPCOMING:  { label: 'Ausstehend', cls: 'border border-border/70 bg-secondary text-muted-foreground' },
+    CLOSED:    { label: 'Geschlossen', cls: 'border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400' },
+    COMPLETED: { label: 'Abgeschlossen', cls: 'border border-border/70 bg-secondary text-muted-foreground' },
   }
   const { label, cls, dot } = map[status] ?? { label: status, cls: '' }
   return (
-    <span className={cn('flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold uppercase tracking-wide', cls)}>
-      {dot && <span className="h-1.5 w-1.5 rounded-full bg-current animate-live-pulse" />}
+    <span className={cn('flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]', cls)}>
+      {dot && <span className="h-1.5 w-1.5 rounded-full bg-current" />}
       {label}
     </span>
   )
@@ -124,10 +126,10 @@ function RankIcon({ rank }: { rank: number }) {
 /* ── Animated Tab Pill ── */
 type TabValue = 'spiele' | 'tabelle' | 'stats'
 
-const tabDefs: { value: TabValue; label: string; icon: React.ReactNode }[] = [
-  { value: 'spiele',  label: 'Spiele & Tipps', icon: <IconBallFootball className="h-3.5 w-3.5" strokeWidth={1.5} /> },
-  { value: 'tabelle', label: 'Bundesliga',      icon: <IconTable       className="h-3.5 w-3.5" strokeWidth={1.5} /> },
-  { value: 'stats',   label: 'Statistiken',     icon: <IconChartBar    className="h-3.5 w-3.5" strokeWidth={1.5} /> },
+const tabDefs: { value: TabValue; label: string; mobileLabel: string; icon: React.ReactNode }[] = [
+  { value: 'spiele',  label: 'Spiele & Tipps', mobileLabel: 'Spiele',     icon: <IconBallFootball className="h-3.5 w-3.5" strokeWidth={1.5} /> },
+  { value: 'tabelle', label: 'Bundesliga',      mobileLabel: 'Bundesliga', icon: <IconTable       className="h-3.5 w-3.5" strokeWidth={1.5} /> },
+  { value: 'stats',   label: 'Statistiken',     mobileLabel: 'Stats',      icon: <IconChartBar    className="h-3.5 w-3.5" strokeWidth={1.5} /> },
 ]
 
 function AnimatedTabsList({
@@ -140,7 +142,7 @@ function AnimatedTabsList({
   onChange: (v: TabValue) => void
 }) {
   return (
-    <div role="tablist" className="relative flex bg-muted/60 rounded-xl p-1 mb-4">
+    <div role="tablist" className="relative mb-4 grid grid-cols-3 rounded-2xl border border-border/70 bg-secondary/80 p-1">
       {tabs.map((tab) => (
         <button
           key={tab.value}
@@ -148,19 +150,20 @@ function AnimatedTabsList({
           aria-selected={value === tab.value}
           onClick={() => onChange(tab.value)}
           className={cn(
-            'relative z-10 flex flex-1 items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors',
+            'relative z-10 flex min-w-0 items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors sm:gap-1.5 sm:px-3 sm:text-xs sm:tracking-[0.12em]',
             value === tab.value ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
           )}
         >
           {value === tab.value && (
             <motion.div
               layoutId="tab-indicator"
-              className="absolute inset-0 bg-white dark:bg-card rounded-lg shadow-sm"
+              className="absolute inset-0 rounded-xl bg-background shadow-sm"
               transition={spring}
             />
           )}
           <span className="relative z-10">{tab.icon}</span>
-          <span className="relative z-10">{tab.label}</span>
+          <span className="relative z-10 min-w-0 truncate sm:hidden">{tab.mobileLabel}</span>
+          <span className="relative z-10 hidden min-w-0 truncate sm:inline">{tab.label}</span>
         </button>
       ))}
     </div>
@@ -193,45 +196,63 @@ export function DashboardContent({
   return (
     <div className="space-y-6">
 
-      {/* ── Hero Header ── */}
       <motion.div
         variants={fadeUp}
         initial="hidden"
         animate="show"
         transition={{ duration: shouldReduce ? 0 : 0.4 }}
       >
-        <div className="pb-2">
-          {/* Status + season row */}
-          <div className="flex items-center gap-2 mb-3">
-            <StatusBadge status={matchday.status} />
-            <span className="text-sm text-muted-foreground">
-              Saison {matchday.season.year}/{parseInt(matchday.season.year) + 1}
-            </span>
-          </div>
+        <div className="surface rounded-[1.75rem] p-5 sm:p-6">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div>
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <StatusBadge status={matchday.status} />
+                <span className="text-sm text-muted-foreground">
+                  Saison {matchday.season.year}/{parseInt(matchday.season.year) + 1}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+                    Matchday Control Center
+                  </p>
+                  <h1 className="mt-3 text-5xl leading-none text-foreground">
+                    Spieltag <span className="text-primary">{matchday.matchdayNumber}</span>
+                  </h1>
+                </div>
+              </div>
+              <p className="mt-4 text-sm text-muted-foreground" suppressHydrationWarning>
+                Deadline: {new Date(matchday.tippDeadline).toLocaleString('de-DE', {
+                  weekday: 'short', day: '2-digit', month: '2-digit',
+                  hour: '2-digit', minute: '2-digit',
+                })}
+              </p>
+            </div>
 
-          {/* Title row */}
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <h1 className="text-5xl font-bold tracking-tight text-foreground leading-none">
-              Spieltag <span className="text-primary">{matchday.matchdayNumber}</span>
-            </h1>
-
-            {/* Spieltag navigation */}
-            <div className="flex items-center gap-1.5">
-              <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl" asChild disabled={!prevMd}>
-                {prevMd
-                  ? <Link href={`/dashboard/${prevMd}`}><IconChevronLeft className="h-4 w-4" strokeWidth={1.5} /></Link>
-                  : <span><IconChevronLeft className="h-4 w-4" strokeWidth={1.5} /></span>}
-              </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl" asChild disabled={!nextMd}>
-                {nextMd
-                  ? <Link href={`/dashboard/${nextMd}`}><IconChevronRight className="h-4 w-4" strokeWidth={1.5} /></Link>
-                  : <span><IconChevronRight className="h-4 w-4" strokeWidth={1.5} /></span>}
-              </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              {prevMd ? (
+                <Button variant="outline" size="icon" className="h-10 w-10" asChild>
+                  <Link href={`/dashboard/${prevMd}`} aria-label={`Zum Spieltag ${prevMd}`}>
+                    <IconChevronLeft className="h-4 w-4" strokeWidth={1.5} />
+                  </Link>
+                </Button>
+              ) : (
+                <span className="h-10 w-10 shrink-0" aria-hidden="true" />
+              )}
+              {nextMd ? (
+                <Button variant="outline" size="icon" className="h-10 w-10" asChild>
+                  <Link href={`/dashboard/${nextMd}`} aria-label={`Zum Spieltag ${nextMd}`}>
+                    <IconChevronRight className="h-4 w-4" strokeWidth={1.5} />
+                  </Link>
+                </Button>
+              ) : (
+                <span className="h-10 w-10 shrink-0" aria-hidden="true" />
+              )}
               {!deadlinePassed && matchday.status === 'ACTIVE' && (
                 <Button
                   asChild
                   size="sm"
-                  className="ml-1 gap-1.5 font-semibold bg-gradient-to-r from-primary to-primary/80 rounded-xl shadow-sm shadow-primary/20"
+                  className="ml-1 gap-1.5 font-semibold"
                 >
                   <Link href="/tippen">
                     <IconPencil className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -241,20 +262,10 @@ export function DashboardContent({
               )}
             </div>
           </div>
-
-          <p className="mt-3 text-xs text-muted-foreground" suppressHydrationWarning>
-            Deadline: {new Date(matchday.tippDeadline).toLocaleString('de-DE', {
-              weekday: 'short', day: 'numeric', month: 'numeric',
-              hour: '2-digit', minute: '2-digit',
-            })}
-          </p>
         </div>
       </motion.div>
 
-      {/* ── Split layout: Spiele + Rechts-Sidebar ── */}
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
-
-        {/* LEFT: Spiele & Tipps */}
         <div className="flex-1 min-w-0">
           <AnimatedTabsList tabs={tabDefs} value={activeTab} onChange={setActiveTab} />
 
@@ -293,7 +304,7 @@ export function DashboardContent({
               )}
 
               {activeTab === 'tabelle' && (
-                <div className="glass rounded-xl overflow-hidden">
+                <div className="surface overflow-hidden rounded-[1.5rem]">
                   <StandingsTable year={matchday.season.year} />
                 </div>
               )}
@@ -313,7 +324,6 @@ export function DashboardContent({
           </AnimatePresence>
         </div>
 
-        {/* RIGHT: Punktetabelle */}
         <div className="w-full lg:w-72 xl:w-80 shrink-0">
           <PointsTable
             users={sortedBySeason}
@@ -350,11 +360,10 @@ function MatchRow({
 
   return (
     <div className={cn(
-      'glass rounded-xl overflow-hidden transition-all',
-      isLive && 'ring-1 ring-emerald-500/30',
+      'surface overflow-hidden rounded-[1.35rem] transition-all',
+      isLive && 'ring-1 ring-emerald-500/25',
     )}>
-      {/* Match header */}
-      <div className="flex items-center gap-3 border-b border-white/20 dark:border-white/5 px-4 py-3">
+      <div className="flex items-center gap-3 border-b border-border/70 px-4 py-3">
         <span className="hidden sm:block shrink-0 text-xs text-muted-foreground tabular-nums" suppressHydrationWarning>
           {matchDate.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric' })}{' '}
           {matchDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
@@ -369,9 +378,9 @@ function MatchRow({
               : <span className="h-6 w-6" />}
             <div className="relative flex items-center">
               <span className={cn(
-                'text-xl font-bold tabular-nums w-16 text-center rounded-lg px-1.5 py-0.5',
+                'w-16 rounded-lg px-1.5 py-0.5 text-center text-xl font-bold tabular-nums',
                 hasResult
-                  ? 'bg-foreground/8 text-foreground'
+                  ? 'bg-secondary text-foreground'
                   : 'text-muted-foreground',
               )}>
                 {hasResult ? `${match.homeScore}:${match.awayScore}` : '–:–'}
@@ -390,36 +399,49 @@ function MatchRow({
       </div>
 
       {/* Tips row */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1.5 px-4 py-2.5">
+      <div className="flex flex-wrap gap-x-3 gap-y-2 px-4 py-3">
         {users.map((u) => {
           const tip = tips[u.id]
           const showTip = deadlinePassed || u.id === currentUserId
           const isMe = u.id === currentUserId
 
           return (
-            <div key={u.id} className="flex items-center gap-1.5">
-              {u.color && (
-                <span
-                  className="h-2 w-2 rounded-full shrink-0"
-                  style={{ backgroundColor: u.color }}
-                />
+            <div
+              key={u.id}
+              className={cn(
+                'flex items-center gap-2 rounded-xl border px-2.5 py-1.5',
+                isMe
+                  ? 'border-primary/20 bg-primary/8'
+                  : 'border-border/60 bg-background/55',
               )}
-              <span className={cn(
-                'text-xs',
-                isMe ? 'font-semibold text-primary' : 'text-muted-foreground',
-              )}>
-                {u.nickname}
-              </span>
+            >
+              <div className="flex min-w-0 items-center gap-1.5">
+                {u.color && (
+                  <span
+                    className="h-2.5 w-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: u.color }}
+                  />
+                )}
+                <span className={cn(
+                  'truncate text-xs',
+                  isMe ? 'font-semibold text-primary' : 'text-muted-foreground',
+                )}>
+                  {u.nickname}
+                </span>
+              </div>
               {showTip && tip ? (
-                <>
-                  <span className="text-sm font-bold tabular-nums text-foreground">
+                <div className="grid shrink-0 grid-cols-[3.25rem_auto_2rem] items-center gap-1.5">
+                  <span className="rounded-lg bg-background/80 px-2 py-0.5 text-center text-sm font-bold tabular-nums text-foreground">
                     {tip.homeScore}:{tip.awayScore}
                   </span>
                   {tip.isJoker && (deadlinePassed || isMe) && (
-                    <IconPokerChip className="h-3.5 w-3.5 text-amber-500 shrink-0" strokeWidth={1.5} />
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/10">
+                      <IconPokerChip className="h-3.5 w-3.5 text-amber-500 shrink-0" strokeWidth={1.5} />
+                    </span>
                   )}
+                  {!(tip.isJoker && (deadlinePassed || isMe)) && <span className="h-7 w-7" aria-hidden="true" />}
                   <PointsBadge points={tip.points} isJoker={tip.isJoker && (deadlinePassed || isMe)} />
-                </>
+                </div>
               ) : showTip ? (
                 <span className="text-xs text-muted-foreground">–</span>
               ) : (
@@ -446,14 +468,14 @@ function PointsTable({
   currentUserId: string
 }) {
   return (
-    <div className="glass rounded-xl overflow-hidden">
-      <div className="flex items-center gap-2 border-b border-white/20 dark:border-white/5 px-4 py-3">
+    <div className="surface overflow-hidden rounded-[1.5rem]">
+      <div className="flex items-center gap-2 border-b border-border/70 px-4 py-3">
         <IconTrophy className="h-4 w-4 text-yellow-500 shrink-0" strokeWidth={1.5} />
         <h2 className="text-sm font-bold tracking-wide text-foreground">
           Punktestand
         </h2>
       </div>
-      <div className="divide-y divide-white/10 dark:divide-white/5">
+      <div className="divide-y divide-border/70">
         <AnimatePresence initial={false}>
           {users.map((u, i) => {
             const isMe = u.id === currentUserId
@@ -468,7 +490,7 @@ function PointsTable({
                 animate="show"
                 transition={{ duration: 0.3, delay: i * 0.04 }}
                 className={cn(
-                  'flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.03]',
+                  'flex items-center gap-3 px-4 py-3 transition-colors hover:bg-secondary/60',
                   isMe && 'bg-primary/5',
                 )}
               >

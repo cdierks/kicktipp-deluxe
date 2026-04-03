@@ -8,9 +8,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  PieChart,
-  Pie,
-  Cell,
 } from 'recharts'
 
 export interface LinePoint {
@@ -18,7 +15,7 @@ export interface LinePoint {
   cumulative: number
 }
 
-export interface PieSlice {
+export interface QualitySlice {
   name: string
   value: number
   pct: number
@@ -33,66 +30,52 @@ const TICK_STYLE = {
 
 export function PlayerCharts({
   lineData,
-  pieData,
+  qualityData,
+  lineColor,
 }: {
   lineData: LinePoint[]
-  pieData: PieSlice[]
+  qualityData: QualitySlice[]
+  lineColor: string
 }) {
   return (
-    <div className="space-y-5">
-
-      {/* Treffer-Verteilung Donut */}
-      {pieData.length > 0 && (
-        <div className="glass rounded-xl p-4">
-          <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-foreground">
-            Treffer-Verteilung
+    <div className="grid gap-4">
+      {qualityData.length > 0 && (
+        <div className="surface overflow-hidden rounded-[1.35rem] border border-border/70 p-4 sm:p-5">
+          <h3 className="mb-4 text-sm font-bold uppercase tracking-[0.16em] text-foreground">
+            Tippqualität
           </h3>
-          <div className="flex flex-col items-center gap-6 sm:flex-row">
-            <PieChart width={180} height={180}>
-              <Pie
-                data={pieData}
-                innerRadius={50}
-                outerRadius={80}
-                dataKey="value"
-                paddingAngle={2}
-              >
-                {pieData.map((e, i) => (
-                  <Cell key={i} fill={e.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null
-                  const d = payload[0].payload as PieSlice
-                  return (
-                    <div className="rounded-lg border border-border bg-popover px-3 py-2 shadow-md text-xs font-sans">
-                      <p className="font-semibold">{d.name}</p>
-                      <p className="text-muted-foreground">{d.value} Tipps · {d.pct}%</p>
-                    </div>
-                  )
-                }}
-              />
-            </PieChart>
-            <div className="flex flex-col gap-2.5">
-              {pieData.map((e) => (
-                <div key={e.name} className="flex items-center gap-2 text-xs font-sans">
-                  <span className="h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: e.color }} />
-                  <span className="text-foreground">{e.name}</span>
-                  <span className="ml-auto pl-4 tabular-nums text-muted-foreground font-medium">{e.pct}%</span>
+          <div className="space-y-3">
+            {qualityData.map((entry) => (
+              <div key={entry.name} className="grid grid-cols-[minmax(0,1fr)_3.5rem] items-center gap-3">
+                <div className="min-w-0">
+                  <div className="mb-1.5 flex items-center gap-2 text-xs">
+                    <span className="h-3 w-3 shrink-0 rounded-sm" style={{ backgroundColor: entry.color }} />
+                    <span className="truncate text-foreground">{entry.name}</span>
+                    <span className="ml-auto shrink-0 tabular-nums text-muted-foreground">{entry.value}</span>
+                  </div>
+                  <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full transition-[width]"
+                      style={{ width: `${entry.pct}%`, backgroundColor: entry.color }}
+                      aria-hidden="true"
+                    />
+                  </div>
                 </div>
-              ))}
-            </div>
+                <span className="text-right text-xs font-medium tabular-nums text-muted-foreground">
+                  {entry.pct}%
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Saison-Verlauf LineChart */}
       {lineData.length > 1 && (
-        <div className="glass rounded-xl p-4">
-          <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-foreground">
+        <div className="surface overflow-hidden rounded-[1.35rem] border border-border/70 p-4 sm:p-5">
+          <h3 className="mb-4 text-sm font-bold uppercase tracking-[0.16em] text-foreground">
             Saison-Verlauf
           </h3>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={220}>
             <LineChart data={lineData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="st" tick={TICK_STYLE} tickLine={false} axisLine={false} />
@@ -101,7 +84,7 @@ export function PlayerCharts({
                 content={({ active, payload, label }) => {
                   if (!active || !payload?.length) return null
                   return (
-                    <div className="rounded-lg border border-border bg-popover px-3 py-2 shadow-md text-xs font-sans">
+                    <div className="rounded-lg border border-border bg-popover px-3 py-2 shadow-md text-xs">
                       <p className="mb-1 font-bold uppercase tracking-wide text-muted-foreground">
                         {label}
                       </p>
@@ -115,10 +98,10 @@ export function PlayerCharts({
               <Line
                 type="monotone"
                 dataKey="cumulative"
-                stroke="#5347CE"
+                stroke={lineColor}
                 strokeWidth={2.5}
                 dot={false}
-                activeDot={{ r: 4, fill: '#5347CE' }}
+                activeDot={{ r: 4, fill: lineColor }}
               />
             </LineChart>
           </ResponsiveContainer>

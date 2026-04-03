@@ -72,7 +72,7 @@ async function MatchdayDashboard({
         matches: {
           select: {
             tips: {
-              select: { userId: true, homeScore: true, awayScore: true, points: true },
+              select: { userId: true, homeScore: true, awayScore: true, points: true, isJoker: true },
             },
           },
         },

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
@@ -16,7 +16,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -24,10 +23,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
-import { IconRefresh, IconTrash } from '@tabler/icons-react'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { cn } from '@/lib/utils'
+import { IconArrowsSort, IconRefresh, IconTrash } from '@/components/app-icons'
 
 type MatchdayStatus = 'UPCOMING' | 'ACTIVE' | 'CLOSED' | 'COMPLETED'
+type SortKey = 'season' | 'matchdayNumber' | 'status' | 'tippDeadline' | 'matches' | 'syncedAt'
+type SortDirection = 'asc' | 'desc'
 
 interface Matchday {
   id: string
@@ -45,6 +54,12 @@ interface Season {
   matchdays: Matchday[]
 }
 
+type MatchdayRowData = Matchday & {
+  seasonId: string
+  seasonYear: string
+  seasonActive: boolean
+}
+
 const statusColors: Record<MatchdayStatus, 'default' | 'secondary' | 'outline' | 'destructive'> = {
   UPCOMING: 'secondary',
   ACTIVE: 'default',
@@ -59,6 +74,13 @@ const statusLabels: Record<MatchdayStatus, string> = {
   COMPLETED: 'Abgeschlossen',
 }
 
+const statusOrder: Record<MatchdayStatus, number> = {
+  ACTIVE: 0,
+  UPCOMING: 1,
+  CLOSED: 2,
+  COMPLETED: 3,
+}
+
 export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -67,37 +89,85 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
   const [selectedSeasonId, setSelectedSeasonId] = useState(activeSeason?.id ?? seasons[0]?.id ?? '')
   const [newMatchdayNum, setNewMatchdayNum] = useState('')
   const [newDeadline, setNewDeadline] = useState('')
+  const [sortKey, setSortKey] = useState<SortKey>('matchdayNumber')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+
+  const selectedSeason = seasons.find((s) => s.id === selectedSeasonId)
+
+  const rows = useMemo(() => {
+    const flatRows: MatchdayRowData[] = seasons.flatMap((season) =>
+      season.matchdays.map((matchday) => ({
+        ...matchday,
+        seasonId: season.id,
+        seasonYear: season.year,
+        seasonActive: season.active,
+      })),
+    )
+
+    const filtered = selectedSeasonId
+      ? flatRows.filter((row) => row.seasonId === selectedSeasonId)
+      : flatRows
+
+    return filtered.sort((a, b) => {
+      const modifier = sortDirection === 'asc' ? 1 : -1
+      switch (sortKey) {
+        case 'season':
+          return a.seasonYear.localeCompare(b.seasonYear) * modifier
+        case 'matchdayNumber':
+          return (a.matchdayNumber - b.matchdayNumber) * modifier
+        case 'status':
+          return (statusOrder[a.status] - statusOrder[b.status]) * modifier
+        case 'tippDeadline':
+          return (a.tippDeadline.getTime() - b.tippDeadline.getTime()) * modifier
+        case 'matches':
+          return (a._count.matches - b._count.matches) * modifier
+        case 'syncedAt':
+          return ((a.syncedAt?.getTime() ?? 0) - (b.syncedAt?.getTime() ?? 0)) * modifier
+        default:
+          return 0
+      }
+    })
+  }, [selectedSeasonId, seasons, sortDirection, sortKey])
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+      return
+    }
+    setSortKey(key)
+    setSortDirection(key === 'matchdayNumber' ? 'asc' : 'desc')
+  }
 
   async function handleCreateSeason() {
     if (!newYear) return
     const result = await createSeason(newYear)
     if (result.error) {
       toast.error(result.error)
-    } else {
-      toast.success(`Saison ${newYear}/${parseInt(newYear) + 1} erstellt`)
-      setNewYear('')
-      startTransition(() => router.refresh())
+      return
     }
+    toast.success(`Saison ${newYear}/${parseInt(newYear) + 1} erstellt`)
+    setNewYear('')
+    startTransition(() => router.refresh())
   }
 
   async function handleDeleteSeason(seasonId: string) {
     const result = await deleteSeason(seasonId)
     if (result.error) {
       toast.error(result.error)
-    } else {
-      toast.success('Saison gelöscht')
-      startTransition(() => router.refresh())
+      return
     }
+    toast.success('Saison gelöscht')
+    startTransition(() => router.refresh())
   }
 
   async function handleSetActive(seasonId: string) {
     const result = await setActiveSeason(seasonId)
     if (result.error) {
       toast.error(result.error)
-    } else {
-      toast.success('Aktive Saison gesetzt')
-      startTransition(() => router.refresh())
+      return
     }
+    toast.success('Aktive Saison gesetzt')
+    startTransition(() => router.refresh())
   }
 
   async function handleCreateMatchday() {
@@ -109,309 +179,339 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
     })
     if (result.error) {
       toast.error(result.error)
-    } else {
-      toast.success('Spieltag erstellt')
-      setNewMatchdayNum('')
-      setNewDeadline('')
-      startTransition(() => router.refresh())
+      return
     }
+    toast.success('Spieltag erstellt')
+    setNewMatchdayNum('')
+    setNewDeadline('')
+    startTransition(() => router.refresh())
   }
 
   async function handleStatusChange(matchdayId: string, status: MatchdayStatus) {
     const result = await setMatchdayStatus(matchdayId, status)
     if (result.error) {
       toast.error(result.error)
-    } else {
-      toast.success('Status geändert')
-      startTransition(() => router.refresh())
+      return
     }
+    toast.success('Status geändert')
+    startTransition(() => router.refresh())
   }
 
   async function handleDeadlineUpdate(matchdayId: string, deadline: string) {
     const result = await updateDeadline(matchdayId, new Date(deadline).toISOString())
     if (result.error) {
       toast.error(result.error)
-    } else {
-      toast.success('Deadline aktualisiert')
-      startTransition(() => router.refresh())
+      return
     }
+    toast.success('Deadline aktualisiert')
+    startTransition(() => router.refresh())
   }
 
   async function handleSync(matchdayId: string, year: string, matchdayNumber: number) {
     const result = await syncMatchday(matchdayId, year, matchdayNumber)
     if (result.error) {
       toast.error(result.error)
-    } else {
-      toast.success(`${result.upserted} Spiele synchronisiert`)
-      startTransition(() => router.refresh())
+      return
     }
+    toast.success(`${result.upserted} Spiele synchronisiert`)
+    startTransition(() => router.refresh())
   }
-
-  const selectedSeason = seasons.find((s) => s.id === selectedSeasonId)
 
   return (
     <div className="space-y-6">
-      {/* Create Season */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base uppercase tracking-wide">Neue Saison anlegen</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-end gap-3">
+      <div className="grid gap-4 xl:grid-cols-3">
+        <section className="surface rounded-[1.5rem] p-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            Saison anlegen
+          </p>
+          <div className="mt-4 space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="year" className="font-sans text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Startjahr (z.B. 2024 für 2024/25)
+              <Label htmlFor="newSeasonYear" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Startjahr
               </Label>
               <Input
-                id="year"
+                id="newSeasonYear"
                 value={newYear}
                 onChange={(e) => setNewYear(e.target.value)}
-                placeholder="2024"
-                className="w-32"
+                placeholder="2026"
+                className="max-w-[10rem]"
               />
             </div>
-            <Button onClick={handleCreateSeason} disabled={!newYear || isPending}
-              className="uppercase tracking-wide text-xs">
-              Erstellen
+            <Button onClick={handleCreateSeason} disabled={!newYear || isPending} className="w-full sm:w-auto">
+              Saison erstellen
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </section>
 
-      {/* Seasons list */}
-      {seasons.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base uppercase tracking-wide">Saisons</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {seasons.map((s) => (
-              <div key={s.id} className="flex items-center justify-between py-1">
-                <span className="font-medium font-sans">
-                  {s.year}/{parseInt(s.year) + 1}
-                  {s.active && (
-                    <Badge className="ml-2" variant="default">Aktiv</Badge>
-                  )}
-                </span>
-                <div className="flex items-center gap-2">
-                  {!s.active && (
-                    <Button size="sm" variant="outline" onClick={() => handleSetActive(s.id)}
-                      className="uppercase tracking-wide text-xs">
-                      Aktivieren
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDeleteSeason(s.id)}
-                    disabled={isPending}
-                    className="gap-1.5 uppercase tracking-wide text-xs"
-                  >
-                    <IconTrash className="h-3.5 w-3.5" strokeWidth={1} />
-                    Löschen
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      <Separator />
-
-      {/* Create Matchday */}
-      {seasons.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base uppercase tracking-wide">Spieltag erstellen</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <section className="surface rounded-[1.5rem] p-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            Spieltag anlegen
+          </p>
+          <div className="mt-4 grid gap-3">
             <div className="space-y-2">
-              <Label className="font-sans text-xs font-semibold uppercase tracking-wide text-muted-foreground">Saison</Label>
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Saison</Label>
               <Select value={selectedSeasonId} onValueChange={setSelectedSeasonId}>
-                <SelectTrigger className="w-full max-w-xs">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {seasons.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.year}/{parseInt(s.year) + 1}
+                  {seasons.map((season) => (
+                    <SelectItem key={season.id} value={season.id}>
+                      {season.year}/{parseInt(season.year) + 1}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="matchdayNum" className="font-sans text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Spieltag-Nr.
+                <Label htmlFor="newMatchdayNum" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Spieltag
                 </Label>
                 <Input
-                  id="matchdayNum"
+                  id="newMatchdayNum"
                   type="number"
                   min={1}
                   max={34}
                   value={newMatchdayNum}
                   onChange={(e) => setNewMatchdayNum(e.target.value)}
-                  className="w-24"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="deadline" className="font-sans text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Tipp-Deadline
+                <Label htmlFor="newDeadline" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Deadline
                 </Label>
                 <Input
-                  id="deadline"
+                  id="newDeadline"
                   type="datetime-local"
                   value={newDeadline}
                   onChange={(e) => setNewDeadline(e.target.value)}
-                  className="w-full max-w-xs"
                 />
               </div>
-              <Button
-                onClick={handleCreateMatchday}
-                disabled={!selectedSeasonId || !newMatchdayNum || !newDeadline || isPending}
-                className="uppercase tracking-wide text-xs self-end"
-              >
-                Erstellen
-              </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <Button
+              onClick={handleCreateMatchday}
+              disabled={!selectedSeasonId || !newMatchdayNum || !newDeadline || isPending}
+              className="w-full sm:w-auto"
+            >
+              Spieltag erstellen
+            </Button>
+          </div>
+        </section>
 
-      {/* Matchdays list */}
-      {selectedSeason && selectedSeason.matchdays.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base uppercase tracking-wide">
-              Spieltage – {selectedSeason.year}/{parseInt(selectedSeason.year) + 1}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {selectedSeason.matchdays.map((md) => (
-              <MatchdayRow
-                key={md.id}
-                matchday={md}
-                seasonYear={selectedSeason.year}
-                onStatusChange={handleStatusChange}
-                onDeadlineUpdate={handleDeadlineUpdate}
-                onSync={handleSync}
-                isPending={isPending}
-              />
+        <section className="surface rounded-[1.5rem] p-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            Saisonverwaltung
+          </p>
+          <div className="mt-4 space-y-3">
+            {seasons.map((season) => (
+              <div key={season.id} className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-background/70 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="font-semibold text-foreground">
+                    {season.year}/{parseInt(season.year) + 1}
+                  </p>
+                  <div className="mt-1 flex items-center gap-2">
+                    {season.active && <Badge>Aktiv</Badge>}
+                    <span className="text-xs text-muted-foreground">
+                      {season.matchdays.length} Spieltage
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {!season.active && (
+                    <Button size="sm" variant="outline" onClick={() => handleSetActive(season.id)} disabled={isPending}>
+                      Aktivieren
+                    </Button>
+                  )}
+                  <Button size="sm" variant="destructive" onClick={() => handleDeleteSeason(season.id)} disabled={isPending}>
+                    <IconTrash className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  </Button>
+                </div>
+              </div>
             ))}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </section>
+      </div>
+
+      <section className="surface rounded-[1.5rem] p-5">
+        <div className="flex flex-col gap-4 border-b border-border/70 pb-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+              Spieltage
+            </p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+              Sortierbare Verwaltungstabelle
+            </h2>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Saison</Label>
+            <Select value={selectedSeasonId} onValueChange={setSelectedSeasonId}>
+              <SelectTrigger className="min-w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {seasons.map((season) => (
+                  <SelectItem key={season.id} value={season.id}>
+                    {season.year}/{parseInt(season.year) + 1}{season.active ? ' · aktiv' : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="mt-4 overflow-hidden rounded-2xl border border-border/70">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <SortableHead label="Saison" active={sortKey === 'season'} direction={sortDirection} onClick={() => toggleSort('season')} />
+                <SortableHead label="Spieltag" active={sortKey === 'matchdayNumber'} direction={sortDirection} onClick={() => toggleSort('matchdayNumber')} className="text-right" />
+                <SortableHead label="Status" active={sortKey === 'status'} direction={sortDirection} onClick={() => toggleSort('status')} />
+                <SortableHead label="Deadline" active={sortKey === 'tippDeadline'} direction={sortDirection} onClick={() => toggleSort('tippDeadline')} />
+                <SortableHead label="Spiele" active={sortKey === 'matches'} direction={sortDirection} onClick={() => toggleSort('matches')} className="text-right" />
+                <SortableHead label="Sync" active={sortKey === 'syncedAt'} direction={sortDirection} onClick={() => toggleSort('syncedAt')} />
+                <TableHead className="text-right">Aktionen</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
+                    Für die gewählte Saison gibt es noch keine Spieltage.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                rows.map((row) => (
+                  <MatchdayTableRow
+                    key={row.id}
+                    row={row}
+                    onStatusChange={handleStatusChange}
+                    onDeadlineUpdate={handleDeadlineUpdate}
+                    onSync={handleSync}
+                    isPending={isPending}
+                  />
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {selectedSeason && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Standardfilter: aktive Saison {selectedSeason.year}/{parseInt(selectedSeason.year) + 1}.
+          </p>
+        )}
+      </section>
     </div>
   )
 }
 
-function MatchdayRow({
-  matchday,
-  seasonYear,
+function SortableHead({
+  label,
+  active,
+  direction,
+  onClick,
+  className,
+}: {
+  label: string
+  active: boolean
+  direction: SortDirection
+  onClick: () => void
+  className?: string
+}) {
+  return (
+    <TableHead className={className}>
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          'inline-flex items-center gap-1 text-inherit transition-colors hover:text-foreground',
+          className?.includes('text-right') && 'ml-auto',
+          active && 'text-foreground',
+        )}
+      >
+        {label}
+        <IconArrowsSort className={cn('h-3.5 w-3.5', active && direction === 'desc' && 'rotate-180')} strokeWidth={1.5} />
+      </button>
+    </TableHead>
+  )
+}
+
+function MatchdayTableRow({
+  row,
   onStatusChange,
   onDeadlineUpdate,
   onSync,
   isPending,
 }: {
-  matchday: Matchday
-  seasonYear: string
+  row: MatchdayRowData
   onStatusChange: (id: string, status: MatchdayStatus) => void
   onDeadlineUpdate: (id: string, deadline: string) => void
   onSync: (id: string, year: string, num: number) => void
   isPending: boolean
 }) {
-  const [editDeadline, setEditDeadline] = useState(false)
-  const [deadlineVal, setDeadlineVal] = useState(
-    new Date(matchday.tippDeadline).toISOString().slice(0, 16),
-  )
+  const [deadlineVal, setDeadlineVal] = useState(new Date(row.tippDeadline).toISOString().slice(0, 16))
 
   return (
-    <div className="rounded-lg border border-border p-3 space-y-2">
-      {/* Top row: info + controls */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-bold text-sm">ST {matchday.matchdayNumber}</span>
-          <Badge variant={statusColors[matchday.status]}>{statusLabels[matchday.status]}</Badge>
-          <span className="text-sm text-muted-foreground font-sans">
-            {matchday._count.matches} Spiele
-          </span>
+    <TableRow>
+      <TableCell>
+        <div className="font-medium text-foreground">
+          {row.seasonYear}/{parseInt(row.seasonYear) + 1}
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onSync(matchday.id, seasonYear, matchday.matchdayNumber)}
-            disabled={isPending}
-            className="gap-1.5 uppercase tracking-wide text-xs"
-          >
-            <IconRefresh className="h-3.5 w-3.5" strokeWidth={1} />
-            Sync
-          </Button>
+      </TableCell>
+      <TableCell className="text-right tabular-nums font-semibold">
+        {row.matchdayNumber}
+      </TableCell>
+      <TableCell>
+        <Badge variant={statusColors[row.status]}>{statusLabels[row.status]}</Badge>
+      </TableCell>
+      <TableCell>
+        <Input
+          type="datetime-local"
+          value={deadlineVal}
+          onChange={(e) => setDeadlineVal(e.target.value)}
+          onBlur={() => {
+            const normalized = new Date(row.tippDeadline).toISOString().slice(0, 16)
+            if (deadlineVal !== normalized) onDeadlineUpdate(row.id, deadlineVal)
+          }}
+          className="h-9 min-w-48"
+        />
+      </TableCell>
+      <TableCell className="text-right tabular-nums">
+        {row._count.matches}
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {row.syncedAt ? new Date(row.syncedAt).toLocaleString('de-DE') : 'Noch kein Sync'}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center justify-end gap-2">
           <Select
-            value={matchday.status}
-            onValueChange={(v) => onStatusChange(matchday.id, v as MatchdayStatus)}
+            value={row.status}
+            onValueChange={(value) => onStatusChange(row.id, value as MatchdayStatus)}
           >
-            <SelectTrigger className="h-8 w-36">
+            <SelectTrigger className="h-9 w-36">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {(['UPCOMING', 'ACTIVE', 'CLOSED', 'COMPLETED'] as MatchdayStatus[]).map((s) => (
-                <SelectItem key={s} value={s}>
-                  {statusLabels[s]}
+              {(['UPCOMING', 'ACTIVE', 'CLOSED', 'COMPLETED'] as MatchdayStatus[]).map((status) => (
+                <SelectItem key={status} value={status}>
+                  {statusLabels[status]}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onSync(row.id, row.seasonYear, row.matchdayNumber)}
+            disabled={isPending}
+            className="gap-1.5"
+          >
+            <IconRefresh className="h-3.5 w-3.5" strokeWidth={1.5} />
+            Sync
+          </Button>
         </div>
-      </div>
-
-      {/* Deadline row */}
-      <div className="text-sm text-muted-foreground font-sans">
-        {!editDeadline ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <span>Deadline: {new Date(matchday.tippDeadline).toLocaleString('de-DE')}</span>
-            <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => setEditDeadline(true)}>
-              Ändern
-            </Button>
-            {matchday.syncedAt && (
-              <span className="text-xs">
-                Sync: {new Date(matchday.syncedAt).toLocaleString('de-DE')}
-              </span>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-            <Input
-              type="datetime-local"
-              value={deadlineVal}
-              onChange={(e) => setDeadlineVal(e.target.value)}
-              className="h-7 w-full max-w-xs text-xs"
-            />
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                className="h-7 uppercase tracking-wide text-xs"
-                onClick={() => {
-                  onDeadlineUpdate(matchday.id, deadlineVal)
-                  setEditDeadline(false)
-                }}
-              >
-                OK
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 text-xs"
-                onClick={() => setEditDeadline(false)}
-              >
-                Abbrechen
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+      </TableCell>
+    </TableRow>
   )
 }

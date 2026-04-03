@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { IconPalette } from '@tabler/icons-react'
+import { IconPalette } from '@/components/app-icons'
 import { ColorAdmin } from './color-admin'
 
 export default async function FarbenAdminPage() {
