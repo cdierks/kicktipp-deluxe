@@ -144,7 +144,7 @@ function ComparisonSummaryBadgeOrText({
 
 export function MatchdayHeader({ model }: { model: MatchdayPageViewModel }) {
   return (
-    <div className="surface rounded-[1.75rem] p-5 sm:p-6">
+    <div className="surface rounded-[1.4rem] p-5 sm:p-6">
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div>
           <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -223,10 +223,10 @@ export function MatchdaySummary({ model }: { model: MatchdayPageViewModel }) {
   ]
 
   return (
-    <div className="surface rounded-[1.5rem] p-3 sm:p-4">
+    <div className="surface rounded-[1.4rem] p-3 sm:p-4">
       <div className="grid gap-2 md:grid-cols-[repeat(2,minmax(0,1fr))_minmax(0,1.3fr)]">
         {summaryItems.map((item) => (
-          <div key={item.label} className="rounded-[1.2rem] border border-border/60 bg-background/45 px-4 py-3">
+          <div key={item.label} className="rounded-[0.95rem] border border-border/60 bg-background/45 px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               {item.label}
             </p>
@@ -243,7 +243,7 @@ export function MatchdaySummary({ model }: { model: MatchdayPageViewModel }) {
 
 export function MatchdayRanking({ ranking }: { ranking: MatchdayRankingEntry[] }) {
   return (
-    <div className="surface overflow-hidden rounded-[1.5rem]">
+    <div className="surface overflow-hidden rounded-[1.4rem]">
       <div className="border-b border-border/70 px-4 py-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           Spieltagswertung
@@ -472,15 +472,18 @@ export function MatchListTableDesktop({ matches }: { matches: MatchdayMatchRow[]
   }
 
   return (
-    <div className="surface hidden overflow-hidden rounded-[1.5rem] lg:block">
+    <div className="surface hidden rounded-[1.4rem] lg:block">
       <div className="border-b border-border/70 px-4 py-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Spieltag im Detail</p>
         <h2 className="mt-1 text-lg font-semibold tracking-tight text-foreground">Alle Spiele im Vergleich</h2>
       </div>
-      <Table className="table-fixed" containerClassName="overflow-x-hidden">
+      <div className="overflow-hidden rounded-b-[1.4rem]">
+        <Table className="table-fixed" containerClassName="overflow-x-hidden rounded-none">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="w-10">Expand</TableHead>
+            <TableHead className="w-10 text-center">
+              <IconChevronRight className="mx-auto h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+            </TableHead>
             <TableHead className="w-[7rem]">Zeit/Status</TableHead>
             <TableHead>Spiel</TableHead>
             <TableHead className="w-[5.75rem]">Ergebnis</TableHead>
@@ -506,7 +509,8 @@ export function MatchListTableDesktop({ matches }: { matches: MatchdayMatchRow[]
             )
           })}
         </TableBody>
-      </Table>
+        </Table>
+      </div>
     </div>
   )
 }
@@ -628,7 +632,7 @@ export function MatchdayPanel({ model }: { model: MatchdayPageViewModel }) {
       <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
         <div className="min-w-0 flex-1 space-y-5">
           <MatchdaySummary model={model} />
-          <div className="surface rounded-[1.5rem] px-5 py-8">
+          <div className="surface rounded-[1.4rem] px-5 py-8">
             <p className="text-base font-semibold text-foreground">Für diesen Spieltag sind noch keine Spiele verfügbar.</p>
             <p className="mt-2 text-sm text-muted-foreground">Sobald Partien synchronisiert sind, erscheint hier der neue Spieltagsvergleich.</p>
           </div>

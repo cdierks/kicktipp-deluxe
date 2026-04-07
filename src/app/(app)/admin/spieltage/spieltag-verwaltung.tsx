@@ -220,7 +220,7 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 xl:grid-cols-3">
-        <section className="surface rounded-[1.5rem] p-5">
+        <section className="surface rounded-[1.4rem] p-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Saison anlegen
           </p>
@@ -243,7 +243,7 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
           </div>
         </section>
 
-        <section className="surface rounded-[1.5rem] p-5">
+        <section className="surface rounded-[1.4rem] p-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Spieltag anlegen
           </p>
@@ -299,13 +299,13 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
           </div>
         </section>
 
-        <section className="surface rounded-[1.5rem] p-5">
+        <section className="surface rounded-[1.4rem] p-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Saisonverwaltung
           </p>
           <div className="mt-4 space-y-3">
             {seasons.map((season) => (
-              <div key={season.id} className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-background/70 px-4 py-3">
+              <div key={season.id} className="flex items-center justify-between gap-3 rounded-[1rem] border border-border/70 bg-background/70 px-4 py-3">
                 <div className="min-w-0">
                   <p className="font-semibold text-foreground">
                     {season.year}/{parseInt(season.year) + 1}
@@ -333,7 +333,7 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
         </section>
       </div>
 
-      <section className="surface rounded-[1.5rem] p-5">
+      <section className="surface rounded-[1.4rem] p-5">
         <div className="flex flex-col gap-4 border-b border-border/70 pb-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">

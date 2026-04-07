@@ -6,10 +6,10 @@ import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { microHover, microPress, panelEnter } from '@/lib/motion'
 import { cn } from '@/lib/utils'
-import { IconLayoutDashboard, IconPencil, IconUser, IconShield } from '@/components/app-icons'
+import { IconBallFootball, IconPencil, IconUser, IconShield } from '@/components/app-icons'
 
 const items = [
-  { href: '/dashboard', label: 'Dashboard', icon: IconLayoutDashboard },
+  { href: '/dashboard', label: 'Spieltag', icon: IconBallFootball },
   { href: '/tippen',    label: 'Tippen',    icon: IconPencil },
   { href: '/profil',    label: 'Profil',    icon: IconUser },
 ]
@@ -41,6 +41,7 @@ export function BottomNav() {
               >
                 <Link
                   href={item.href}
+                  aria-label={item.label}
                   className={cn(
                     'flex flex-1 flex-col items-center gap-1 rounded-[1.05rem] border px-1 py-2.5 transition-all duration-200',
                     active

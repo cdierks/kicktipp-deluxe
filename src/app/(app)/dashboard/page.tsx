@@ -15,7 +15,7 @@ export default async function DashboardPage() {
   if (!activeMatchday) {
     return (
       <div>
-        <h1 className="mb-4 text-2xl font-bold">Dashboard</h1>
+        <h1 className="mb-4 text-2xl font-bold">Spieltag</h1>
         <p className="text-muted-foreground">Aktuell ist kein Spieltag aktiv.</p>
       </div>
     )

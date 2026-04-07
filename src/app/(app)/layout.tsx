@@ -12,7 +12,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         className="mx-auto w-full max-w-7xl px-4 pb-32 md:px-6 md:pb-10"
         style={{ paddingTop: 'calc(env(safe-area-inset-top) + 7.4rem)' }}
       >
-        <div className="min-h-[calc(100vh-8rem)] rounded-[2rem] border border-border/70 bg-background/50 px-3 py-5 md:px-5 md:py-6">
+        <div className="rounded-[2rem] border border-border/70 bg-background/50 px-3 pt-5 pb-3 md:px-5 md:pt-6 md:pb-5">
           {children}
         </div>
       </main>

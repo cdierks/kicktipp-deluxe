@@ -19,14 +19,14 @@ import {
   IconMonitor,
   IconCheck,
   IconLogout,
-  IconLayoutDashboard,
+  IconBallFootball,
   IconPencil,
   IconUser,
   IconShield,
 } from '@/components/app-icons'
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: IconLayoutDashboard },
+  { href: '/dashboard', label: 'Spieltag', icon: IconBallFootball },
   { href: '/tippen',    label: 'Tippen',    icon: IconPencil },
   { href: '/profil',    label: 'Profil',    icon: IconUser },
 ]
@@ -143,6 +143,7 @@ export function Nav() {
                 <motion.div key={item.href} whileHover={!active ? microHover : undefined} whileTap={microPress}>
                   <Link
                     href={item.href}
+                    aria-label={item.label}
                     className={cn(
                     'flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-medium transition-all',
                     active

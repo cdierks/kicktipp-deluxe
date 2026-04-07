@@ -164,7 +164,7 @@ export function TipForm({ matches, existingTips }: Props) {
     <motion.div variants={panelEnter} initial="hidden" animate="show">
       <div className="space-y-4">
         {!jokerMatchId && (
-          <div className="rounded-[1.35rem] border border-amber-400/35 bg-amber-400/[0.08] px-4 py-3">
+          <div className="rounded-[1.05rem] border border-amber-400/35 bg-amber-400/[0.08] px-4 py-3">
             <div className="flex items-start gap-3">
               <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400/15 text-amber-500">
                 <IconAlertTriangle className="h-4.5 w-4.5" strokeWidth={1.7} />
@@ -181,7 +181,7 @@ export function TipForm({ matches, existingTips }: Props) {
           </div>
         )}
 
-        <div className="surface rounded-[1.5rem] p-4 sm:p-5">
+        <div className="surface rounded-[1.4rem] p-4 sm:p-5">
           <motion.ul
             variants={listStagger}
             initial="hidden"
@@ -202,7 +202,7 @@ export function TipForm({ matches, existingTips }: Props) {
                   key={match.id}
                   variants={panelEnter}
                   className={cn(
-                    'rounded-[1.35rem] border border-border/70 bg-background/70 px-4 py-4 transition-all',
+                    'rounded-[1.05rem] border border-border/70 bg-background/70 px-4 py-4 transition-all',
                     isActiveJoker
                       ? 'border-amber-400/45 bg-amber-400/[0.06] ring-1 ring-amber-400/30'
                       : isComplete

@@ -54,7 +54,7 @@ export default async function ProfilPage() {
 
   return (
     <div className="space-y-6">
-      <div className="surface rounded-[1.75rem] p-5 sm:p-6">
+      <div className="surface rounded-[1.4rem] p-5 sm:p-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
           Dein Bereich
         </p>
@@ -68,7 +68,7 @@ export default async function ProfilPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:items-start">
         <div className="space-y-5">
-          <div className="surface rounded-[1.5rem] p-5">
+          <div className="surface rounded-[1.4rem] p-5">
             <div className="flex items-center gap-2 mb-4">
               <IconPalette className="h-4 w-4 text-primary" strokeWidth={1.5} />
               <h2 className="text-sm font-bold tracking-wide text-foreground">
@@ -85,10 +85,10 @@ export default async function ProfilPage() {
         </div>
 
         <div className="space-y-4 lg:sticky lg:top-24">
-          <div className="surface rounded-[1.5rem] p-5">
+          <div className="surface rounded-[1.4rem] p-5">
             <div className="flex items-start gap-4">
               <div
-                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.2rem] text-white ring-1 ring-white/14"
+                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[0.95rem] text-white ring-1 ring-white/14"
                 style={{ backgroundColor: user.color ?? 'var(--color-primary)' }}
               >
                 {club?.iconUrl ? (
@@ -149,7 +149,7 @@ export default async function ProfilPage() {
             </div>
           </div>
 
-          <div className="surface rounded-[1.5rem] p-5">
+          <div className="surface rounded-[1.4rem] p-5">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
               Ansicht im Spiel
             </p>

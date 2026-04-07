@@ -24,7 +24,7 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <div className="surface rounded-[1.75rem] p-5 sm:p-6">
+      <div className="surface rounded-[1.4rem] p-5 sm:p-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
           Adminbereich
         </p>
@@ -34,7 +34,7 @@ export default async function AdminPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="surface rounded-[1.5rem] p-5">
+        <div className="surface rounded-[1.4rem] p-5">
           <div className="flex items-start justify-between mb-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
               <IconUsers className="h-5 w-5 text-primary" strokeWidth={1.5} />
@@ -49,7 +49,7 @@ export default async function AdminPage() {
           </Button>
         </div>
 
-        <div className="surface rounded-[1.5rem] p-5">
+        <div className="surface rounded-[1.4rem] p-5">
           <div className="flex items-start justify-between mb-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
               <IconCalendarEvent className="h-5 w-5 text-primary" strokeWidth={1.5} />
@@ -64,7 +64,7 @@ export default async function AdminPage() {
           </Button>
         </div>
 
-        <div className="surface rounded-[1.5rem] p-5">
+        <div className="surface rounded-[1.4rem] p-5">
           <div className="flex items-start justify-between mb-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
               <IconBallFootball className="h-5 w-5 text-primary" strokeWidth={1.5} />
@@ -88,7 +88,7 @@ export default async function AdminPage() {
           </Button>
         </div>
 
-        <div className="surface rounded-[1.5rem] p-5">
+        <div className="surface rounded-[1.4rem] p-5">
           <div className="flex items-start justify-between mb-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
               <IconPalette className="h-5 w-5 text-primary" strokeWidth={1.5} />
@@ -103,7 +103,7 @@ export default async function AdminPage() {
           </Button>
         </div>
 
-        <div className="surface rounded-[1.5rem] p-5">
+        <div className="surface rounded-[1.4rem] p-5">
           <div className="flex items-center gap-2 mb-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
               <IconShirt className="h-4 w-4 text-primary" strokeWidth={1.5} />
@@ -116,7 +116,7 @@ export default async function AdminPage() {
           <ClubsRefresh currentCount={CLUBS.length} />
         </div>
 
-        <div className="surface rounded-[1.5rem] p-5">
+        <div className="surface rounded-[1.4rem] p-5">
           <div className="flex items-center gap-2 mb-4">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
               {registrationEnabled
@@ -133,7 +133,7 @@ export default async function AdminPage() {
 
         <BackupPanel />
 
-        <div className="surface rounded-[1.5rem] p-5">
+        <div className="surface rounded-[1.4rem] p-5">
           <div className="mb-3 flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
               <IconBookmark className="h-4 w-4 text-primary" strokeWidth={1.5} />

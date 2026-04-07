@@ -84,7 +84,7 @@ export function ProfileForm({ userId, user }: Props) {
 
   return (
     <div className="space-y-5">
-      <div className="surface rounded-[1.5rem] p-5">
+      <div className="surface rounded-[1.4rem] p-5">
         <div className="flex items-center gap-2 mb-5">
           <IconUser className="h-4 w-4 text-primary" strokeWidth={1.5} />
           <h2 className="text-sm font-bold tracking-wide text-foreground">
@@ -147,7 +147,7 @@ export function ProfileForm({ userId, user }: Props) {
         </form>
       </div>
 
-      <div className="surface rounded-[1.5rem] p-5">
+      <div className="surface rounded-[1.4rem] p-5">
         <div className="flex items-center gap-2 mb-5">
           <IconLock className="h-4 w-4 text-primary" strokeWidth={1.5} />
           <h2 className="text-sm font-bold tracking-wide text-foreground">

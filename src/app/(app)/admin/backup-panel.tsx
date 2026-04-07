@@ -78,7 +78,7 @@ export function BackupPanel() {
   }
 
   return (
-    <div className="surface rounded-[1.5rem] p-5">
+    <div className="surface rounded-[1.4rem] p-5">
       <div className="mb-4 flex items-center gap-2">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
           <IconDatabaseExport className="h-4 w-4 text-primary" strokeWidth={1.5} />

@@ -143,7 +143,7 @@ export function DashboardContent({
           {activeTab === 'spieltag' && <MatchdayPanel model={matchdayPageModel} />}
 
           {activeTab === 'tabelle' && (
-            <div className="surface overflow-hidden rounded-[1.5rem]">
+            <div className="surface overflow-hidden rounded-[1.4rem]">
               <StandingsTable year={matchday.season.year} />
             </div>
           )}

@@ -34,7 +34,7 @@ export default async function TippenPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <div className="surface rounded-[1.75rem] p-5 sm:p-6">
+      <div className="surface rounded-[1.4rem] p-5 sm:p-6">
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
@@ -50,8 +50,8 @@ export default async function TippenPage() {
           <div
             className={
               deadlinePassed
-                ? 'rounded-[1.4rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-destructive'
-                : 'rounded-[1.4rem] border border-primary/15 bg-primary/[0.07] px-4 py-3 text-foreground'
+                ? 'rounded-[1.05rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-destructive'
+                : 'rounded-[1.05rem] border border-primary/15 bg-primary/[0.07] px-4 py-3 text-foreground'
             }
           >
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -76,7 +76,7 @@ export default async function TippenPage() {
       </div>
 
       {deadlinePassed ? (
-        <div className="surface rounded-[1.5rem] px-5 py-6">
+        <div className="surface rounded-[1.4rem] px-5 py-6">
           <p className="text-base font-bold tracking-tight text-muted-foreground">
             Für diesen Spieltag können keine Tipps mehr abgegeben werden.
           </p>
@@ -84,7 +84,7 @@ export default async function TippenPage() {
       ) : (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
           <TipForm matches={matchday.matches} existingTips={tipMap} />
-          <aside className="surface h-fit rounded-[1.5rem] p-4 sm:p-5">
+          <aside className="surface h-fit rounded-[1.4rem] p-4 sm:p-5">
             <div className="mb-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Bundesliga
