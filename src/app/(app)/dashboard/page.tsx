@@ -4,6 +4,7 @@ import { getActiveMatchday } from '@/lib/matchday'
 import { prisma } from '@/lib/prisma'
 import { DashboardContent } from './dashboard-content'
 import type { SeasonMatchdayStat } from './stats-tab'
+import { buildMatchdayPageViewModel } from './matchday-view-model'
 
 export default async function DashboardPage() {
   const session = await getSession()
@@ -114,9 +115,16 @@ async function MatchdayDashboard({
     }
   }
 
-  const deadlinePassed = new Date() > matchday.tippDeadline
-
   const matchdayList = seasons?.matchdays ?? []
+  const matchdayPageModel = buildMatchdayPageViewModel({
+    matchday,
+    users,
+    tipIndex,
+    matchdayPointsMap,
+    seasonPointsMap,
+    currentUserId,
+    matchdayList,
+  })
 
   return (
     <DashboardContent
@@ -127,8 +135,7 @@ async function MatchdayDashboard({
       seasonPointsMap={seasonPointsMap}
       seasonStats={seasonStats}
       currentUserId={currentUserId}
-      deadlinePassed={deadlinePassed}
-      matchdayList={matchdayList}
+      matchdayPageModel={matchdayPageModel}
     />
   )
 }

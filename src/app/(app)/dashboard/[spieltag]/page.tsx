@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { DashboardContent } from '../dashboard-content'
 import type { SeasonMatchdayStat } from '../stats-tab'
+import { buildMatchdayPageViewModel } from '../matchday-view-model'
 
 interface Props {
   params: Promise<{ spieltag: string }>
@@ -106,7 +107,15 @@ export default async function SpieltagPage({ params }: Props) {
     }
   }
 
-  const deadlinePassed = new Date() > matchday.tippDeadline
+  const matchdayPageModel = buildMatchdayPageViewModel({
+    matchday,
+    users,
+    tipIndex,
+    matchdayPointsMap,
+    seasonPointsMap,
+    currentUserId: session.user.id,
+    matchdayList: allMatchdays,
+  })
 
   return (
     <DashboardContent
@@ -117,8 +126,7 @@ export default async function SpieltagPage({ params }: Props) {
       seasonPointsMap={seasonPointsMap}
       seasonStats={seasonStats}
       currentUserId={session.user.id}
-      deadlinePassed={deadlinePassed}
-      matchdayList={allMatchdays}
+      matchdayPageModel={matchdayPageModel}
     />
   )
 }
