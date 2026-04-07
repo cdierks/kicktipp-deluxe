@@ -425,13 +425,13 @@ function MatchCell({
           <IconChevronRight className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-90')} strokeWidth={1.5} />
         </button>
       </TableCell>
-      <TableCell className="w-[10rem] whitespace-normal">
+      <TableCell className="w-[7rem] whitespace-normal">
         <div className="space-y-1">
           <p className="text-sm font-medium tabular-nums text-foreground">{match.kickoffShortLabel}</p>
           <p className="text-xs text-muted-foreground">{getRowStatusLabel(match.status)}</p>
         </div>
       </TableCell>
-      <TableCell className="min-w-[18rem] whitespace-normal">
+      <TableCell className="whitespace-normal">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             {homeClub ? <ClubIcon src={homeClub.iconUrl} fallbackSrc={homeClub.iconSourceUrl} label={match.teams.home} className="h-5 w-5 shrink-0 object-contain" /> : <span className="h-5 w-5 shrink-0" />}
@@ -443,21 +443,21 @@ function MatchCell({
           </div>
         </div>
       </TableCell>
-      <TableCell className="w-[6rem]">
+      <TableCell className="w-[5.75rem]">
         <span className="text-sm font-semibold tabular-nums text-foreground">{match.result ?? '–:–'}</span>
       </TableCell>
-      <TableCell className="w-[6rem]">
+      <TableCell className="w-[5.75rem]">
         <span className={cn('text-sm font-semibold tabular-nums', match.myPrediction ? 'text-foreground' : 'text-muted-foreground')}>
           {match.myPrediction ?? '–'}
         </span>
       </TableCell>
-      <TableCell className="w-[5rem]">
+      <TableCell className="w-[6.25rem]">
         <div className="flex flex-col items-start gap-1">
           {match.usedJoker && <JokerBadge compact />}
           <PointsBadge points={match.myPoints} isJoker={match.usedJoker} />
         </div>
       </TableCell>
-      <TableCell className="w-[13rem] whitespace-normal">
+      <TableCell className="w-[8.5rem] whitespace-normal">
         <ComparisonSummaryBadgeOrText type={match.comparisonType} text={match.comparisonSummary} />
       </TableCell>
     </TableRow>
@@ -477,16 +477,16 @@ export function MatchListTableDesktop({ matches }: { matches: MatchdayMatchRow[]
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Spieltag im Detail</p>
         <h2 className="mt-1 text-lg font-semibold tracking-tight text-foreground">Alle Spiele im Vergleich</h2>
       </div>
-      <Table>
+      <Table className="table-fixed" containerClassName="overflow-x-hidden">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead className="w-10">Expand</TableHead>
-            <TableHead>Zeit/Status</TableHead>
+            <TableHead className="w-[7rem]">Zeit/Status</TableHead>
             <TableHead>Spiel</TableHead>
-            <TableHead>Ergebnis</TableHead>
-            <TableHead>Dein Tipp</TableHead>
-            <TableHead>Punkte</TableHead>
-            <TableHead>Vergleich</TableHead>
+            <TableHead className="w-[5.75rem]">Ergebnis</TableHead>
+            <TableHead className="w-[5.75rem]">Dein Tipp</TableHead>
+            <TableHead className="w-[6.25rem]">Punkte</TableHead>
+            <TableHead className="w-[8.5rem]">Vergleich</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
