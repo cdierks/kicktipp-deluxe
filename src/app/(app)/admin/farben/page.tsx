@@ -17,7 +17,7 @@ export default async function FarbenAdminPage() {
   ])
 
   const claimedMap = Object.fromEntries(
-    usersWithColor.map((u) => [u.color!, u.nickname]),
+    usersWithColor.map((u) => [u.color!, { nickname: u.nickname }]),
   )
 
   const colors = palette.map((c) => ({

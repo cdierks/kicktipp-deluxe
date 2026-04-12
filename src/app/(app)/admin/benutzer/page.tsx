@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -51,7 +52,11 @@ export default async function BenutzerAdminPage() {
             {users.map((u) => (
               <TableRow key={u.id}>
                 <TableCell className="font-medium font-sans">{u.name}</TableCell>
-                <TableCell className="font-sans text-muted-foreground">{u.nickname}</TableCell>
+                <TableCell className="font-sans text-muted-foreground">
+                  <Link href={`/spieler/${u.nickname}`} className="transition-colors hover:text-foreground hover:underline underline-offset-4">
+                    {u.nickname}
+                  </Link>
+                </TableCell>
                 <TableCell className="hidden md:table-cell font-sans text-sm text-muted-foreground">{u.email}</TableCell>
                 <TableCell>
                   <Badge variant={u.role === 'ADMIN' ? 'default' : 'secondary'} className="text-xs uppercase tracking-wide">

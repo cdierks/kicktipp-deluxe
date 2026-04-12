@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { addPaletteColor, removePaletteColor } from '@/actions/color.actions'
@@ -12,7 +13,7 @@ interface PaletteColor {
   id: string
   hex: string
   label: string
-  claimedBy: string | null // nickname or null
+  claimedBy: { nickname: string } | null
 }
 
 export function ColorAdmin({ colors }: { colors: PaletteColor[] }) {
@@ -67,9 +68,12 @@ export function ColorAdmin({ colors }: { colors: PaletteColor[] }) {
                 <td className="px-4 py-3 font-sans font-medium text-foreground">{c.label}</td>
                 <td className="px-4 py-3">
                   {c.claimedBy ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-sans font-medium text-primary">
-                      {c.claimedBy}
-                    </span>
+                    <Link
+                      href={`/spieler/${c.claimedBy.nickname}`}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-sans font-medium text-primary transition-colors hover:bg-primary/15 hover:underline underline-offset-4"
+                    >
+                      {c.claimedBy.nickname}
+                    </Link>
                   ) : (
                     <span className="text-xs text-muted-foreground font-sans">—</span>
                   )}

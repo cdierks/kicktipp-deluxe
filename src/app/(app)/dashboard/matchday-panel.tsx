@@ -275,10 +275,16 @@ export function MatchdayRanking({ ranking }: { ranking: MatchdayRankingEntry[] }
                   ) : (
                     <span className="h-3 w-3 shrink-0 rounded-full bg-border" />
                   )}
-                  <span className={cn('truncate text-sm font-medium', entry.isCurrentUser && 'text-primary')}>
+                  <Link
+                    href={`/spieler/${entry.nickname}`}
+                    className={cn(
+                      'truncate text-sm font-medium transition-colors hover:underline underline-offset-4',
+                      entry.isCurrentUser ? 'text-primary' : 'text-foreground',
+                    )}
+                  >
                     {entry.nickname}
                     {entry.isCurrentUser && <span className="ml-1 text-xs font-normal text-muted-foreground">(du)</span>}
-                  </span>
+                  </Link>
                 </div>
               </div>
               <div className="text-right">
@@ -315,7 +321,16 @@ export function ParticipantPredictionList({
       <div className="rounded-[1rem] border border-border/60 bg-background/35 px-3 py-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Tipps im Feld</p>
         <div className="mt-2 flex items-center justify-between gap-3 text-sm">
-          <span className="font-medium text-foreground">{mine?.nickname ?? 'Du'}</span>
+          {mine ? (
+            <Link
+              href={`/spieler/${mine.nickname}`}
+              className="font-medium text-foreground transition-colors hover:underline underline-offset-4"
+            >
+              {mine.nickname}
+            </Link>
+          ) : (
+            <span className="font-medium text-foreground">Du</span>
+          )}
           <span className="font-semibold tabular-nums text-foreground">{mine?.prediction ?? '–'}</span>
         </div>
       </div>
@@ -336,9 +351,15 @@ export function ParticipantPredictionList({
             <div className="px-3 py-3 sm:hidden">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className={cn('break-words text-sm font-semibold leading-5 text-foreground', prediction.isCurrentUser && 'text-primary')}>
+                  <Link
+                    href={`/spieler/${prediction.nickname}`}
+                    className={cn(
+                      'break-words text-sm font-semibold leading-5 transition-colors hover:underline underline-offset-4',
+                      prediction.isCurrentUser ? 'text-primary' : 'text-foreground',
+                    )}
+                  >
                     {prediction.nickname}
-                  </p>
+                  </Link>
                 </div>
                 <span
                   className="mt-0.5 inline-flex h-2.5 w-2.5 shrink-0 rounded-full"
@@ -354,9 +375,15 @@ export function ParticipantPredictionList({
             </div>
 
             <div className="hidden grid-cols-[minmax(6rem,1.2fr)_4rem_3rem_minmax(5rem,1fr)] gap-3 px-3 py-2.5 text-sm sm:grid">
-              <span className={cn('min-w-0 break-words font-medium leading-5 text-foreground', prediction.isCurrentUser && 'text-primary')}>
+              <Link
+                href={`/spieler/${prediction.nickname}`}
+                className={cn(
+                  'min-w-0 break-words font-medium leading-5 transition-colors hover:underline underline-offset-4',
+                  prediction.isCurrentUser ? 'text-primary' : 'text-foreground',
+                )}
+              >
                 {prediction.nickname}
-              </span>
+              </Link>
               <span className="tabular-nums text-foreground">{prediction.prediction ?? '–'}</span>
               <span className="tabular-nums text-foreground">{prediction.points ?? '–'}</span>
               <span className="min-w-0 break-words text-xs leading-5 text-muted-foreground">
@@ -562,14 +589,14 @@ function MobileMatchRow({
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-[1rem] border border-border/60 bg-background/45 px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Ergebnis</p>
-              <p className="mt-1 text-sm font-semibold tabular-nums text-foreground">{match.result ?? '–:–'}</p>
+              <p className="mt-1 text-sm font-semibold tabular-nums leading-none text-foreground">{match.result ?? '–:–'}</p>
             </div>
             <div className="rounded-[1rem] border border-border/60 bg-background/45 px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Dein Tipp</p>
-              <p className="mt-1 text-sm font-semibold tabular-nums text-foreground">{match.myPrediction ?? '–'}</p>
+              <p className="mt-1 text-sm font-semibold tabular-nums leading-none text-foreground">{match.myPrediction ?? '–'}</p>
             </div>
-            <div className="rounded-[1rem] border border-border/60 bg-background/45 px-3 py-2.5">
-              <div className="flex min-h-[4.75rem] flex-col">
+            <div className="rounded-[1rem] border border-border/60 bg-background/45 px-3 py-2">
+              <div className="flex flex-col">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Punkte</p>
                 <div className="mt-1"><PointsBadge points={match.myPoints} isJoker={match.usedJoker} /></div>
               </div>
