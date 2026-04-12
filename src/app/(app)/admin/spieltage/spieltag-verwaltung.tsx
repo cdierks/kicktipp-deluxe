@@ -90,7 +90,7 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
   const [newMatchdayNum, setNewMatchdayNum] = useState('')
   const [newDeadline, setNewDeadline] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('matchdayNumber')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
   const selectedSeason = seasons.find((s) => s.id === selectedSeasonId)
 
@@ -135,7 +135,7 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
       return
     }
     setSortKey(key)
-    setSortDirection(key === 'matchdayNumber' ? 'asc' : 'desc')
+    setSortDirection('desc')
   }
 
   async function handleCreateSeason() {
@@ -340,7 +340,7 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
               Spieltage
             </p>
             <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground">
-              Sortierbare Verwaltungstabelle
+              Spieltagsübersicht
             </h2>
           </div>
           <div className="space-y-2">

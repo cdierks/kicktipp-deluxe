@@ -225,22 +225,23 @@ function getInsight({
 }
 
 function buildComparison({
+  comparisonUnlocked,
   matchStatus,
   participantPredictions,
   currentUserId,
 }: {
+  comparisonUnlocked: boolean
   matchStatus: MatchdayMatchRow['status']
   participantPredictions: ParticipantPredictionRow[]
   currentUserId: string
 }) {
   const myRow = participantPredictions.find((row) => row.userId === currentUserId) ?? null
   const myPrediction = myRow?.prediction ?? null
-  const revealed = matchStatus === 'LIVE' || matchStatus === 'FINISHED'
   const submittedCount = participantPredictions.filter((row) => row.prediction).length
 
-  if (!revealed) {
+  if (!comparisonUnlocked) {
     return {
-      comparisonSummary: 'Vergleich nach Anstoß',
+      comparisonSummary: 'Vergleich nach Tipp-Deadline',
       comparisonType: 'GESPERRT' as const,
       details: {
         revealComparison: false,
@@ -408,6 +409,7 @@ export function buildMatchdayPageViewModel({
     })
 
     const comparison = buildComparison({
+      comparisonUnlocked: now > matchday.tippDeadline,
       matchStatus,
       participantPredictions,
       currentUserId,
