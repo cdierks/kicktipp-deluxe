@@ -100,13 +100,13 @@ export function ProfileForm({ userId, user }: Props) {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="name" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Name
+              Vor- und Nachname
             </Label>
             <Input id="name" name="name" defaultValue={user.name} required minLength={2} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="nickname" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Nickname
+              Spitzname
             </Label>
             <Input
               id="nickname"

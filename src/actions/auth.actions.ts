@@ -8,11 +8,11 @@ import { getRegistrationEnabled } from '@/lib/settings'
 const RegisterSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
   password: z.string().min(8, 'Passwort muss mindestens 8 Zeichen haben'),
-  name: z.string().min(2, 'Name muss mindestens 2 Zeichen haben'),
+  name: z.string().min(2, 'Vor- und Nachname muss mindestens 2 Zeichen haben'),
   nickname: z
     .string()
-    .min(2, 'Nickname muss mindestens 2 Zeichen haben')
-    .max(20, 'Nickname darf maximal 20 Zeichen haben')
+    .min(2, 'Spitzname muss mindestens 2 Zeichen haben')
+    .max(20, 'Spitzname darf maximal 20 Zeichen haben')
     .regex(/^[a-zA-Z0-9_]+$/, 'Nur Buchstaben, Zahlen und Unterstriche erlaubt'),
   favoriteTeam: z.string().optional(),
 })
@@ -35,7 +35,7 @@ export async function registerUser(data: RegisterInput) {
   })
   if (existing) {
     if (existing.email === email) return { error: 'E-Mail bereits registriert' }
-    return { error: 'Nickname bereits vergeben' }
+    return { error: 'Spitzname bereits vergeben' }
   }
 
   const passwordHash = await bcrypt.hash(password, 12)
@@ -48,12 +48,12 @@ export async function registerUser(data: RegisterInput) {
 
 const ProfileSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
-  name: z.string().min(2, 'Name muss mindestens 2 Zeichen haben'),
+  name: z.string().min(2, 'Vor- und Nachname muss mindestens 2 Zeichen haben'),
   nickname: z
     .string()
-    .min(2)
-    .max(20)
-    .regex(/^[a-zA-Z0-9_]+$/),
+    .min(2, 'Spitzname muss mindestens 2 Zeichen haben')
+    .max(20, 'Spitzname darf maximal 20 Zeichen haben')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Nur Buchstaben, Zahlen und Unterstriche erlaubt'),
   favoriteTeam: z.string().optional(),
   currentPassword: z.string().optional(),
 })
@@ -72,7 +72,7 @@ export async function updateProfile(
   const existingNickname = await prisma.user.findFirst({
     where: { nickname, NOT: { id: userId } },
   })
-  if (existingNickname) return { error: 'Nickname bereits vergeben' }
+  if (existingNickname) return { error: 'Spitzname bereits vergeben' }
 
   const user = await prisma.user.findUnique({
     where: { id: userId },

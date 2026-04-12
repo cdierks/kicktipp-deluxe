@@ -55,13 +55,13 @@ export function RegisterForm() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="name" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Vorname
+                Vor- und Nachname
               </Label>
               <Input id="name" name="name" required minLength={2} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="nickname" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Nickname
+                Spitzname
               </Label>
               <Input
                 id="nickname" name="nickname"
