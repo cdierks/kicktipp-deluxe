@@ -87,7 +87,7 @@ fi
 bash "${SCRIPT_DIR}/switch.sh" "${switch_args[@]}"
 
 info "Step 6/7: smoke verification"
-bash "${SCRIPT_DIR}/verify-smoke.sh" "${common_args[@]}"
+bash "${SCRIPT_DIR}/verify-smoke.sh" "${common_args[@]}" --release "${release_path}"
 
 info "Step 7/7: functional verification"
 bash "${SCRIPT_DIR}/verify-functional.sh" "${common_args[@]}"

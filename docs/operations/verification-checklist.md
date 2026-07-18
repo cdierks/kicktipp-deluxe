@@ -3,6 +3,9 @@
 ## Nach jedem Deploy
 
 ```bash
+expected_release=/home/kicktipp/releases/kicktipp-<timestamp>
+active_release=$(readlink -f /home/kicktipp/kicktipp-deluxe)
+test "$active_release" = "$expected_release"
 curl -I --max-time 20 http://127.0.0.1:3000/login
 curl -I --max-time 20 https://kicktipp.schultypografie.de/login
 curl -I --max-time 20 https://kicktipp.schultypografie.de/api/auth/signin
@@ -12,6 +15,7 @@ supervisorctl status kicktipp
 
 Erwartet:
 
+- aktiver Release-Pfad entspricht exakt dem erwarteten Release
 - lokaler Backend-Check: `HTTP/1.1 200 OK`
 - öffentliche Login-URL: `HTTP/2 200`
 - `/api/auth/signin`: kein `500`

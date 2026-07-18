@@ -204,18 +204,19 @@ Beim Umschalten:
 ### 6. Verbindliche Smoke-Checks
 
 ```bash
-bash scripts/deploy/verify-smoke.sh
+bash scripts/deploy/verify-smoke.sh --release /home/kicktipp/releases/kicktipp-<timestamp>
 ```
 
 Erwartet:
 
+- `/home/kicktipp/kicktipp-deluxe` ist ein Symlink auf exakt den erwarteten Release-Pfad
 - `http://127.0.0.1:3000/login` -> `200`
 - `https://kicktipp.schultypografie.de/login` -> `200`
 - `https://kicktipp.schultypografie.de/api/auth/signin` -> kein `500`
 - `https://kicktipp.schultypografie.de/dashboard` ohne Session -> `307`
 - `supervisorctl status kicktipp` -> `RUNNING`
 
-Wenn einer dieser Checks fehlschlaegt, ist der Deploy nicht erfolgreich. Es gibt keinen automatischen Cleanup und keinen automatischen Rollback.
+Der Check gibt den aktiven und den erwarteten Release-Pfad aus. Wenn die Pfade abweichen oder einer der weiteren Checks fehlschlaegt, ist der Deploy nicht erfolgreich. Es gibt keinen automatischen Cleanup und keinen automatischen Rollback.
 
 ### 7. Funktionale Verifikation
 
