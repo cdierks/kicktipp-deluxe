@@ -1,6 +1,3 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import { ClubIcon } from '@/components/club-icon'
 import { getClubByName } from '@/lib/clubs'
 import { fetchTable, OpenligaTable } from '@/lib/openligadb'
@@ -34,72 +31,62 @@ const LEGEND: Array<{ color: string; label: string }> = [
   { color: 'var(--table-danger)',  label: 'Abstieg' },
 ]
 
-export function StandingsTable({ year }: { year: string }) {
-  const [table, setTable] = useState<OpenligaTable[] | null>(null)
-  const [error, setError] = useState('')
+export async function StandingsTable({ year }: { year: string }) {
+  let table: OpenligaTable[]
+  try {
+    table = await fetchTable(year, { next: { revalidate: 300 } })
+  } catch {
+    return <p className="px-4 py-6 text-sm text-muted-foreground">Tabelle konnte nicht geladen werden.</p>
+  }
 
-  useEffect(() => {
-    fetchTable(year, { cache: 'no-store' })
-      .then(setTable)
-      .catch(() => setError('Tabelle konnte nicht geladen werden'))
-  }, [year])
-
-  if (error) return <p className="px-4 py-6 text-sm text-muted-foreground font-sans">{error}</p>
-  if (!table) return <p className="px-4 py-6 text-sm text-muted-foreground font-sans">Lade Tabelle…</p>
+  if (table.length === 0) {
+    return <p className="px-4 py-6 text-sm text-muted-foreground">Noch keine Tabellendaten verfügbar.</p>
+  }
 
   return (
     <div>
-      <Table>
+      <Table containerClassName="rounded-none">
         <TableHeader>
           <TableRow>
-            {/* Spacer matches the 4px qualifier border on data rows */}
             <TableHead
-              className="w-8 pl-3 uppercase tracking-wide text-xs"
-              style={{ borderLeft: '4px solid transparent' }}
+              className="w-16 pl-4"
             >
               #
             </TableHead>
-            <TableHead className="uppercase tracking-wide text-xs">Verein</TableHead>
-            <TableHead className="hidden sm:table-cell text-right uppercase tracking-wide text-xs">Sp</TableHead>
-            <TableHead className="hidden sm:table-cell text-right uppercase tracking-wide text-xs">S</TableHead>
-            <TableHead className="hidden sm:table-cell text-right uppercase tracking-wide text-xs">U</TableHead>
-            <TableHead className="hidden sm:table-cell text-right uppercase tracking-wide text-xs">N</TableHead>
-            <TableHead className="hidden xs:table-cell text-right uppercase tracking-wide text-xs">Tore</TableHead>
-            <TableHead className="hidden sm:table-cell text-right uppercase tracking-wide text-xs">Diff</TableHead>
-            <TableHead className="text-right uppercase tracking-wide text-xs">Pkt</TableHead>
+            <TableHead>Verein</TableHead>
+            <TableHead className="hidden sm:table-cell text-right"><abbr title="Spiele">Sp</abbr></TableHead>
+            <TableHead className="hidden sm:table-cell text-right"><abbr title="Siege">S</abbr></TableHead>
+            <TableHead className="hidden sm:table-cell text-right"><abbr title="Unentschieden">U</abbr></TableHead>
+            <TableHead className="hidden sm:table-cell text-right"><abbr title="Niederlagen">N</abbr></TableHead>
+            <TableHead className="hidden xs:table-cell text-right">Tore</TableHead>
+            <TableHead className="hidden sm:table-cell text-right"><abbr title="Tordifferenz">Diff</abbr></TableHead>
+            <TableHead className="text-right"><abbr title="Punkte">Pkt</abbr></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {table.map((team, i) => {
             const rank = i + 1
             const q = getQualifier(rank)
-            const prevQ = i > 0 ? getQualifier(i)?.color : null
-            const nextQ = i < table.length - 1 ? getQualifier(i + 2)?.color : null
-            const startsGroup = q?.color !== prevQ
-            const endsGroup = q?.color !== nextQ
             const diff = team.goalDiff
             const club = getClubByName(team.teamName)
 
             return (
               <TableRow key={team.teamInfoId}>
                 <TableCell
-                  className="relative pl-4 font-bold text-sm tabular-nums text-muted-foreground"
+                  className="w-16 pl-4 text-sm font-bold tabular-nums text-muted-foreground"
                   title={q?.label}
                 >
-                  {q && (
+                  <div className="flex items-center gap-2">
                     <span
                       aria-hidden="true"
-                      className={cn(
-                        'absolute bottom-0 left-0 top-0 w-1',
-                        startsGroup && 'rounded-tr-sm',
-                      )}
-                      style={{ backgroundColor: q.color }}
+                      className={cn('h-2.5 w-2.5 shrink-0 rounded-sm', !q && 'opacity-0')}
+                      style={q ? { backgroundColor: q.color } : undefined}
                     />
-                  )}
-                  {rank}
+                    <span>{rank}</span>
+                    {q && <span className="sr-only">, {q.label}</span>}
+                  </div>
                 </TableCell>
 
-                {/* Club name + icon */}
                 <TableCell className="font-sans font-medium text-sm">
                   <div className="flex items-center gap-2">
                     {team.teamIconUrl && (
@@ -124,16 +111,13 @@ export function StandingsTable({ year }: { year: string }) {
                   {team.goals}:{team.opponentGoals}
                 </TableCell>
 
-                {/* Goal difference – green / grey / red */}
                 <TableCell
-                  className={cn('hidden sm:table-cell text-right tabular-nums text-sm', diff > 0 && 'font-semibold')}
-                  style={{
-                    color: diff > 0
-                      ? 'var(--table-el)'
-                      : diff < 0
-                        ? 'var(--table-danger)'
-                        : 'var(--muted-foreground)',
-                  }}
+                  className={cn(
+                    'hidden text-right text-sm tabular-nums sm:table-cell',
+                    diff > 0 && 'font-semibold text-success-800 dark:text-success-300',
+                    diff < 0 && 'text-error-700 dark:text-error-300',
+                    diff === 0 && 'text-muted-foreground',
+                  )}
                 >
                   {diff > 0 ? '+' : ''}{diff}
                 </TableCell>
@@ -147,11 +131,11 @@ export function StandingsTable({ year }: { year: string }) {
         </TableBody>
       </Table>
 
-      {/* Legend */}
       <div className="flex flex-wrap gap-x-4 gap-y-1.5 border-t border-border px-4 py-3">
         {LEGEND.map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1.5">
             <span
+              aria-hidden="true"
               className="h-2.5 w-2.5 shrink-0 rounded-sm"
               style={{ backgroundColor: color }}
             />

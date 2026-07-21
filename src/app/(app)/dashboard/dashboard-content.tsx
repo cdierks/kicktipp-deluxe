@@ -1,19 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { StandingsTable } from './standings-table'
-import { StatsTab } from './stats-tab'
 import type { SeasonMatchdayStat } from './stats-tab'
-import { cn } from '@/lib/utils'
 import { normal, panelEnter, pageEnter } from '@/lib/motion'
 import { MatchdayHeader, MatchdayPanel } from './matchday-panel'
 import type { MatchdayPageViewModel } from './matchday-view-model'
-import {
-  IconBallFootball,
-  IconTable,
-  IconChartBar,
-} from '@/components/app-icons'
+import { parseDashboardView } from '@/lib/dashboard-view'
+import { PageFrame } from '@/components/page-frame'
+
+const StatsTab = dynamic(
+  () => import('./stats-tab').then((module) => module.StatsTab),
+  {
+    loading: () => (
+      <div className="surface-muted rounded-xl px-6 py-10 text-center text-sm text-muted-foreground" role="status">
+        Statistiken werden geladen…
+      </div>
+    ),
+  },
+)
 
 interface Match {
   id: string
@@ -37,7 +43,6 @@ interface Matchday {
 interface User {
   id: string
   nickname: string
-  name: string
   favoriteTeam: string | null
   color: string | null
 }
@@ -58,51 +63,7 @@ interface Props {
   seasonStats: SeasonMatchdayStat[]
   currentUserId: string
   matchdayPageModel: MatchdayPageViewModel
-}
-
-type TabValue = 'spieltag' | 'tabelle' | 'stats'
-
-const tabDefs: { value: TabValue; label: string; mobileLabel: string; icon: React.ReactNode }[] = [
-  { value: 'spieltag', label: 'Spieltag', mobileLabel: 'Spieltag', icon: <IconBallFootball className="h-3.5 w-3.5" strokeWidth={1.5} /> },
-  { value: 'tabelle', label: 'Bundesliga', mobileLabel: 'Liga', icon: <IconTable className="h-3.5 w-3.5" strokeWidth={1.5} /> },
-  { value: 'stats', label: 'Statistiken', mobileLabel: 'Stats', icon: <IconChartBar className="h-3.5 w-3.5" strokeWidth={1.5} /> },
-]
-
-function AnimatedTabsList({
-  tabs,
-  value,
-  onChange,
-}: {
-  tabs: typeof tabDefs
-  value: TabValue
-  onChange: (v: TabValue) => void
-}) {
-  return (
-    <div role="tablist" className="relative mb-4 grid grid-cols-3 rounded-2xl border border-border/70 bg-secondary/80 p-1">
-      {tabs.map((tab) => (
-        <button
-          key={tab.value}
-          role="tab"
-          aria-selected={value === tab.value}
-          onClick={() => onChange(tab.value)}
-          className={cn(
-            'relative z-10 flex min-w-0 items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors sm:gap-1.5 sm:px-3 sm:text-xs sm:tracking-[0.12em]',
-            value === tab.value ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
-          )}
-        >
-          {value === tab.value && (
-            <motion.div
-              layoutId="tab-indicator"
-              className="absolute inset-0 rounded-xl bg-background shadow-sm"
-            />
-          )}
-          <span className="relative z-10">{tab.icon}</span>
-          <span className="relative z-10 min-w-0 truncate sm:hidden">{tab.mobileLabel}</span>
-          <span className="relative z-10 hidden min-w-0 truncate sm:inline">{tab.label}</span>
-        </button>
-      ))}
-    </div>
-  )
+  standings: React.ReactNode
 }
 
 export function DashboardContent({
@@ -114,43 +75,44 @@ export function DashboardContent({
   seasonStats,
   currentUserId,
   matchdayPageModel,
+  standings,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<TabValue>('spieltag')
+  const searchParams = useSearchParams()
+  const activeView = parseDashboardView(searchParams.get('ansicht'))
   const shouldReduce = useReducedMotion()
 
   return (
-    <div className="space-y-6">
+    <PageFrame>
       <motion.div
         variants={pageEnter}
         initial="hidden"
         animate="show"
         transition={shouldReduce ? { duration: 0 } : undefined}
       >
-        <MatchdayHeader model={matchdayPageModel} />
+        <MatchdayHeader model={matchdayPageModel} view={activeView} />
       </motion.div>
-
-      <AnimatedTabsList tabs={tabDefs} value={activeTab} onChange={setActiveTab} />
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={activeTab}
+          key={activeView}
           variants={panelEnter}
           initial="hidden"
           animate="show"
           exit="hidden"
           transition={shouldReduce ? { duration: 0 } : normal}
         >
-          {activeTab === 'spieltag' && <MatchdayPanel model={matchdayPageModel} />}
+          {activeView === 'spieltag' && <MatchdayPanel model={matchdayPageModel} />}
 
-          {activeTab === 'tabelle' && (
-            <div className="surface overflow-hidden rounded-[1.4rem]">
-              <StandingsTable year={matchday.season.year} />
+          {activeView === 'bundesliga' && (
+            <div className="surface-raised overflow-hidden rounded-xl">
+              {standings}
             </div>
           )}
 
-          {activeTab === 'stats' && (
+          {activeView === 'statistiken' && (
             <StatsTab
               matchday={matchday}
+              matchdayUnlocked={matchdayPageModel.header.deadlinePassed}
               users={users}
               tipIndex={tipIndex}
               matchdayPointsMap={matchdayPointsMap}
@@ -161,6 +123,6 @@ export function DashboardContent({
           )}
         </motion.div>
       </AnimatePresence>
-    </div>
+    </PageFrame>
   )
 }

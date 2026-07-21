@@ -1,16 +1,16 @@
 # Troubleshooting
 
-## Erstes Vorgehen bei Störungen
+## Erstdiagnose
 
-1. Prozessstatus prüfen
-2. lokalen Backend-Check fahren
-3. öffentliche Health-nahe URLs prüfen
-4. Supervisor-Logs lesen
-5. aktives Release und letzte Änderung identifizieren
-
-Minimalbefehle:
+1. aktiven Release und Metadaten bestimmen;
+2. Prozessstatus prüfen;
+3. lokalen und öffentlichen Login prüfen;
+4. Supervisor-Logs lesen;
+5. erst dann Rollback oder Reparatur entscheiden.
 
 ```bash
+readlink -f /home/kicktipp/kicktipp-deluxe
+cat /home/kicktipp/kicktipp-deluxe/RELEASE_METADATA
 supervisorctl status kicktipp
 curl -I --max-time 20 http://127.0.0.1:3000/login
 curl -I --max-time 20 https://kicktipp.schultypografie.de/login
@@ -18,159 +18,150 @@ curl -I --max-time 20 https://kicktipp.schultypografie.de/api/auth/signin
 curl -I --max-time 20 https://kicktipp.schultypografie.de/dashboard
 ```
 
-## Problem: Build auf dem Server stirbt mit `Killed`
+## Deploy-Preflight verweigert den Start
+
+### Arbeitsbaum ist nicht sauber
+
+Deploys werden ausschließlich aus einem verifizierten Commit erzeugt. Die
+Änderungen prüfen, bewusst committen und den gesamten Verify-Lauf wiederholen.
+Uncommittete Dateien dürfen nicht mit einem manuellen Upload umgangen werden.
+
+### Backup fehlt oder ist ungültig
+
+`check.sh` verlangt höchstens 24 Stunden alte, valide App- und DB-Backups. Ein
+App-Archiv des Symlinks statt des aufgelösten Releases, ein Archiv ohne
+vollständige Standalone-Runtime, `.env` oder passende `RELEASE_METADATA`, eine
+Datei ohne Modus `600`, ein leeres Gzip oder ein Dump ohne `CREATE TABLE` und
+Abschlussmarker wird abgewiesen. Die Befehle aus
+[Backups und Rollback](./backups-and-rollback.md) erneut vollständig ausführen.
+
+### Service-Datei weicht ab
+
+Die produktive Definition muss den Standalone-Entrypoint mit `/usr/bin/node`,
+Port `3000`, Loopback-Hostname und `TZ=Europe/Berlin` exakt abbilden. Die
+versionierte [scripts/kicktipp.ini](../../scripts/kicktipp.ini) installieren,
+Supervisor neu laden und den Preflight wiederholen.
+
+## Remote-Deploy-Lock ist belegt
 
 ### Symptom
 
-- `npm ci` oder `npm run build` endet ohne fachlichen Fehlertext mit `Killed`
+`run.sh` meldet einen bereits aktiven Deploy und zeigt
+`/home/kicktipp/releases/.kicktipp-deploy.lock`.
 
-### Wahrscheinliche Ursache
+### Vorgehen
 
-- RAM-Limit des Hosts
+Nicht sofort löschen. Zuerst Inhalt von `owner`, laufende lokale/entfernte
+Deploy-Prozesse, Supervisor und aktiven Release prüfen. Nur wenn sicher kein
+Deploy mehr läuft, den verwaisten `owner` entfernen und das leere Verzeichnis
+mit `rmdir` löschen. Ein paralleles Umschalten ist ausdrücklich verboten.
 
-### Behebung
+## Linux-Container-Build schlägt fehl
 
-- lokalen Produktionsbuild verwenden
-- Standalone-Output plus `.next/static` hochladen
-- kein regulärer Server-Build auf diesem Host, solange keine Reserve bestätigt ist
+- Docker-Daemon und freien lokalen Speicher prüfen;
+- `BUILD_PLATFORM` gegen `uname -m` des Zielhosts prüfen;
+- Erreichbarkeit des npm-Registrys und Integrität des Lockfiles prüfen;
+- den exakten Commit nicht verändern, sondern Ursache beheben und Build neu
+  starten.
 
-## Problem: Standalone-Artefakte im Release fehlen oder sind unvollständig
+Ein Build auf dem Produktionshost ist kein unterstützter Ersatz. Er umgeht
+Plattform-, Commit- und Metadatenprüfungen.
 
-### Symptom
+## Standalone-Runtime ist unvollständig
 
-- `supervisorctl start kicktipp` endet mit `spawn error` oder `FATAL`
-- `server.js` fehlt im Release
-- `.next/static` oder das Standalone-`node_modules` fehlen im aktiven Release
+### Symptome
 
-### Ursache
-
-- der Release wurde nicht mit dem Standalone-Output ausgeliefert
-- der Upload hat nur Teile von `.next` statt des Runtime-Artefakts übertragen
-
-### Behebung
-
-- lokalen Build erneut erzeugen
-- `.next/standalone` in den Release-Root entpacken
-- `.next/static` zusaetzlich nach `release/.next/static` uebertragen
-- vor dem Umschalten `server.js`, `.next/static`, `node_modules/` und `node_modules/@prisma/client` pruefen
-
-## Problem: Altes externes-`node_modules`-Modell mischt sich noch in die Laufzeit
-
-### Symptom
-
-- alte Releases enthalten `node_modules`-Symlinks auf andere Releases
-- ein Neustart haengt von frueheren Releases ab
-- der aktive Release ist nicht aus sich selbst heraus startfaehig
-
-### Ursache
-
-- Altlast aus dem frueheren Runtime-Modell
-- versteckte Abhaengigkeit zu einer historischen Release-Kette
+- `server.js`, `.next/static`, `public` oder `node_modules/@prisma/client`
+  fehlen;
+- Linux-Sharp-Paket passt nicht zur Zielarchitektur;
+- macOS-native Dateien liegen im Release;
+- `.migration` fehlt oder meldet nicht Prisma 7.8.0;
+- `.env` hat nicht Modus `600`;
+- Paketversion und `RELEASE_METADATA` widersprechen sich.
 
 ### Behebung
 
-- aktiven Release auf echte Standalone-Artefakte umstellen
-- keine externe produktive `node_modules`-Basis mehr als Standard voraussetzen
-- alte Symlink-Ketten nur noch als Rollback-Artefakte behandeln oder bereinigen
+Nicht manuell einzelne Dateien in Produktion ergänzen. Den Release verwerfen
+und `run.sh` aus dem unveränderten, verifizierten Commit neu ausführen. Der
+Standardpfad baut `public` und `.next/static` bereits in den Standalone-Baum
+ein; eine externe `node_modules`-Basis oder historische Symlink-Kette ist
+unzulässig.
 
-## Problem: `/login` funktioniert, aber Auth- oder Server-Routen liefern `500`
+## `/login` funktioniert, Auth- oder Serverrouten liefern aber `500`
 
-### Typisches Symptom
+Prüfen:
 
-- App startet scheinbar
-- `/login` antwortet
-- `/api/auth/signin` oder geschützte Seiten brechen mit `500`
+- `DATABASE_URL` ist vollständig und die Datenbank erreichbar;
+- `.env` gehört zum aktiven Release und hat Modus `600`;
+- `NEXTAUTH_URL` entspricht bei der öffentlichen Produktion exakt der
+  HTTPS-Domain; nur lokale oder private Standalone-Ziele dürfen HTTP nutzen;
+- `NEXTAUTH_SECRET` ist stabil und mindestens 32 Zeichen lang;
+- Standalone-Runtime und Prisma-Client stammen aus demselben Release-Commit;
+- Supervisor-Logs nennen keinen nativen Runtime- oder Schemafehler.
 
-### Bekannte Ursache
+Keine Runtime aus einem alten Release verlinken. Bei unklarem Zustand den
+Release-spezifischen Fallback über `restore-release.sh` wiederherstellen.
 
-Im Altmodell aus lokalem `.next` plus externer Runtime konnten Prisma-Runtime-Module im Release fehlen. AP2 stellt deshalb auf Standalone-Artefakte um, damit dieser Hotfix im Standardpfad entfaellt.
+## Funktionaler Check schlägt nach dem Umschalten fehl
 
-Typischer Fehler im alten Modell:
+`verify-functional.sh` verlangt:
 
-```text
-Failed to load external module @prisma/client-<hash>/runtime/client
-```
+- `--release` mit dem tatsächlich erwarteten Release;
+- `VERIFY_LOGIN_EMAIL` und `VERIFY_LOGIN_PASSWORD` eines existierenden Admins;
+- erreichbare Dashboard-, Tipp- und Adminrouten;
+- funktionierenden SQL-Zugriff für einen transaktional zurückgerollten
+  `AppSetting`-Write.
 
-### Behebung
+Das Skript erzeugt keinen temporären Benutzer und schreibt keine Tipps. Bei
+falschen Zugangsdaten einen vorgesehenen Prüf-Admin verwenden; nicht die
+Kontrolle durch einen manuellen Datenbankbenutzer umgehen. `run.sh` versucht
+bei diesem Fehler automatisch, das vorige App-Release wiederherzustellen.
 
-- sicherstellen, dass der Release aus `.next/standalone` gestartet wird
-- aktiven Release nicht mit externem `node_modules` mischen
-- Deploy erneut mit Standalone-Upload fahren
+## Automatischer Rollback schlägt fehl
 
-Danach pruefen:
+Cleanup stoppen und keine Fallbacks verschieben. Prüfen:
 
 ```bash
-curl -I --max-time 20 https://kicktipp.schultypografie.de/api/auth/signin
-curl -I --max-time 20 https://kicktipp.schultypografie.de/dashboard
+readlink -f /home/kicktipp/kicktipp-deluxe
+ls -l /home/kicktipp/kicktipp-deluxe-predeploy-*
+supervisorctl status kicktipp
 ```
 
-Erwartet:
+Nur der zum aktuell ausgewählten Release gehörende Fallback darf verwendet
+werden. Wenn der Standardzustand noch besteht, erneut
+`restore-release.sh --release <aktiver-release>` ausführen. Manuelle
+Symlink-Operationen erst nach Sicherung aller Ziele und nur mit einem
+bestätigten Wiederanlaufplan.
 
-- kein `500` mehr auf `/api/auth/signin`
-- `/dashboard` ohne Session liefert `307`
+## `/api/sync` liefert `401` oder `500`
 
-## Problem: `/api/sync` liefert `401`
+Bei `401` Headername und `CRON_SECRET` abgleichen. Bei `500` zusätzlich
+OpenLigaDB, Provider-Antwort, aktiven Spieltag, Datenbankverbindung und
+Supervisor-Logs prüfen. Das Secret wird längenkonstant verglichen; zusätzliche
+Leerzeichen verändern es.
 
-### Ursache
+## Daten nach Import, Migration oder Restore sind unplausibel
 
-- `x-cron-secret` fehlt oder passt nicht zu `CRON_SECRET`
+- verwendeten SQL- beziehungsweise JSON-Stand identifizieren;
+- Migrationstand und Release-Metadaten vergleichen;
+- getrennt aktive Saison und aktiven Spieltag prüfen;
+- Anzahlen von Benutzern, Matches und Tipps mit dem Backup vergleichen;
+- Punktestichprobe inklusive Joker neu berechnen;
+- Registrierungseinstellung und mindestens einen Admin bestätigen.
 
-### Behebung
+Bei ungeklärter Datenabweichung Schreibzugriffe stoppen und erst am isolierten
+Backup analysieren.
 
-- Secret in Zielinstanz prüfen
-- Headernamen exakt setzen
-- Cron-Konfiguration gegen produktive `.env` abgleichen
+## Logs
 
-## Problem: Login funktioniert nicht
-
-### Prüfpunkte
-
-- Datenbank erreichbar
-- `DATABASE_URL` korrekt
-- mindestens ein Benutzer vorhanden
-- `NEXTAUTH_SECRET` gesetzt
-- `NEXTAUTH_URL` stimmt mit der öffentlichen URL überein
-
-### Zusatzhinweis
-
-Da der Credentials-Provider direkt gegen die Datenbank prüft, ist ein Loginfehler oft ein Datenbank- oder Datenproblem, nicht nur ein Frontend-Problem.
-
-## Problem: Funktionale Verifikation scheitert nach erfolgreichem Smoke-Check
-
-### Typische Symptome
-
-- `verify-functional.sh` bricht bei `credentials login` mit `401` ab
-- `/dashboard` oder `/admin/benutzer` liefern nach Login nicht `200`
-- die Verifikation bricht beim reversiblen Schreibtest ab
-
-### Pruefpunkte
-
-- wurde der Verifikationslauf mit expliziten `VERIFY_LOGIN_*`-Werten gegen veraltete oder falsche Zugangsdaten gestartet
-- kann das Skript auf dem Zielhost temporaer einen Verifikationsbenutzer in der Datenbank anlegen und wieder entfernen
-- existiert ein aktiver Spieltag fuer den bevorzugten Tipp-Schreibtest
-- ist der Datenbankzugriff aus dem aktiven Release ueber `DATABASE_URL` intakt
-
-### Behebung
-
-- Funktionstest ohne explizite Login-Daten erneut starten, damit ein temporaerer Admin-Benutzer automatisch angelegt wird
-- bei Fehlschlag des Tipp-Schreibtests pruefen, ob aktive Spieltage und Matches vorhanden sind
-- bei Datenbankfehlern zuerst `DATABASE_URL` und die Erreichbarkeit des MySQL-Servers validieren
-- Deploy nicht bereinigen; Rollback-Kandidaten erhalten, bis der Funktionstest grün ist
-
-## Problem: Daten nach Import oder Restore unplausibel
-
-### Prüfpunkte
-
-- wurde ein SQL-Restore oder ein JSON-App-Import verwendet
-- sind Migrationen und Datenstand kompatibel
-- ist die aktive Saison korrekt gesetzt
-- existieren Spieltage, Matches und Tipps in erwarteter Anzahl
-
-## Relevante Log-Orte
-
-- `/home/kicktipp/logs/supervisord/kicktipp.log`
-- `/home/kicktipp/logs/supervisord/kicktipp.err`
+```text
+/home/kicktipp/logs/supervisord/kicktipp.log
+/home/kicktipp/logs/supervisord/kicktipp.err
+```
 
 ## Eskalationsregel
 
-Wenn die Störung nicht klar auf Runtime, Build oder Datenbank eingegrenzt werden kann, zuerst das letzte funktionierende Release wiederherstellen und danach die Analyse am nicht-produktiven Stand fortsetzen.
+Wenn sich der Fehler nicht eindeutig auf Release, Runtime oder Datenbank
+begrenzen lässt, zuerst das letzte bekannte App-Release wiederherstellen. Eine
+DB-Wiederherstellung ist eine separate, destruktive Entscheidung und darf nicht
+als Nebenwirkung eines App-Rollbacks erfolgen.

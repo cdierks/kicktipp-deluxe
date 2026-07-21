@@ -25,9 +25,10 @@ interface Props {
   onChange: (value: string) => void
   /** hidden input name so it works inside plain HTML forms */
   name?: string
+  label?: string
 }
 
-export function ClubCombobox({ value, onChange, name }: Props) {
+export function ClubCombobox({ value, onChange, name, label = 'Lieblingsclub' }: Props) {
   const [open, setOpen] = useState(false)
 
   const selected = CLUBS.find((c) => c.name === value)
@@ -39,10 +40,12 @@ export function ClubCombobox({ value, onChange, name }: Props) {
 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
+        <Button
+          type="button"
+          variant="outline"
             role="combobox"
             aria-expanded={open}
+            aria-label={`${label}: ${selected?.name ?? 'Kein Verein ausgewählt'}`}
             className="w-full justify-between font-sans font-normal"
           >
             {selected ? (

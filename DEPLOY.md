@@ -1,354 +1,300 @@
-# Deploy auf Uberspace
+# Deployment auf Uberspace
 
-Diese Datei ist die operative Quelle fuer produktive Releases auf `kicktipp.schultypografie.de`.
-Der Standardpfad wird lokal aus dem Repository heraus ueber `scripts/deploy/*.sh` ausgefuehrt.
+Diese Datei ist die verbindliche operative Quelle für Releases auf
+`kicktipp.schultypografie.de`. Der Produktionspfad wird lokal aus einem
+verifizierten Commit über `scripts/deploy/*.sh` ausgeführt. Ein Build direkt auf
+dem Server ist nicht unterstützt.
 
 ## Zielsystem
 
-- Uberspace-User: `kicktipp`
-- SSH-Host: `regulus.uberspace.de`
-- Produktive Domain: `https://kicktipp.schultypografie.de`
-- Produktiver App-Pfad: `/home/kicktipp/kicktipp-deluxe`
-- Release-Basis: `/home/kicktipp/releases`
-- Aktiver `supervisord`-Service: `kicktipp`
-- Backend-Zuordnung: `kicktipp.schultypografie.de/ http:3000`
-- Datenbank: MariaDB auf `localhost`, Datenbankname `kicktipp`
+- SSH: `kicktipp@regulus.uberspace.de`
+- Domain: `https://kicktipp.schultypografie.de`
+- aktiver App-Pfad: `/home/kicktipp/kicktipp-deluxe`
+- Releases: `/home/kicktipp/releases/kicktipp-*`
+- Backups: `/home/kicktipp/backups`
+- Supervisor-Service: `kicktipp`
+- lokales Backend: `http://127.0.0.1:3000`
+- Datenbank: MariaDB auf `localhost`, Datenbank `kicktipp`
 
-## Standardpfad
+Der aktive App-Pfad ist immer ein Symlink auf genau ein direktes Kind des
+Release-Verzeichnisses. Jeder Release ist eigenständig startfähig und enthält
+`server.js`, die Standalone-Runtime, statische Assets, eine produktive `.env`
+mit Modus `600`, die gepinnte Prisma-Migrationsruntime und
+`RELEASE_METADATA`.
 
-Der verbindliche Produktionspfad ist:
+## Voraussetzungen
 
-`Check -> Release anlegen -> lokalen Standalone-Build hochladen -> Runtime validieren -> optional migrieren -> umschalten -> Smoke-Checks -> expliziter Cleanup`
+Lokal werden `git`, `ssh`, `tar`, `curl`, Node.js, npm und Docker benötigt. Das
+Repository muss sauber sein; nur ein vollständiger 40-stelliger Commit-SHA wird
+ausgeliefert. Der Standardbuild läuft in einem Linux-Container:
 
-Alles davon wird lokal angestossen. Ein Server-Build ist nicht der Standard.
-
-## Warum dieser Pfad der Standard ist
-
-- `npm ci` kann auf Uberspace wegen Speicherlimits mit `Killed` enden.
-- Der robuste Weg auf diesem Host ist deshalb:
-  - Quellstand ohne `.next`, `.env` und `node_modules` hochladen
-  - Produktionsbuild lokal erzeugen
-  - den Standalone-Output plus `.next/static` hochladen
-  - Release direkt aus seinem eigenen Runtime-Artefakt starten
-  - danach per `supervisorctl` umschalten
-
-## Pflicht vor jedem Deploy
-
-Vor jedem produktiven Eingriff:
-
-1. Pflicht-Backups anlegen
-2. Ausgangszustand pruefen
-3. erst danach den Standardpfad ausfuehren
-
-Backups bleiben bewusst ein separater manueller Schritt. Ohne App-Backup und DB-Backup kein Deploy.
-
-```bash
-ssh kicktipp@regulus.uberspace.de
-
-ts=$(date +%Y%m%d-%H%M%S)
-mkdir -p ~/backups
-
-tar -czf ~/backups/kicktipp-app-$ts.tar.gz -C /home/kicktipp kicktipp-deluxe
-mysqldump --single-transaction --quick --default-character-set=utf8mb4 --databases kicktipp | gzip > ~/backups/kicktipp-db-$ts.sql.gz
-
-ls -lh ~/backups/kicktipp-app-$ts.tar.gz ~/backups/kicktipp-db-$ts.sql.gz
+```text
+BUILD_PLATFORM=linux/amd64
+BUILD_NODE_IMAGE=node:20.19.5-bookworm-slim
 ```
 
-## Deploy-Skripte
+Die Werte können als Umgebungsvariablen überschrieben werden. `check.sh`
+vergleicht die Zielarchitektur mit `BUILD_PLATFORM` und prüft außerdem die
+versionierte Supervisor-Konfiguration.
 
-Alle Skripte laden dieselben Defaults aus `scripts/deploy/config.sh`:
-
-- `DEPLOY_USER=kicktipp`
-- `DEPLOY_HOST=regulus.uberspace.de`
-- `APP_DIR=/home/kicktipp/kicktipp-deluxe`
-- `RELEASES_DIR=/home/kicktipp/releases`
-- `SERVICE_NAME=kicktipp`
-- `DOMAIN=https://kicktipp.schultypografie.de`
-- `LOCAL_PORT=3000`
-
-Gemeinsame Optionen:
+Für den verpflichtenden funktionalen Check werden Zugangsdaten eines
+existierenden Administrators benötigt. Das Skript legt niemals einen
+temporären Produktionsbenutzer an:
 
 ```bash
---host <host>
---user <user>
---app-dir <path>
---releases-dir <path>
---service <name>
---domain <url>
---local-port <port>
+export VERIFY_LOGIN_EMAIL='admin@example.com'
+read -rsp 'Passwort des Prüf-Admins: ' VERIFY_LOGIN_PASSWORD
+echo
+export VERIFY_LOGIN_PASSWORD
 ```
 
-Verfuegbare Einstiegspunkte:
+Die Variablen nur in einer geschützten Shell setzen und danach mit
+`unset VERIFY_LOGIN_EMAIL VERIFY_LOGIN_PASSWORD` entfernen. Passwörter gehören
+weder in das Repository noch in Shell-History, Tickets oder Protokolle.
 
-- `scripts/deploy/check.sh`
-- `scripts/deploy/create-release.sh`
-- `scripts/deploy/upload-build.sh`
-- `scripts/deploy/link-runtime.sh`
-- `scripts/deploy/switch.sh`
-- `scripts/deploy/verify-smoke.sh`
-- `scripts/deploy/verify-functional.sh`
-- `scripts/deploy/cleanup.sh`
-- `scripts/deploy/run.sh`
+## Pflicht-Backups
 
-## Standard-Deploy ausfuehren
+Vor jedem Deploy müssen ein höchstens 24 Stunden altes, valides App-Backup und
+ein ebenso aktuelles Datenbank-Backup vorhanden sein. `check.sh` verweigert den
+Deploy andernfalls. Das App-Backup muss den aufgelösten Release-Inhalt sichern;
+ein Archiv des Symlinks `kicktipp-deluxe` genügt nicht.
 
-### Ohne Migration
+```bash
+ssh kicktipp@regulus.uberspace.de 'bash -s' <<'REMOTE'
+set -euo pipefail
+umask 077
+
+backup_dir=/home/kicktipp/backups
+app_dir=/home/kicktipp/kicktipp-deluxe
+releases_dir=/home/kicktipp/releases
+ts=$(date -u +%Y%m%d-%H%M%S)
+mkdir -p "$backup_dir"
+chmod 700 "$backup_dir"
+
+active_release=$(readlink -f "$app_dir")
+case "$active_release" in
+  "$releases_dir"/kicktipp-*) ;;
+  *) echo "Ungültiges aktives Release: $active_release" >&2; exit 1 ;;
+esac
+
+release_parent=$(dirname "$active_release")
+release_name=$(basename "$active_release")
+metadata_required=0
+active_metadata=''
+if [[ -f "$active_release/RELEASE_METADATA" ]]; then
+  metadata_required=1
+  active_metadata=$(cat "$active_release/RELEASE_METADATA")
+fi
+app_backup="$backup_dir/kicktipp-app-$ts.tar.gz"
+db_backup="$backup_dir/kicktipp-db-$ts.sql.gz"
+test ! -e "$app_backup" && test ! -e "$db_backup"
+
+tar -czf "$app_backup" -C "$release_parent" "$release_name"
+chmod 600 "$app_backup"
+test -s "$app_backup"
+tar -tzf "$app_backup" | awk -v root="$release_name" -v metadata_required="$metadata_required" '
+  BEGIN { metadata = 0 }
+  /^\// || /(^|\/)\.\.($|\/)/ { unsafe = 1 }
+  $0 == root "/server.js" { server = 1 }
+  $0 == root "/.env" { env = 1 }
+  $0 == root "/package.json" { package = 1 }
+  index($0, root "/.next/static/") == 1 { static = 1 }
+  index($0, root "/node_modules/") == 1 { modules = 1 }
+  $0 == root "/RELEASE_METADATA" { metadata += 1 }
+  END {
+    metadata_ok = metadata_required ? metadata == 1 : metadata == 0
+    exit unsafe || !server || !env || !package || !static || !modules || !metadata_ok
+  }
+'
+if ((metadata_required == 1)); then
+  archive_metadata=$(tar -xOzf "$app_backup" "$release_name/RELEASE_METADATA")
+  test "$archive_metadata" = "$active_metadata"
+fi
+test "$(stat -c '%a' "$app_backup")" = 600
+
+mysqldump \
+  --single-transaction \
+  --quick \
+  --default-character-set=utf8mb4 \
+  --databases kicktipp \
+| gzip -c > "$db_backup"
+chmod 600 "$db_backup"
+test -s "$db_backup"
+gzip -t "$db_backup"
+gzip -dc "$db_backup" | awk '
+  NF { nonempty = 1 }
+  /CREATE TABLE/ { found = 1 }
+  /Dump completed on/ { complete = 1 }
+  END { exit !nonempty || !found || !complete }
+'
+test "$(stat -c '%a' "$db_backup")" = 600
+
+ls -lh "$app_backup" "$db_backup"
+REMOTE
+```
+
+`set -o pipefail` ist für den Dump wesentlich: Ein fehlgeschlagenes
+`mysqldump` darf nicht durch einen erfolgreichen `gzip`-Prozess verdeckt werden.
+Die Inhaltsprüfungen bestätigen zusätzlich, dass das Archiv die vollständige
+Standalone-Runtime samt `.env` und – sobald vorhanden – exakt den Metadaten des
+aktiven Releases enthält. Nur beim einmaligen Übergang von einem Alt-Release
+ohne `RELEASE_METADATA` ist ein Archiv ohne diese Datei zulässig; jeder durch
+den V5-Pfad erzeugte Release enthält sie. Der SQL-Dump muss mindestens eine
+Tabelle sowie den Abschlussmarker von `mysqldump` enthalten. Beide
+Backup-Dateien müssen Modus `600` haben.
+
+## Standard-Deploy
+
+Ohne Datenbankmigration:
 
 ```bash
 bash scripts/deploy/run.sh
 ```
 
-### Mit Produktionsmigration
+Mit einer vorab geprüften, rückwärtskompatiblen Migration:
 
 ```bash
 bash scripts/deploy/run.sh --migrate
 ```
 
-Optional kann ein fester Release-Name vorgegeben werden:
+Optional kann der Release-Name vorgegeben werden:
 
 ```bash
-bash scripts/deploy/run.sh --release-name kicktipp-20260403-153810
+bash scripts/deploy/run.sh --release-name kicktipp-20260718-153810
 ```
 
-`run.sh` fuehrt in genau dieser Reihenfolge aus:
+Alle Skripte akzeptieren bei Bedarf gemeinsame Overrides:
 
-1. `check.sh`
-2. `create-release.sh`
-3. `upload-build.sh`
-4. `link-runtime.sh`
-5. `switch.sh` mit optionalem `--migrate`
-6. `verify-smoke.sh`
-7. `verify-functional.sh`
+```text
+--host <host>
+--user <user>
+--app-dir <path>
+--releases-dir <path>
+--service <name>
+--domain <https-url>
+--local-port <port>
+```
 
-Cleanup ist absichtlich **nicht** automatisch Teil von `run.sh`. Nach erfolgreicher Verifikation wird explizit entschieden, welche Altlasten entfernt werden duerfen.
+`run.sh` hält während des gesamten Ablaufs den Remote-Lock
+`/home/kicktipp/releases/.kicktipp-deploy.lock`. Ein zweiter Deploy bricht ab.
+Bleibt der Lock nach einem unerwarteten Client-Abbruch zurück, zuerst über
+`ps`, `supervisorctl` und den Inhalt der Datei `owner` sicherstellen, dass kein
+Deploy mehr läuft; erst dann das leere Lock-Verzeichnis manuell entfernen.
 
-## Einzelschritte
+## Verbindlicher Ablauf
 
-### 1. Hostzustand pruefen
+`run.sh` führt genau diese sieben Schritte aus:
+
+1. `check.sh`: lokale und entfernte Voraussetzungen, sauberen Git-Stand,
+   aktuelle valide Backups, Service-Datei, Architektur und aktiven Symlink
+   prüfen.
+2. `create-release.sh`: den einmal ermittelten Commit archivieren, den Release
+   anlegen, die produktive `.env` serverseitig mit Modus `600` übernehmen und
+   Metadaten schreiben.
+3. `upload-build.sh`: denselben Commit in Docker für die Zielplattform bauen
+   und Standalone- sowie Migrationsruntime hochladen.
+4. `link-runtime.sh`: das selbstständige Linux-Artefakt, statische Assets,
+   Prisma 7.8.0, `.env`-Modus, Plattform und Metadaten validieren.
+5. `switch.sh`: optional migrieren, den bisherigen Symlink als Fallback
+   erhalten und atomar auf den neuen Release umschalten.
+6. `verify-smoke.sh`: aktiven Release exakt vergleichen, lokale und öffentliche
+   HTTP-Endpunkte sowie Supervisor prüfen.
+7. `verify-functional.sh`: echten Login, Session, geschützte Seiten, einen
+   transaktional zurückgerollten `AppSetting`-Write und Sign-out prüfen.
+
+Der Release-Commit wird zu Beginn genau einmal aus `HEAD` ermittelt.
+`create-release.sh` und `upload-build.sh` erhalten denselben SHA; lokale,
+ignorierte und uncommittete Dateien gelangen dadurch nicht in das Artefakt.
+`RELEASE_METADATA` enthält Commit, Paketversion, UTC-Erstellzeit,
+Build-Plattform und Build-Image und wird in den Prüfungen ausgegeben.
+
+Der Container führt `npm ci`, `npm run build` und die Installation der
+separaten Migrationsruntime aus. `postbuild` kopiert `public` und
+`.next/static` in den Standalone-Baum. Hochgeladen wird anschließend das
+vollständige, eigenständig startbare Linux-Artefakt; eine externe
+`node_modules`-Basis ist nicht zulässig.
+
+## Migrationen sicher ausführen
+
+`switch.sh --migrate` verwendet ausschließlich die im Release enthaltene,
+über Lockfile gepinnte Runtime unter `.migration`:
+
+```text
+<release>/.migration/node_modules/.bin/prisma migrate deploy
+```
+
+Produktionsmigrationen müssen nach dem Expand/Contract-Prinzip sowohl mit dem
+alten als auch mit dem neuen App-Release kompatibel sein. Destruktive Schritte
+wie Spaltenlöschung, Umbenennung oder irreversible Datenkonvertierung gehören
+nicht in denselben Umschaltvorgang.
+
+Wichtig: Der automatische Rollback stellt nur das vorige App-Release wieder
+her. Eine bereits ausgeführte Datenbankmigration wird nicht automatisch
+zurückgenommen. Vor `--migrate` müssen daher ein getesteter SQL-Restore-Plan
+und ein aktuelles DB-Backup vorliegen.
+
+## Umschalten, Verifikation und automatischer Rollback
+
+Der Fallback für einen Release
+`/home/kicktipp/releases/kicktipp-20260718-153810` heißt exakt:
+
+```text
+/home/kicktipp/kicktipp-deluxe-predeploy-kicktipp-20260718-153810
+```
+
+Schlägt der Service-Start innerhalb von `switch.sh` fehl, wird der vorherige
+App-Symlink sofort wiederhergestellt. Schlägt nach dem Umschalten der Smoke-
+oder Funktionstest fehl, ruft `run.sh` automatisch `restore-release.sh` für
+genau diesen Release auf. Misslingt auch diese Wiederherstellung, ist eine
+manuelle Intervention erforderlich; der Cleanup bleibt in jedem Fehlerfall
+aus.
+
+Der funktionale Check verlangt `--release` und explizite Zugangsdaten. Er
+bestätigt zuerst die aktive Release-Identität und prüft dann:
+
+- Redirect ohne Session;
+- Credentials-Login und Session-E-Mail/-Rolle;
+- authentifizierte Zugriffe auf Dashboard, Tippen und Admin;
+- einen `AppSetting`-Write innerhalb einer SQL-Transaktion samt `ROLLBACK`;
+- Sign-out und leere Session.
+
+Er erzeugt oder löscht keine Benutzer und schreibt keine Tipps.
+
+## Manueller App-Rollback
+
+Wenn der automatische Pfad nicht gelaufen ist oder ein bereits freigegebener
+Release zurückgenommen werden muss, wird der zu diesem aktiven Release
+gehörende Fallback gezielt wiederhergestellt:
 
 ```bash
-bash scripts/deploy/check.sh
+bash scripts/deploy/restore-release.sh \
+  --release /home/kicktipp/releases/kicktipp-20260718-153810
 ```
 
-Prueft lokal benoetigte Werkzeuge und remote unter anderem:
+Das Skript verweigert den Vorgang, wenn der angegebene Release nicht mehr aktiv
+ist, der Fallback fehlt oder eines der Ziele außerhalb von `RELEASES_DIR` liegt.
+Nach dem Wechsel prüft es Service-Status, exaktes Symlink-Ziel und den lokalen
+Login-Endpunkt.
 
-- `supervisorctl status`
-- `uberspace web backend list`
-- `node -v`
-- `npm -v`
-- `mysql --version`
-- `~/etc/services.d/kicktipp.ini`
-- `git status --short` im aktiven App-Pfad
+## Cleanup
 
-### 2. Neues Release anlegen
-
-```bash
-bash scripts/deploy/create-release.sh
-```
-
-Legt ein Release unter `~/releases/kicktipp-YYYYMMDD-HHMMSS` an, laedt den Quellstand ohne `.git`, `.env`, `.next`, `node_modules` und `tsconfig.tsbuildinfo` hoch und kopiert die produktive `.env` in den neuen Release.
-
-Die Ausgabe endet mit dem erzeugten Release-Pfad.
-
-### 3. Lokalen Build hochladen
-
-```bash
-bash scripts/deploy/upload-build.sh --release /home/kicktipp/releases/kicktipp-<timestamp>
-```
-
-Fuehrt lokal `npm run build` aus und laedt danach den Standalone-Runtime-Output in den Release:
-
-- `server.js`
-- `node_modules/` aus `.next/standalone`
-- `.next/` aus `.next/standalone`
-- `.next/static`
-
-Die produktive `.env` bleibt die serverseitige Release-`.env` aus `create-release.sh`. Die lokale `.next/standalone/.env` wird nicht uebernommen.
-
-### 4. Standalone-Runtime validieren
-
-```bash
-bash scripts/deploy/link-runtime.sh --release /home/kicktipp/releases/kicktipp-<timestamp>
-```
-
-Der Schritt verlinkt nichts mehr. Er prueft nur, dass der Release bereits eine vollstaendige Standalone-Runtime enthaelt.
-
-Wichtig:
-
-- der Standardpfad braucht keine externe produktive `node_modules`-Basis mehr
-- `server.js`, das Standalone-`node_modules` und `.next/static` muessen im Release vorhanden sein
-
-### 5. Aktives Release umschalten
-
-Ohne Migration:
-
-```bash
-bash scripts/deploy/switch.sh --release /home/kicktipp/releases/kicktipp-<timestamp>
-```
-
-Mit Migration:
-
-```bash
-bash scripts/deploy/switch.sh --release /home/kicktipp/releases/kicktipp-<timestamp> --migrate
-```
-
-Mit `--migrate` wird im neuen Release genau einmal `npm run db:migrate` vor dem Umschalten ausgefuehrt.
-
-Beim Umschalten:
-
-- `supervisorctl stop kicktipp`
-- aktiver Symlink wird nach `kicktipp-deluxe-predeploy-<timestamp>` verschoben
-- `~/kicktipp-deluxe` zeigt auf den neuen Release
-- Dienst wird neu gestartet
-
-### 6. Verbindliche Smoke-Checks
-
-```bash
-bash scripts/deploy/verify-smoke.sh --release /home/kicktipp/releases/kicktipp-<timestamp>
-```
-
-Erwartet:
-
-- `/home/kicktipp/kicktipp-deluxe` ist ein Symlink auf exakt den erwarteten Release-Pfad
-- `http://127.0.0.1:3000/login` -> `200`
-- `https://kicktipp.schultypografie.de/login` -> `200`
-- `https://kicktipp.schultypografie.de/api/auth/signin` -> kein `500`
-- `https://kicktipp.schultypografie.de/dashboard` ohne Session -> `307`
-- `supervisorctl status kicktipp` -> `RUNNING`
-
-Der Check gibt den aktiven und den erwarteten Release-Pfad aus. Wenn die Pfade abweichen oder einer der weiteren Checks fehlschlaegt, ist der Deploy nicht erfolgreich. Es gibt keinen automatischen Cleanup und keinen automatischen Rollback.
-
-### 7. Funktionale Verifikation
-
-```bash
-bash scripts/deploy/verify-functional.sh
-```
-
-Der Schritt prueft nach dem technischen Start die realen Nutzungspfade:
-
-- Redirect auf geschuetzter Route ohne Session
-- Login ueber den echten NextAuth-Credentials-Flow
-- Session-Erstellung ueber `/api/auth/session`
-- authentifizierter Zugriff auf `/dashboard`
-- authentifizierter Zugriff auf `/tippen`
-- authentifizierter Zugriff auf eine Admin-Route
-- eine reversible produktive Schreibpruefung auf App-Daten
-- Sign-out inklusive Session-Abbau
-
-Defaults:
-
-- ohne `VERIFY_LOGIN_EMAIL` und `VERIFY_LOGIN_PASSWORD` erzeugt das Skript automatisch einen temporaeren Admin-Benutzer, meldet sich damit an und raeumt ihn am Ende wieder auf
-- mit `VERIFY_LOGIN_EMAIL` und `VERIFY_LOGIN_PASSWORD` nutzt das Skript explizit diese Zugangsdaten
-- Admin-Route: `/admin/benutzer`
-- Tipp-Route: `/tippen`
-
-Schreibpruefung:
-
-- bevorzugt wird ein reversibler Tipp-Schreibtest auf einem aktiven Spiel
-- falls kein aktiver Spieltag vorhanden ist, faellt der Check kontrolliert auf einen reversiblen `AppSetting`-Write zurueck
-
-Wenn die funktionale Verifikation fehlschlaegt, gilt der Deploy als fehlgeschlagen. Cleanup bleibt aus, damit ein manueller Rollback moeglich bleibt.
-
-### 7. Expliziter Cleanup
-
-Retention-Regel:
-
-- mindestens 3 Releases insgesamt behalten
-- mindestens 1 funktionierenden `kicktipp-deluxe-predeploy-*`-Fallback behalten
-- mindestens 3 App-Backups behalten
-- mindestens 5 DB-Backups behalten
-
-Schutzregeln von `cleanup.sh`:
-
-- loescht nur explizit angegebene Pfade
-- loescht niemals den aktiven Release
-- loescht niemals den juengsten funktionierenden Predeploy-Link
-- loescht niemals das Release-Ziel dieses juengsten funktionierenden Predeploy-Links
-- bricht ab, wenn die Retention-Regel durch die ausgewaehlten Loeschungen verletzt wuerde
-
-Beispiele:
+Cleanup ist absichtlich kein Teil von `run.sh`. Erst nach erfolgreicher
+fachlicher Abnahme werden konkrete Pfade übergeben:
 
 ```bash
 bash scripts/deploy/cleanup.sh \
-  --release /home/kicktipp/releases/kicktipp-<old-1> \
-  --release /home/kicktipp/releases/kicktipp-<old-2> \
-  --predeploy /home/kicktipp/kicktipp-deluxe-predeploy-<timestamp> \
-  --app-backup /home/kicktipp/backups/kicktipp-app-<old>.tar.gz
+  --release /home/kicktipp/releases/kicktipp-<alt> \
+  --predeploy /home/kicktipp/kicktipp-deluxe-predeploy-kicktipp-<alt> \
+  --app-backup /home/kicktipp/backups/kicktipp-app-<alt>.tar.gz \
+  --db-backup /home/kicktipp/backups/kicktipp-db-<alt>.sql.gz
 ```
 
-```bash
-bash scripts/deploy/cleanup.sh --npm-cache
-```
+Die Schutzregeln erhalten mindestens drei Releases, einen funktionierenden
+Predeploy-Fallback, drei valide App-Backups und fünf valide DB-Backups. Aktiver
+Release, jüngster funktionierender Fallback und dessen Ziel sind geschützt.
+Nur explizit benannte, vom Skript erkannte Artefakte werden entfernt.
 
-Vor dem Loeschen immer pruefen:
-
-- ist der Release aktuell nicht aktiv
-- ist das Predeploy-Ziel kein benoetigter Rollback-Kandidat mehr
-- bleibt mindestens ein sinnvoller Rueckfallstand erhalten
-
-## Rollback
-
-Vorherigen Stand ermitteln:
-
-```bash
-ls -d ~/kicktipp-deluxe-predeploy-*
-ls -lh ~/backups
-```
-
-App-Rollback:
-
-```bash
-ssh kicktipp@regulus.uberspace.de
-
-old=/home/kicktipp/kicktipp-deluxe-predeploy-<timestamp>
-
-supervisorctl stop kicktipp
-rm ~/kicktipp-deluxe
-ln -s "$old" ~/kicktipp-deluxe
-supervisorctl start kicktipp
-sleep 5
-supervisorctl status kicktipp
-```
-
-DB-Rollback:
-
-```bash
-ssh kicktipp@regulus.uberspace.de
-
-gzip -dc ~/backups/kicktipp-db-<timestamp>.sql.gz | mysql kicktipp
-```
-
-DB-Rollback nur verwenden, wenn wirklich Daten- oder Migrationsprobleme vorliegen.
-
-## Bekannte Ausnahmen ausserhalb des Standardpfads
-
-### Server-Build nur als Notfall
-
-Nur wenn ausreichend RAM und Disk-Quota frei sind:
-
-```bash
-ssh kicktipp@regulus.uberspace.de
-
-rel=/home/kicktipp/releases/kicktipp-<timestamp>
-
-rm -rf "$rel/node_modules"
-cp -a ~/kicktipp-deluxe/node_modules "$rel/"
-
-cd "$rel"
-npm run build
-npm run db:migrate
-```
-
-Wenn `npm ci` oder `npm run build` mit `Killed` endet, ist das typischerweise ein Host-Limit und kein normaler Produktionspfad.
-
-### Historischer Prisma-Hotfix aus dem Altmodell
-
-Der manuelle Prisma-Runtime-Link aus AP1 war ein Befund des alten `.next + externes node_modules`-Modells. Im neuen Standalone-Standard ist dieser Eingriff kein regulaerer Deploy-Schritt mehr.
-
-## Nützliche Pfade
-
-- Service-Datei: `/home/kicktipp/etc/services.d/kicktipp.ini`
-- Produktive `.env`: `/home/kicktipp/kicktipp-deluxe/.env`
-- Release-Ordner: `/home/kicktipp/releases/`
-- Backups: `/home/kicktipp/backups/`
-- npm-Cache: `/home/kicktipp/.npm`
+Die vollständige Nachkontrolle steht in
+[docs/operations/verification-checklist.md](docs/operations/verification-checklist.md),
+Backup- und Restore-Grenzen in
+[docs/operations/backups-and-rollback.md](docs/operations/backups-and-rollback.md).

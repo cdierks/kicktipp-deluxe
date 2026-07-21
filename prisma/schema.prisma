@@ -34,7 +34,7 @@ model User {
   name         String
   nickname     String   @unique
   favoriteTeam String?
-  color        String?  // hex value from ColorPalette, e.g. "#2a61a1"
+  color        String?  // hex value from ColorPalette, e.g. "#394eab"
   role         Role     @default(USER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -43,7 +43,7 @@ model User {
 
 model ColorPalette {
   id    String @id @default(cuid())
-  hex   String @unique // "#2a61a1"
+  hex   String @unique // "#394eab"
   label String
   order Int    @default(0)
 }

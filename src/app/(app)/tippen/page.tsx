@@ -4,6 +4,14 @@ import { getActiveMatchday } from '@/lib/matchday'
 import { prisma } from '@/lib/prisma'
 import { TipForm } from './tip-form'
 import { ReducedStandingsTable } from './reduced-standings-table'
+import { PageHeader } from '@/components/page-header'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { PageFrame } from '@/components/page-frame'
+import { MatchdayContext } from '@/components/matchday-context'
+import { getEffectiveTipDeadline, isDeadlinePassed } from '@/lib/matchday'
+import { createTipRevision } from '@/lib/tip-revision'
+import { formatAppDate } from '@/lib/date-format'
 
 export default async function TippenPage() {
   const session = await getSession()
@@ -13,14 +21,16 @@ export default async function TippenPage() {
 
   if (!matchday) {
     return (
-      <div className="py-12 text-center">
-        <p className="text-xl font-semibold uppercase tracking-wide text-muted-foreground">
-          Kein aktiver Spieltag
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground font-sans">
-          Der Admin hat noch keinen Spieltag aktiviert.
-        </p>
-      </div>
+      <PageFrame>
+        <PageHeader
+          eyebrow="Spieltag"
+          title="Tippen"
+          description="Sobald ein Spieltag aktiviert wurde, kannst du hier deine Tipps abgeben."
+        />
+        <section className="surface-raised rounded-xl px-5 py-8 text-center">
+          <p className="text-sm text-muted-foreground">Der Admin hat noch keinen Spieltag aktiviert.</p>
+        </section>
+      </PageFrame>
     )
   }
 
@@ -30,35 +40,38 @@ export default async function TippenPage() {
   })
 
   const tipMap = Object.fromEntries(existingTips.map((t) => [t.matchId, t]))
-  const deadlinePassed = new Date() > matchday.tippDeadline
+  const tipRevision = createTipRevision(existingTips)
+  const effectiveDeadline = getEffectiveTipDeadline(
+    matchday.tippDeadline,
+    matchday.matches.map((match) => match.matchDate),
+  )
+  const deadlinePassed = isDeadlinePassed(effectiveDeadline)
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      <div className="surface rounded-[1.4rem] p-5 sm:p-6">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-              Tippen
-            </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground">
-              Spieltag {matchday.matchdayNumber}
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Triff deine Tipps, sichere den Joker und nutze die Tabelle rechts als schnellen Form- und Punkte-Kontext.
-            </p>
-          </div>
+    <PageFrame>
+      <PageHeader
+        eyebrow={
+          <MatchdayContext
+            statusLabel="Aktiv"
+            seasonLabel={`Saison ${matchday.season.year}/${parseInt(matchday.season.year, 10) + 1}`}
+            matchdayNumber={matchday.matchdayNumber}
+          />
+        }
+        title="Tippen"
+        description="Triff deine Tipps, sichere den Joker und nutze die Tabelle rechts als schnellen Form- und Punkte-Kontext."
+        aside={
           <div
             className={
               deadlinePassed
-                ? 'rounded-[1.05rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-destructive'
-                : 'rounded-[1.05rem] border border-primary/15 bg-primary/[0.07] px-4 py-3 text-foreground'
+                ? 'rounded-lg border border-error-300 bg-error-100 px-4 py-3 text-error-900 dark:border-error-700 dark:bg-error-900 dark:text-error-100'
+                : 'rounded-lg border border-primary-300 bg-primary-100 px-4 py-3 text-primary-900 dark:border-primary-700 dark:bg-primary-900 dark:text-primary-100'
             }
           >
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <p className="text-xs font-medium text-muted-foreground">
               {deadlinePassed ? 'Deadline abgelaufen' : 'Tipp-Deadline'}
             </p>
             <p className={deadlinePassed ? 'mt-2 text-lg font-bold' : 'mt-2 text-lg font-bold text-foreground'} suppressHydrationWarning>
-              {new Date(matchday.tippDeadline).toLocaleString('de-DE', {
+              {formatAppDate(effectiveDeadline, {
                 weekday: 'short',
                 day: 'numeric',
                 month: 'long',
@@ -72,40 +85,46 @@ export default async function TippenPage() {
                 : 'Danach werden alle Eingaben geschlossen.'}
             </p>
           </div>
-        </div>
-      </div>
+        }
+      />
 
-      {deadlinePassed ? (
-        <div className="surface rounded-[1.4rem] px-5 py-6">
-          <p className="text-base font-bold tracking-tight text-muted-foreground">
+      {matchday.matches.length === 0 ? (
+        <Alert>
+          <AlertTitle>Noch keine Spiele vorhanden</AlertTitle>
+          <AlertDescription>
+            Für diesen Spieltag wurden noch keine Begegnungen synchronisiert.
+          </AlertDescription>
+        </Alert>
+      ) : deadlinePassed ? (
+        <Alert variant="destructive">
+          <AlertTitle>Tipps geschlossen</AlertTitle>
+          <AlertDescription>
             Für diesen Spieltag können keine Tipps mehr abgegeben werden.
-          </p>
-        </div>
+          </AlertDescription>
+        </Alert>
       ) : (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-          <TipForm matches={matchday.matches} existingTips={tipMap} />
-          <aside className="surface h-fit rounded-[1.4rem] p-4 sm:p-5">
-            <div className="mb-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        <div className="grid gap-6 2xl:gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <TipForm
+            key={`${matchday.id}:${tipRevision}:${matchday.matches.map((match) => match.id).join(',')}`}
+            matches={matchday.matches}
+            existingTips={tipMap}
+          />
+          <Card className="surface-raised h-fit gap-0 py-0">
+            <CardHeader className="p-4 pb-3">
+              <p className="text-xs font-medium text-muted-foreground">
                 Bundesliga
               </p>
-              <h2 className="mt-2 text-lg font-bold tracking-tight text-foreground">
-                Tabellenstand
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <CardTitle className="text-lg">Tabellenstand</CardTitle>
+              <CardDescription>
                 Platz, Punkte und Differenz als schnelle Orientierung für deine Tipps.
-              </p>
-            </div>
-            <div className="mb-3 grid grid-cols-[2rem_minmax(0,1fr)_3.5rem_3.25rem] gap-2 px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              <span>#</span>
-              <span>Verein</span>
-              <span className="text-right">Diff</span>
-              <span className="text-right">Pkt</span>
-            </div>
-            <ReducedStandingsTable year={matchday.season.year} />
-          </aside>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ReducedStandingsTable year={matchday.season.year} />
+            </CardContent>
+          </Card>
         </div>
       )}
-    </div>
+    </PageFrame>
   )
 }

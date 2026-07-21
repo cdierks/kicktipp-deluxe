@@ -42,7 +42,7 @@ export function ClubIcon({
         aria-hidden={alt === ''}
         title={label}
         className={cn(
-          'inline-flex items-center justify-center rounded-sm bg-muted/70 text-[0.6rem] font-bold leading-none text-muted-foreground',
+          'inline-flex items-center justify-center rounded-sm bg-muted text-xs font-bold leading-none text-muted-foreground',
           className,
           fallbackClassName,
         )}

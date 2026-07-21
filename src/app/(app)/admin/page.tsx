@@ -1,18 +1,19 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { getSession } from '@/lib/auth'
+import { getVerifiedUser } from '@/lib/auth-guards'
 import { prisma } from '@/lib/prisma'
 import { CLUBS } from '@/lib/clubs'
 import { getRegistrationEnabled } from '@/lib/settings'
 import { Button } from '@/components/ui/button'
-import { IconUsers, IconCalendarEvent, IconBallFootball, IconShirt, IconPalette, IconUserPlus, IconUserOff, IconBookmark, IconChevronRight } from '@/components/app-icons'
-import { ClubsRefresh } from './clubs-refresh'
+import { IconUsers, IconCalendarEvent, IconBallFootball, IconShirt, IconPalette, IconUserPlus, IconUserOff, IconChevronRight } from '@/components/app-icons'
 import { RegistrationToggle } from './registration-toggle'
 import { BackupPanel } from './backup-panel'
+import { PageHeader } from '@/components/page-header'
+import { PageFrame } from '@/components/page-frame'
 
 export default async function AdminPage() {
-  const session = await getSession()
-  if (!session || session.user.role !== 'ADMIN') redirect('/dashboard')
+  const user = await getVerifiedUser()
+  if (user?.role !== 'ADMIN') redirect('/dashboard')
 
   const [userCount, matchdayCount, activeMatchday, colorCount, registrationEnabled] = await Promise.all([
     prisma.user.count(),
@@ -23,144 +24,104 @@ export default async function AdminPage() {
   ])
 
   return (
-    <div className="space-y-6">
-      <div className="surface rounded-[1.4rem] p-5 sm:p-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-          Adminbereich
-        </p>
-        <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground">
-          Admin
-        </h1>
-      </div>
+    <PageFrame>
+      <PageHeader eyebrow="Adminbereich" title="Admin" description="Verwalte Spieltage, Ergebnisse, Benutzer und Systemeinstellungen." />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="surface rounded-[1.4rem] p-5">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <IconUsers className="h-5 w-5 text-primary" strokeWidth={1.5} />
-            </div>
+      <section className="surface-raised overflow-hidden rounded-xl">
+        <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-primary-readable">Aktueller Betrieb</p>
+            <h2 className="mt-1 text-lg font-semibold text-foreground">
+              {activeMatchday
+                ? `Spieltag ${activeMatchday.matchdayNumber} · ${activeMatchday.season.year}/${parseInt(activeMatchday.season.year) + 1}`
+                : 'Kein aktiver Spieltag'}
+            </h2>
           </div>
-          <p className="text-5xl font-bold tracking-tight text-foreground">{userCount}</p>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Registrierte Benutzer
-          </p>
-          <Button asChild variant="outline" size="sm" className="mt-4 font-semibold uppercase tracking-wide text-xs rounded-xl w-full">
-            <Link href="/admin/benutzer">Verwalten</Link>
+          <Button asChild size="sm">
+            <Link href="/admin/ergebnisse">Ergebnisse verwalten</Link>
           </Button>
         </div>
-
-        <div className="surface rounded-[1.4rem] p-5">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <IconCalendarEvent className="h-5 w-5 text-primary" strokeWidth={1.5} />
+        <div className="grid divide-y divide-border sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4">
+          {[
+            { label: 'Benutzer', value: userCount, icon: IconUsers },
+            { label: 'Spieltage', value: matchdayCount, icon: IconCalendarEvent },
+            { label: 'Aktiv', value: activeMatchday ? `ST ${activeMatchday.matchdayNumber}` : '–', icon: IconBallFootball },
+            { label: 'Nutzerfarben', value: colorCount, icon: IconPalette },
+          ].map((metric) => (
+            <div key={metric.label} className="flex items-center gap-3 px-4 py-3">
+              <metric.icon className="size-4 text-primary-readable" strokeWidth={1.6} />
+              <div>
+                <p className="text-xl font-bold tabular-nums text-foreground">{metric.value}</p>
+                <p className="text-xs text-muted-foreground">{metric.label}</p>
+              </div>
             </div>
-          </div>
-          <p className="text-5xl font-bold tracking-tight text-foreground">{matchdayCount}</p>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Spieltage
-          </p>
-          <Button asChild variant="outline" size="sm" className="mt-4 font-semibold uppercase tracking-wide text-xs rounded-xl w-full">
-            <Link href="/admin/spieltage">Spieltage verwalten</Link>
-          </Button>
+          ))}
         </div>
+      </section>
 
-        <div className="surface rounded-[1.4rem] p-5">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <IconBallFootball className="h-5 w-5 text-primary" strokeWidth={1.5} />
-            </div>
-          </div>
-          <p className="text-2xl font-bold tracking-tight text-foreground leading-tight">
-            {activeMatchday
-              ? `ST ${activeMatchday.matchdayNumber}`
-              : '–'}
-          </p>
-          {activeMatchday && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {activeMatchday.season.year}/{parseInt(activeMatchday.season.year) + 1}
-            </p>
-          )}
-          <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Aktiver Spieltag
-          </p>
-          <Button asChild variant="outline" size="sm" className="mt-4 font-semibold uppercase tracking-wide text-xs rounded-xl w-full">
-            <Link href="/admin/ergebnisse">Ergebnisse</Link>
-          </Button>
-        </div>
-
-        <div className="surface rounded-[1.4rem] p-5">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <IconPalette className="h-5 w-5 text-primary" strokeWidth={1.5} />
-            </div>
-          </div>
-          <p className="text-5xl font-bold tracking-tight text-foreground">{colorCount}</p>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Nutzerfarben
-          </p>
-          <Button asChild variant="outline" size="sm" className="mt-4 font-semibold uppercase tracking-wide text-xs rounded-xl w-full">
-            <Link href="/admin/farben">Verwalten</Link>
-          </Button>
-        </div>
-
-        <div className="surface rounded-[1.4rem] p-5">
+      <div className="grid gap-6 xl:grid-cols-3 2xl:gap-8">
+        <section className="surface rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-              <IconShirt className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-100">
+              <IconShirt className="h-4 w-4 text-primary-readable" strokeWidth={1.5} />
             </div>
             <div>
-              <p className="text-sm font-bold tracking-wide text-foreground">Vereinsliste</p>
+              <p className="text-sm font-bold text-foreground">Vereinsliste</p>
               <p className="text-xs text-muted-foreground">BL1, BL2 & BL3 von OpenLigaDB</p>
             </div>
           </div>
-          <ClubsRefresh currentCount={CLUBS.length} />
-        </div>
+          <p className="text-sm text-muted-foreground">
+            Aktuell: <span className="font-semibold text-foreground tabular-nums">{CLUBS.length} Vereine</span>
+          </p>
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">
+            Die statische Liste wird vor einem Release mit <code>npm run generate:clubs -- JJJJ</code> aktualisiert und anschließend neu gebaut.
+          </p>
+        </section>
 
-        <div className="surface rounded-[1.4rem] p-5">
+        <section className="surface rounded-xl p-4">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-100">
               {registrationEnabled
-                ? <IconUserPlus className="h-4 w-4 text-primary" strokeWidth={1.5} />
-                : <IconUserOff className="h-4 w-4 text-primary" strokeWidth={1.5} />}
+                ? <IconUserPlus className="h-4 w-4 text-primary-readable" strokeWidth={1.5} />
+                : <IconUserOff className="h-4 w-4 text-primary-readable" strokeWidth={1.5} />}
             </div>
             <div>
-              <p className="text-sm font-bold tracking-wide text-foreground">Registrierung</p>
+              <p className="text-sm font-bold text-foreground">Registrierung</p>
               <p className="text-xs text-muted-foreground">Zugang für neue Benutzer</p>
             </div>
           </div>
           <RegistrationToggle enabled={registrationEnabled} />
-        </div>
+        </section>
 
         <BackupPanel />
+      </div>
 
-        <div className="surface rounded-[1.4rem] p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-              <IconBookmark className="h-4 w-4 text-primary" strokeWidth={1.5} />
-            </div>
-            <div>
-              <p className="text-sm font-bold tracking-wide text-foreground">Schnellzugriffe</p>
-              <p className="text-xs text-muted-foreground">Direkt zu den wichtigsten Admin-Bereichen</p>
-            </div>
-          </div>
-          <div className="space-y-2">
+      <section className="surface-raised overflow-hidden rounded-xl">
+        <div className="border-b border-border px-4 py-3">
+          <h2 className="text-base font-semibold text-foreground">Verwaltung</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Alle operativen Bereiche in einer gemeinsamen Aufgabenliste.</p>
+        </div>
+        <div className="divide-y divide-border">
             {[
-              { href: '/admin/benutzer', label: 'Benutzer' },
-              { href: '/admin/spieltage', label: 'Spieltage' },
-              { href: '/admin/ergebnisse', label: 'Ergebnisse' },
+              { href: '/admin/benutzer', label: 'Benutzer', detail: 'Rollen, Profile und Teilnehmer prüfen' },
+              { href: '/admin/spieltage', label: 'Spieltage', detail: 'Saisons, Deadlines und Synchronisation steuern' },
+              { href: '/admin/ergebnisse', label: 'Ergebnisse', detail: 'Spielstände kontrollieren und korrigieren' },
+              { href: '/admin/farben', label: 'Nutzerfarben', detail: 'Gemeinsame Spielerpalette verwalten' },
             ].map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center justify-between rounded-xl border border-border/70 bg-background/65 px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary/70"
+                className="flex min-h-14 items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
               >
-                <span>{item.label}</span>
+                <span>
+                  <span className="block text-sm font-semibold text-foreground">{item.label}</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">{item.detail}</span>
+                </span>
                 <IconChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
               </Link>
             ))}
-          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </PageFrame>
   )
 }

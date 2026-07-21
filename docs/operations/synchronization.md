@@ -1,110 +1,100 @@
 # Synchronisation
 
-## Zweck
+## Zweck und Wege
 
-Die Anwendung synchronisiert Spielstände über OpenLigaDB.
+Ergebnisse und Spielstatus werden über OpenLigaDB synchronisiert:
 
-Relevant sind zwei Wege:
+- manuell für einen ausgewählten Spieltag im Adminbereich;
+- automatisch für den aktiven Spieltag über `POST /api/sync`.
 
-- manueller Sync eines Spieltags im Admin-Bereich
-- automatischer Sync über den HTTP-Endpunkt `/api/sync`
-
-## Externe Quelle
-
-- Dienst: OpenLigaDB
-- API-Key: keiner erforderlich
-
-Wenn OpenLigaDB stört oder fehlerhafte Antworten liefert, ist die Anwendung selbst nicht zwingend defekt. Betroffen sind dann primär:
-
-- Ergebnis-Synchronisation
-- Vereinsdaten-Aktualisierung
+OpenLigaDB benötigt keinen API-Key. Ein Ausfall betrifft die Aktualisierung,
+nicht den Zugriff auf bereits gespeicherte Daten.
 
 ## HTTP-Cron-Endpunkt
 
-Die Anwendung stellt diesen Endpunkt bereit:
-
 ```text
 POST /api/sync
-Header: x-cron-secret: <CRON_SECRET>
+x-cron-secret: <CRON_SECRET>
 ```
 
-Verhalten:
+Die Anwendung validiert `CRON_SECRET` beim Start und vergleicht den Header nach
+einer Längenprüfung mit `crypto.timingSafeEqual`. Es wird kein Klartextvergleich
+verwendet.
 
-- fehlender oder falscher Header: `401 Unauthorized`
-- erfolgreicher interner Sync: JSON-Antwort mit Sync-Ergebnis
-- unbehandelter Fehler im Sync-Pfad: `500`
+Erwartete Antworten:
 
-Implementationsrelevant:
+- fehlendes oder falsches Secret: `401 Unauthorized`;
+- erfolgreicher Sync: `200` mit JSON-Ergebnis;
+- externer, Validierungs- oder Datenbankfehler: `500` mit generischer
+  Fehlermeldung.
 
-- nur `POST` ist vorgesehen
-- das Secret wird direkt gegen `process.env.CRON_SECRET` verglichen
+Das Secret darf nur im Cron-Dienst und in der geschützten Serverkonfiguration
+liegen. Nicht in URL-Querys, Logs oder Tickets kopieren.
+
+## Validierung und Schreibverhalten
+
+Der gemeinsame Sync-Kern für Cron und Admin:
+
+- lädt ausschließlich den ausgewählten Spieltag;
+- begrenzt externe Requests durch einen Timeout;
+- validiert Typen, IDs, Teams, Termine, Ergebnisse und Status;
+- verlangt für einen Bundesliga-Spieltag genau neun eindeutige Spiele und 18
+  eindeutige Teams;
+- verhindert die Wiederverwendung einer OpenLigaDB-Spiel-ID in einem anderen
+  Spieltag;
+- gleicht kontrolliert nur noch ungetippte, veraltete Fixtures ab und weist
+  widersprüchliche Bestandsdaten zurück;
+- setzt ein Spiel nur mit vollständigem Endergebnis auf abgeschlossen;
+- schreibt Spiele und `syncedAt` transaktional;
+- berechnet Punkte anschließend konsistent neu beziehungsweise entfernt
+  überholte Wertungen.
+
+Ein Sync darf deshalb bei einer unvollständigen oder unerwarteten Provider-
+Antwort fehlschlagen, statt einen teilweise gültigen Spieltag zu speichern.
 
 ## Manueller Sync
 
-Im Admin-Bereich können Spieltage gezielt synchronisiert werden.
+Die Server Action verlangt eine aktive Adminberechtigung und eine valide
+Spieltag-ID. Sinnvolle Einsatzfälle sind:
 
-Betrieblich sinnvoll bei:
+- ein verzögerter Cronlauf;
+- eine Nachkontrolle nach Provider-Problemen;
+- eine gezielte Aktualisierung nach Ergebnisfreigabe.
 
-- verzogenem Cronlauf
-- Einzelkorrekturen nach API-Problemen
-- Verifikation direkt nach Ergebnisfreigaben
+## Clubdaten und Icons
 
-## Fachlich relevanter Zustand
-
-Ein erfolgreicher Sync aktualisiert unter anderem:
-
-- Spiele eines Spieltags
-- Spielstatus
-- Scores
-- `syncedAt` des Spieltags
-
-## Clubs-Aktualisierung
-
-Zusätzlich existiert eine Admin-Aktion zur Aktualisierung von Vereinsdaten aus:
-
-- `bl1`
-- `bl2`
-- `bl3`
-
-Auch diese Funktion hängt von OpenLigaDB ab.
-
-## Operative Schnelltests
-
-### Cron-Endpunkt prüfen
+Clubdaten sind keine zur Laufzeit veränderliche Adminfunktion. Sie werden
+kontrolliert im Repository erzeugt:
 
 ```bash
-curl -i -X POST \
-  -H "x-cron-secret: <CRON_SECRET>" \
+npm run generate:clubs -- <season-start-year>
+npm run mirror:club-icons
+npm run list:missing-club-icons
+npm run build
+```
+
+`generate:clubs` schreibt die statische, versionierte Clubquelle; die Icons
+werden lokal unter `public/club-icons` ausgeliefert. Damit gelangen saisonale
+Änderungen nur als prüfbarer Code-/Asset-Stand in einen Release.
+
+## Operative Prüfung
+
+```bash
+curl -i --max-time 20 \
+  -X POST \
+  -H 'x-cron-secret: <CRON_SECRET>' \
   https://kicktipp.schultypografie.de/api/sync
 ```
 
-### Erwartungsbild
+Danach prüfen:
 
-- mit korrektem Secret kein `401`
-- bei gesundem System kein `500`
-- nach erfolgreichem Sync aktualisiert sich `syncedAt` des aktiven Spieltags
+- HTTP-Status ist weder `401` noch `500`;
+- `syncedAt` des aktiven Spieltags wurde aktualisiert;
+- neun Partien, Vereinszuordnung, Anstoßzeiten, Scores und Status sind
+  plausibel;
+- Punkte und Joker-Auswertung entsprechen den Endergebnissen;
+- Supervisor-Logs enthalten keine wiederholte Sync-Fehlerschleife.
 
-## Typische Fehlerbilder
-
-### `401 Unauthorized`
-
-Ursachen:
-
-- `CRON_SECRET` falsch
-- Headername falsch
-- Secret nicht auf Zielinstanz gesetzt
-
-### `500` beim Sync
-
-Ursachen:
-
-- OpenLigaDB liefert Fehler oder Timeout
-- Datenbankproblem während Upsert
-- Release-spezifischer Laufzeitfehler
-
-## Nachkontrolle nach einem Sync
-
-- Admin-Ansicht für Spieltage prüfen
-- `syncedAt` des betroffenen Spieltags ansehen
-- Stichprobe: sind Scores und Match-Status plausibel
-- falls Punkte neu berechnet werden müssen, fachliche Folgeeffekte prüfen
+Bei `500` zuerst OpenLigaDB-Erreichbarkeit, Provider-Antwort, aktive
+Spieltagskonfiguration und Datenbankverbindung prüfen. Nicht durch manuelle
+Teil-Updates umgehen.

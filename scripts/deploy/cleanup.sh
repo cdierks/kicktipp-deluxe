@@ -49,18 +49,22 @@ fi
 while (($# > 0)); do
   case "$1" in
     --release)
+      require_option_value "$1" "$#" "${2:-}"
       releases+=("$2")
       shift 2
       ;;
     --predeploy)
+      require_option_value "$1" "$#" "${2:-}"
       predeploys+=("$2")
       shift 2
       ;;
     --app-backup)
+      require_option_value "$1" "$#" "${2:-}"
       app_backups+=("$2")
       shift 2
       ;;
     --db-backup)
+      require_option_value "$1" "$#" "${2:-}"
       db_backups+=("$2")
       shift 2
       ;;
@@ -73,6 +77,11 @@ while (($# > 0)); do
       ;;
   esac
 done
+
+for path in "${releases[@]}"; do require_safe_absolute_path "${path}" "release cleanup path"; done
+for path in "${predeploys[@]}"; do require_safe_absolute_path "${path}" "predeploy cleanup path"; done
+for path in "${app_backups[@]}"; do require_safe_absolute_path "${path}" "app backup cleanup path"; done
+for path in "${db_backups[@]}"; do require_safe_absolute_path "${path}" "database backup cleanup path"; done
 
 require_cmd ssh
 require_cmd base64
@@ -149,6 +158,68 @@ count_remaining() {
   printf '%s\n' "${count}"
 }
 
+valid_app_backup() {
+  local path="$1"
+  local server_entry root metadata_content
+
+  [[ "$(stat -c '%a' "${path}")" == "600" ]] || return 1
+
+  # Keep the cleanup definition aligned with check.sh: a gzip-compressed tar
+  # that only contains the APP_DIR symlink is not a restorable app backup.
+  server_entry="$(
+    tar -tzf "${path}" 2>/dev/null | awk '
+      $0 == "server.js" || $0 == "./server.js" { root_entry = $0; root_count += 1; next }
+      $0 ~ /^[^\/]+\/server\.js$/ { named_entry = $0; named_count += 1 }
+      END {
+        if (root_count == 1) print root_entry
+        else if (root_count == 0 && named_count == 1) print named_entry
+        else exit 1
+      }
+    '
+  )" || return 1
+  root="${server_entry%server.js}"
+
+  tar -tzf "${path}" 2>/dev/null | awk -v root="${root}" '
+    BEGIN { seen = server = env = package = static = modules = metadata = 0; unsafe = 0 }
+    {
+      entry = $0
+      if (entry == "") next
+      seen = 1
+      if (entry ~ /^\// || entry ~ /(^|\/)\.\.(\/|$)/) unsafe = 1
+      if (entry == root "server.js") server = 1
+      if (entry == root ".env") env = 1
+      if (entry == root "package.json") package = 1
+      if (index(entry, root ".next/static/") == 1 || entry == root ".next/static") static = 1
+      if (index(entry, root "node_modules/") == 1 || entry == root "node_modules") modules = 1
+      if (entry == root "RELEASE_METADATA") metadata += 1
+    }
+    END { exit !(seen && server && env && package && static && modules && metadata <= 1 && !unsafe) }
+  ' || return 1
+
+  if tar -tzf "${path}" 2>/dev/null | awk -v target="${root}RELEASE_METADATA" '
+    $0 == target { found = 1 }
+    END { exit !found }
+  '; then
+    metadata_content="$(tar -xOzf "${path}" "${root}RELEASE_METADATA" 2>/dev/null)" || return 1
+    printf '%s\n' "${metadata_content}" | grep -Eq '^commit=[0-9a-f]{40}$' \
+      && printf '%s\n' "${metadata_content}" | grep -Eq '^version=[0-9]+\.[0-9]+\.[0-9]+$'
+  fi
+}
+
+valid_db_backup() {
+  local path="$1"
+
+  [[ "$(stat -c '%a' "${path}")" == "600" ]] || return 1
+
+  gzip -t "${path}" 2>/dev/null \
+    && gzip -dc "${path}" 2>/dev/null | awk '
+      NF { nonempty = 1 }
+      /CREATE TABLE/ { schema = 1 }
+      /Dump completed on/ { complete = 1 }
+      END { exit !(nonempty && schema && complete) }
+    '
+}
+
 decode_into_array RELEASES_B64 release_delete
 decode_into_array PREDEPLOYS_B64 predeploy_delete
 decode_into_array APP_BACKUPS_B64 app_backup_delete
@@ -160,16 +231,39 @@ app_basename="$(basename "${APP_DIR}")"
 backup_dir="/home/${DEPLOY_USER}/backups"
 
 mapfile -t all_releases < <(find "${RELEASES_DIR}" -mindepth 1 -maxdepth 1 -type d -name "${APP_NAME}-*" | sort)
-mapfile -t all_predeploys < <(find "${app_parent}" -mindepth 1 -maxdepth 1 -name "${app_basename}-predeploy-*" | sort)
+mapfile -t all_predeploys < <(find "${app_parent}" -mindepth 1 -maxdepth 1 -type l -name "${app_basename}-predeploy-*" | sort)
 mapfile -t working_predeploys < <(
   for path in "${all_predeploys[@]}"; do
-    if readlink -e "${path}" >/dev/null 2>&1; then
+    target="$(readlink -f "${path}")"
+    if [[ "${target}" == "${RELEASES_DIR}/"* && -f "${target}/server.js" ]]; then
       printf '%s\n' "${path}"
     fi
   done | sort
 )
-mapfile -t all_app_backups < <(find "${backup_dir}" -mindepth 1 -maxdepth 1 -type f -name "${APP_NAME}-app-*.tar.gz" | sort)
-mapfile -t all_db_backups < <(find "${backup_dir}" -mindepth 1 -maxdepth 1 -type f -name "${APP_NAME}-db-*.sql.gz" | sort)
+mapfile -t discovered_app_backups < <(
+  find "${backup_dir}" -mindepth 1 -maxdepth 1 -type f -name "${APP_NAME}-app-*.tar.gz" | sort
+)
+mapfile -t discovered_db_backups < <(
+  find "${backup_dir}" -mindepth 1 -maxdepth 1 -type f -name "${APP_NAME}-db-*.sql.gz" | sort
+)
+mapfile -t valid_app_backups < <(
+  find "${backup_dir}" -mindepth 1 -maxdepth 1 -type f -name "${APP_NAME}-app-*.tar.gz" -print0 \
+  | while IFS= read -r -d '' path; do
+      if valid_app_backup "${path}"; then
+        printf '%s\n' "${path}"
+      fi
+    done \
+  | sort
+)
+mapfile -t valid_db_backups < <(
+  find "${backup_dir}" -mindepth 1 -maxdepth 1 -type f -name "${APP_NAME}-db-*.sql.gz" -print0 \
+  | while IFS= read -r -d '' path; do
+      if valid_db_backup "${path}"; then
+        printf '%s\n' "${path}"
+      fi
+    done \
+  | sort
+)
 
 latest_working_predeploy=""
 latest_working_target=""
@@ -177,6 +271,21 @@ if ((${#working_predeploys[@]} > 0)); then
   latest_working_predeploy="${working_predeploys[${#working_predeploys[@]}-1]}"
   latest_working_target="$(readlink -f "${latest_working_predeploy}")"
 fi
+
+# Every deletion target must be one of the artifacts discovered above. The
+# retention math is not a substitute for proving membership before rm.
+for path in "${release_delete[@]}"; do
+  contains_path "${path}" "${all_releases[@]}" || { echo "Unknown release: ${path}" >&2; exit 1; }
+done
+for path in "${predeploy_delete[@]}"; do
+  contains_path "${path}" "${all_predeploys[@]}" || { echo "Unknown predeploy: ${path}" >&2; exit 1; }
+done
+for path in "${app_backup_delete[@]}"; do
+  contains_path "${path}" "${discovered_app_backups[@]}" || { echo "Unknown app backup: ${path}" >&2; exit 1; }
+done
+for path in "${db_backup_delete[@]}"; do
+  contains_path "${path}" "${discovered_db_backups[@]}" || { echo "Unknown database backup: ${path}" >&2; exit 1; }
+done
 
 for path in "${release_delete[@]}"; do
   [[ "${path}" != "${active_release}" ]] || { echo "Refusing to delete active release: ${path}" >&2; exit 1; }
@@ -195,8 +304,8 @@ done
 
 remaining_releases="$(count_remaining all_releases release_delete)"
 remaining_working_predeploys="$(count_remaining working_predeploys predeploy_delete)"
-remaining_app_backups="$(count_remaining all_app_backups app_backup_delete)"
-remaining_db_backups="$(count_remaining all_db_backups db_backup_delete)"
+remaining_app_backups="$(count_remaining valid_app_backups app_backup_delete)"
+remaining_db_backups="$(count_remaining valid_db_backups db_backup_delete)"
 
 [[ "${remaining_releases}" -ge "${MIN_RELEASES}" ]] || {
   echo "Cleanup would violate release retention: ${remaining_releases} < ${MIN_RELEASES}" >&2

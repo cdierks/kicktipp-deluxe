@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { IconBallFootball } from '@/components/app-icons'
 import { cn } from '@/lib/utils'
 
 type BrandLockupProps = {
@@ -17,29 +16,35 @@ export function BrandLockup({
     <>
       <span
         className={cn(
-          'relative flex shrink-0 items-center justify-center rounded-[1.35rem] bg-primary text-primary-foreground shadow-[0_12px_30px_-16px_color-mix(in_oklab,var(--color-blue-700)_78%,transparent)] ring-1 ring-white/8',
-          compact ? 'h-[2.15rem] w-[2.15rem] rounded-[1.15rem]' : 'h-10 w-10',
+          'brand-mark relative flex shrink-0 items-center justify-center border border-primary-300 bg-primary-600 text-neutral-50 dark:border-primary-700 dark:bg-primary-500 dark:text-neutral-50',
+          compact ? 'size-10 rounded-xl' : 'size-11 rounded-xl',
         )}
       >
-        <span className={cn('absolute inset-[1px] border border-white/10', compact ? 'rounded-[1.05rem]' : 'rounded-[1.25rem]')} />
-        <IconBallFootball
-          className={cn(compact ? 'h-4 w-4' : 'h-5 w-5')}
-          strokeWidth={1.7}
-        />
+        <span
+          aria-hidden="true"
+          className={cn(
+            'font-sans font-bold leading-none tracking-[-0.06em]',
+            compact ? 'text-sm' : 'text-base',
+          )}
+        >
+          KD
+        </span>
       </span>
       <span className="flex min-w-0 flex-col justify-center">
         <span
           className={cn(
-            'block truncate font-display leading-none text-foreground',
-            compact ? 'text-[1.28rem]' : 'text-[1.72rem]',
+            'block truncate font-display font-semibold text-current',
+            compact ? 'text-lg leading-5 tracking-[-0.02em]' : 'text-3xl leading-none',
           )}
         >
-          Kicktipp<span className="text-primary">.</span>Deluxe
+          Kicktipp<span className="text-primary-readable">.</span>Deluxe
         </span>
         <span
           className={cn(
-            'block truncate font-semibold uppercase text-muted-foreground',
-            compact ? 'mt-0.5 text-[9px] tracking-[0.24em]' : 'mt-0.5 text-[10px] tracking-[0.24em]',
+            'block truncate text-muted-foreground',
+            compact
+              ? 'mt-0.5 text-xs font-medium leading-4 tracking-normal'
+              : 'mt-0.5 text-xs font-semibold uppercase tracking-[0.2em]',
           )}
         >
           Bundesliga Tippspiel
@@ -51,9 +56,9 @@ export function BrandLockup({
   return (
     <Link
       href={href}
+      aria-label="Kicktipp Deluxe – Dashboard"
       className={cn(
-        'group inline-flex min-w-0 items-center rounded-2xl transition-transform duration-200 hover:translate-y-[-1px]',
-        compact ? 'gap-2.25' : 'gap-3',
+        'group inline-flex min-w-0 items-center gap-3 rounded-xl transition-colors duration-150',
         className,
       )}
     >

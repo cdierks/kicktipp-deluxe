@@ -1,47 +1,71 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 import { getSession } from '@/lib/auth'
+import { requireAdmin } from '@/lib/auth-guards'
 import { prisma } from '@/lib/prisma'
 
-/** User sets their own color (null = remove) */
+const hexSchema = z.string().regex(/^#[0-9a-f]{6}$/i)
+const idSchema = z.string().min(1).max(191)
+
 export async function setUserColor(hex: string | null) {
   const session = await getSession()
-  if (!session) return { error: 'Nicht angemeldet' }
+  if (!session?.user.id) return { error: 'Nicht angemeldet' }
 
-  if (hex !== null) {
-    // Verify hex exists in palette
-    const entry = await prisma.colorPalette.findUnique({ where: { hex } })
-    if (!entry) return { error: 'Farbe nicht verfügbar' }
+  const parsedHex = hex === null ? null : hexSchema.safeParse(hex)
+  if (parsedHex !== null && !parsedHex.success) return { error: 'Ungültige Farbe' }
 
-    // Check it's not already taken by another user
-    const taken = await prisma.user.findFirst({
-      where: { color: hex, NOT: { id: session.user.id } },
-      select: { id: true },
-    })
-    if (taken) return { error: 'Diese Farbe ist bereits vergeben' }
+  try {
+    await prisma.$transaction(async (tx) => {
+      let selectedHex = parsedHex === null ? null : parsedHex.data
+      if (selectedHex !== null) {
+        const entry = await tx.colorPalette.findUnique({ where: { hex: selectedHex } })
+        if (!entry) throw new Error('COLOR_UNAVAILABLE')
+        selectedHex = entry.hex
+
+        const taken = await tx.user.findFirst({
+          where: { color: selectedHex, NOT: { id: session.user.id } },
+          select: { id: true },
+        })
+        if (taken) throw new Error('COLOR_TAKEN')
+      }
+
+      await tx.user.update({
+        where: { id: session.user.id },
+        data: { color: selectedHex },
+      })
+    }, { isolationLevel: 'Serializable' })
+  } catch (error) {
+    if (error instanceof Error && error.message === 'COLOR_UNAVAILABLE') {
+      return { error: 'Farbe nicht verfügbar' }
+    }
+    if (error instanceof Error && error.message === 'COLOR_TAKEN') {
+      return { error: 'Diese Farbe ist bereits vergeben' }
+    }
+    return { error: 'Farbe konnte nicht gespeichert werden' }
   }
-
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: { color: hex },
-  })
 
   revalidatePath('/profil')
   revalidatePath('/dashboard')
   return { success: true }
 }
 
-/** Admin: add a new color to the palette */
 export async function addPaletteColor(formData: FormData) {
-  const session = await getSession()
-  if (!session || session.user.role !== 'ADMIN') return { error: 'Kein Zugriff' }
+  try {
+    await requireAdmin()
+  } catch {
+    return { error: 'Kein Zugriff' }
+  }
 
-  const hex = (formData.get('hex') as string ?? '').trim().toLowerCase()
-  const label = (formData.get('label') as string ?? '').trim()
+  const rawHex = formData.get('hex')
+  const rawLabel = formData.get('label')
+  const hex = typeof rawHex === 'string' ? rawHex.trim().toLowerCase() : ''
+  const label = typeof rawLabel === 'string' ? rawLabel.trim() : ''
 
-  if (!/^#[0-9a-f]{6}$/.test(hex)) return { error: 'Ungültiger Hex-Wert (z.B. #2a61a1)' }
+  if (!hexSchema.safeParse(hex).success) return { error: 'Ungültiger Hex-Wert (z. B. #394eab)' }
   if (!label) return { error: 'Bezeichnung fehlt' }
+  if (label.length > 50) return { error: 'Bezeichnung ist zu lang' }
 
   const maxOrder = await prisma.colorPalette.aggregate({ _max: { order: true } })
   const nextOrder = (maxOrder._max.order ?? -1) + 1
@@ -56,17 +80,32 @@ export async function addPaletteColor(formData: FormData) {
   return { success: true }
 }
 
-/** Admin: remove a color from the palette (unsets it from any user who had it) */
 export async function removePaletteColor(id: string) {
-  const session = await getSession()
-  if (!session || session.user.role !== 'ADMIN') return { error: 'Kein Zugriff' }
+  try {
+    await requireAdmin()
+  } catch {
+    return { error: 'Kein Zugriff' }
+  }
 
-  const color = await prisma.colorPalette.findUnique({ where: { id } })
-  if (!color) return { error: 'Farbe nicht gefunden' }
+  const parsedId = idSchema.safeParse(id)
+  if (!parsedId.success) return { error: 'Ungültige Farbe' }
 
-  // Free the color from any user who has it
-  await prisma.user.updateMany({ where: { color: color.hex }, data: { color: null } })
-  await prisma.colorPalette.delete({ where: { id } })
+  try {
+    await prisma.$transaction(async (tx) => {
+      const color = await tx.colorPalette.findUnique({ where: { id: parsedId.data } })
+      if (!color) throw new Error('COLOR_NOT_FOUND')
+
+      // Palette removal and user cleanup are one invariant; no account may
+      // retain a color that is no longer selectable.
+      await tx.user.updateMany({ where: { color: color.hex }, data: { color: null } })
+      await tx.colorPalette.delete({ where: { id: parsedId.data } })
+    })
+  } catch (error) {
+    if (error instanceof Error && error.message === 'COLOR_NOT_FOUND') {
+      return { error: 'Farbe nicht gefunden' }
+    }
+    return { error: 'Farbe konnte nicht entfernt werden' }
+  }
 
   revalidatePath('/admin/farben')
   revalidatePath('/profil')

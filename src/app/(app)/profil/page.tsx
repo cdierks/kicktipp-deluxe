@@ -9,17 +9,19 @@ import { IconPalette, IconMail, IconBallFootball, IconPokerChip, IconUser } from
 import { Button } from '@/components/ui/button'
 import { ProfileForm } from './profile-form'
 import { ColorPicker } from './color-picker'
+import { PageHeader } from '@/components/page-header'
+import { PageFrame } from '@/components/page-frame'
 
 function PreviewPointsBadge({ points, isJoker = false }: { points: number; isJoker?: boolean }) {
   const className = cn(
     'inline-flex h-7 min-w-[1.85rem] items-center justify-center rounded-xl border px-2 text-xs font-bold tabular-nums shadow-sm',
-    !isJoker && points === 4 && 'border-blue-700 bg-blue-700 text-white',
-    !isJoker && points === 3 && 'border-blue-600 bg-blue-600 text-white',
-    !isJoker && points === 2 && 'border-blue-300 bg-blue-300/20 text-blue-300',
-    points === 0 && 'border-gray-500/35 bg-gray-500/12 text-gray-300',
-    isJoker && points === 8 && 'border-amber-400 bg-amber-400 text-gray-950',
-    isJoker && points === 6 && 'border-amber-500 bg-amber-500/80 text-gray-950',
-    isJoker && points === 4 && 'border-amber-300 bg-amber-300/20 text-amber-300',
+    !isJoker && points === 4 && 'border-primary-700 bg-primary-700 text-neutral-50',
+    !isJoker && points === 3 && 'border-primary-600 bg-primary-600 text-neutral-50',
+    !isJoker && points === 2 && 'border-primary-300 bg-primary-200 text-primary-900',
+    points === 0 && 'border-neutral-300 bg-neutral-200 text-neutral-700',
+    isJoker && points === 8 && 'border-warning-500 bg-warning-500 text-warning-950',
+    isJoker && points === 6 && 'border-warning-400 bg-warning-400 text-warning-950',
+    isJoker && points === 4 && 'border-warning-300 bg-warning-200 text-warning-900',
   )
 
   return <span className={className}>{points}</span>
@@ -53,25 +55,19 @@ export default async function ProfilPage() {
   const colorLabel = palette.find((c) => c.hex === user.color)?.label
 
   return (
-    <div className="space-y-6">
-      <div className="surface rounded-[1.4rem] p-5 sm:p-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-          Dein Bereich
-        </p>
-        <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground">
-          Profil
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Verwalte deine Angaben, deine Farbe und die öffentliche Ansicht in einer klaren Oberfläche.
-        </p>
-      </div>
+    <PageFrame>
+      <PageHeader
+        eyebrow="Dein Bereich"
+        title="Profil"
+        description="Verwalte deine Angaben, deine Farbe und die öffentliche Ansicht in einer klaren Oberfläche."
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:items-start">
-        <div className="space-y-5">
-          <div className="surface rounded-[1.4rem] p-5">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)] lg:items-start 2xl:gap-8">
+        <div className="space-y-6 2xl:space-y-8">
+          <div className="surface rounded-xl p-4">
             <div className="flex items-center gap-2 mb-4">
-              <IconPalette className="h-4 w-4 text-primary" strokeWidth={1.5} />
-              <h2 className="text-sm font-bold tracking-wide text-foreground">
+              <IconPalette className="h-4 w-4 text-primary-readable" strokeWidth={1.5} />
+              <h2 className="text-sm font-bold text-foreground">
                 Meine Farbe
               </h2>
             </div>
@@ -81,24 +77,24 @@ export default async function ProfilPage() {
             />
           </div>
 
-          <ProfileForm userId={session.user.id} user={user} />
+          <ProfileForm user={user} />
         </div>
 
-        <div className="space-y-4 lg:sticky lg:top-24">
-          <div className="surface rounded-[1.4rem] p-5">
+        <div className="space-y-6 lg:sticky lg:top-24 2xl:space-y-8">
+          <div className="surface-raised rounded-xl p-4">
             <div className="flex items-start gap-4">
               <div
-                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[0.95rem] text-white ring-1 ring-white/14"
+                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl text-neutral-50 ring-1 ring-neutral-50/20"
                 style={{ backgroundColor: user.color ?? 'var(--color-primary)' }}
               >
                 {club?.iconUrl ? (
                   <ClubIcon src={club.iconUrl} fallbackSrc={club.iconSourceUrl} label={club.name} className="h-9 w-9 object-contain" />
                 ) : (
-                  <IconUser className="h-7 w-7 text-white" strokeWidth={1.5} />
+                  <IconUser className="h-7 w-7 text-neutral-50" strokeWidth={1.5} />
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+                <p className="text-sm font-medium text-primary-readable">
                   Öffentliche Ansicht
                 </p>
                 <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground">
@@ -130,7 +126,7 @@ export default async function ProfilPage() {
               {user.color && (
                 <div className="flex items-center gap-2.5 text-sm">
                   <span
-                    className="h-4 w-4 shrink-0 rounded-full ring-1 ring-white/20"
+                    className="h-4 w-4 shrink-0 rounded-full ring-1 ring-neutral-50/20"
                     style={{ backgroundColor: user.color }}
                   />
                   <span className="font-medium text-foreground">{colorLabel ?? user.color}</span>
@@ -149,31 +145,31 @@ export default async function ProfilPage() {
             </div>
           </div>
 
-          <div className="surface rounded-[1.4rem] p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+          <div className="surface rounded-xl p-4">
+            <p className="mb-3 text-sm font-semibold text-foreground">
               Ansicht im Spiel
             </p>
             <div className="space-y-2.5">
-              <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/8 px-2.5 py-1.5">
+              <div className="flex items-center gap-2 rounded-xl bg-primary-100 px-2.5 py-1.5 dark:bg-primary-900">
                 {user.color && (
                   <span
                     className="h-2.5 w-2.5 rounded-full shrink-0"
                     style={{ backgroundColor: user.color }}
                   />
                 )}
-                <span className="min-w-0 flex-1 truncate text-xs font-semibold text-primary">{user.nickname}</span>
+                <span className="min-w-0 flex-1 truncate text-xs font-semibold text-primary-readable">{user.nickname}</span>
                 <div className="grid shrink-0 grid-cols-[3.25rem_2rem] items-center gap-1.5">
-                  <span className="rounded-lg bg-background/80 px-2 py-0.5 text-center text-sm font-bold tabular-nums text-foreground">2:1</span>
+                  <span className="rounded-lg bg-background px-2 py-0.5 text-center text-sm font-bold tabular-nums text-foreground">2:1</span>
                   <PreviewPointsBadge points={4} />
                 </div>
               </div>
-              <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/55 px-2.5 py-1.5">
-                <span className="h-2.5 w-2.5 rounded-full shrink-0 bg-yellow-300" />
+              <div className="flex items-center gap-2 rounded-xl bg-muted px-2.5 py-1.5">
+                <span className="h-2.5 w-2.5 rounded-full shrink-0 bg-warning-300" />
                 <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">Mitspieler</span>
                 <div className="grid shrink-0 grid-cols-[3.25rem_auto_2rem] items-center gap-1.5">
-                  <span className="rounded-lg bg-background/80 px-2 py-0.5 text-center text-sm font-bold tabular-nums text-foreground">3:2</span>
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/10">
-                    <IconPokerChip className="h-3.5 w-3.5 text-amber-500" strokeWidth={1.5} />
+                  <span className="rounded-lg bg-background px-2 py-0.5 text-center text-sm font-bold tabular-nums text-foreground">3:2</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-warning-300 bg-warning-100 dark:border-warning-700 dark:bg-warning-900">
+                    <IconPokerChip className="h-3.5 w-3.5 text-warning-700 dark:text-warning-300" strokeWidth={1.5} />
                   </span>
                   <PreviewPointsBadge points={8} isJoker />
                 </div>
@@ -186,6 +182,6 @@ export default async function ProfilPage() {
 
         </div>
       </div>
-    </div>
+    </PageFrame>
   )
 }

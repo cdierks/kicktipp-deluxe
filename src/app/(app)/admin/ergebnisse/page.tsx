@@ -1,11 +1,13 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { getVerifiedUser } from '@/lib/auth-guards'
 import { prisma } from '@/lib/prisma'
 import { ErgebnissePanel } from './ergebnisse-panel'
+import { PageHeader } from '@/components/page-header'
+import { PageFrame } from '@/components/page-frame'
 
 export default async function ErgebnisseAdminPage() {
-  const session = await getSession()
-  if (!session || session.user.role !== 'ADMIN') redirect('/dashboard')
+  const user = await getVerifiedUser()
+  if (user?.role !== 'ADMIN') redirect('/dashboard')
 
   const matchdays = await prisma.matchday.findMany({
     where: { status: { in: ['ACTIVE', 'CLOSED', 'COMPLETED'] } },
@@ -17,11 +19,9 @@ export default async function ErgebnisseAdminPage() {
   })
 
   return (
-    <div>
-      <h1 className="mb-6 text-3xl font-bold uppercase tracking-wider text-foreground">
-        Ergebnisse überschreiben
-      </h1>
+    <PageFrame>
+      <PageHeader eyebrow="Adminbereich" title="Ergebnisse überschreiben" description="Spielstände prüfen und bei Bedarf manuell korrigieren." />
       <ErgebnissePanel matchdays={matchdays} />
-    </div>
+    </PageFrame>
   )
 }

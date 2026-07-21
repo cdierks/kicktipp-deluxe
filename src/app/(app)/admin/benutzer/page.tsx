@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { getVerifiedUser } from '@/lib/auth-guards'
 import { prisma } from '@/lib/prisma'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -12,10 +12,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { RoleToggle } from './role-toggle'
+import { PageHeader } from '@/components/page-header'
+import { PageFrame } from '@/components/page-frame'
+import { formatAppDate } from '@/lib/date-format'
 
 export default async function BenutzerAdminPage() {
-  const session = await getSession()
-  if (!session || session.user.role !== 'ADMIN') redirect('/dashboard')
+  const user = await getVerifiedUser()
+  if (user?.role !== 'ADMIN') redirect('/dashboard')
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: 'asc' },
@@ -31,20 +34,18 @@ export default async function BenutzerAdminPage() {
   })
 
   return (
-    <div>
-      <h1 className="mb-6 text-3xl font-bold uppercase tracking-wider text-foreground">
-        Benutzerverwaltung
-      </h1>
-      <div className="overflow-x-auto rounded-lg border border-border">
+    <PageFrame>
+      <PageHeader eyebrow="Adminbereich" title="Benutzerverwaltung" description="Konten, Rollen und Tippaktivität im Überblick." />
+      <div className="surface-raised overflow-hidden rounded-xl">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="uppercase tracking-wide text-xs">Name</TableHead>
-              <TableHead className="uppercase tracking-wide text-xs">Nickname</TableHead>
-              <TableHead className="hidden md:table-cell uppercase tracking-wide text-xs">E-Mail</TableHead>
-              <TableHead className="uppercase tracking-wide text-xs">Rolle</TableHead>
-              <TableHead className="hidden sm:table-cell text-right uppercase tracking-wide text-xs">Tipps</TableHead>
-              <TableHead className="hidden lg:table-cell uppercase tracking-wide text-xs">Registriert</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Nickname</TableHead>
+              <TableHead className="hidden md:table-cell">E-Mail</TableHead>
+              <TableHead>Rolle</TableHead>
+              <TableHead className="hidden sm:table-cell text-right">Tipps</TableHead>
+              <TableHead className="hidden lg:table-cell">Registriert</TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -59,13 +60,13 @@ export default async function BenutzerAdminPage() {
                 </TableCell>
                 <TableCell className="hidden md:table-cell font-sans text-sm text-muted-foreground">{u.email}</TableCell>
                 <TableCell>
-                  <Badge variant={u.role === 'ADMIN' ? 'default' : 'secondary'} className="text-xs uppercase tracking-wide">
+                  <Badge variant={u.role === 'ADMIN' ? 'default' : 'secondary'}>
                     {u.role}
                   </Badge>
                 </TableCell>
                 <TableCell className="hidden sm:table-cell text-right tabular-nums text-sm">{u._count.tips}</TableCell>
                 <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                  {new Date(u.createdAt).toLocaleDateString('de-DE')}
+                  {formatAppDate(u.createdAt, { dateStyle: 'short' })}
                 </TableCell>
                 <TableCell>
                   <RoleToggle userId={u.id} currentRole={u.role} />
@@ -75,6 +76,6 @@ export default async function BenutzerAdminPage() {
           </TableBody>
         </Table>
       </div>
-    </div>
+    </PageFrame>
   )
 }

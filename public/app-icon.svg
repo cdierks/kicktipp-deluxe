@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
+  <title id="title">Kicktipp Deluxe</title>
+  <rect width="1024" height="1024" fill="oklch(46.18% 0.15 269.98)" />
+  <path
+    fill="oklch(97.59% 0.00 264.70)"
+    d="M180 300h90v170l160-170h110L350 498l200 226H438L270 535v189h-90V300Zm340 0h155c127 0 195 78 195 212s-68 212-195 212H520V300Zm90 78v268h60c72 0 110-43 110-134s-38-134-110-134h-60Z"
+  />
+</svg>

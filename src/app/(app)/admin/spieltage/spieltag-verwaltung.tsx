@@ -17,6 +17,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -32,6 +43,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import { formatAppDate, formatAppDateTimeLocal, parseAppDateTimeLocal } from '@/lib/date-format'
 import { IconArrowsSort, IconRefresh, IconTrash } from '@/components/app-icons'
 
 type MatchdayStatus = 'UPCOMING' | 'ACTIVE' | 'CLOSED' | 'COMPLETED'
@@ -138,95 +150,127 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
     setSortDirection('desc')
   }
 
-  async function handleCreateSeason() {
-    if (!newYear) return
-    const result = await createSeason(newYear)
-    if (result.error) {
-      toast.error(result.error)
-      return
-    }
-    toast.success(`Saison ${newYear}/${parseInt(newYear) + 1} erstellt`)
-    setNewYear('')
-    startTransition(() => router.refresh())
-  }
-
-  async function handleDeleteSeason(seasonId: string) {
-    const result = await deleteSeason(seasonId)
-    if (result.error) {
-      toast.error(result.error)
-      return
-    }
-    toast.success('Saison gelöscht')
-    startTransition(() => router.refresh())
-  }
-
-  async function handleSetActive(seasonId: string) {
-    const result = await setActiveSeason(seasonId)
-    if (result.error) {
-      toast.error(result.error)
-      return
-    }
-    toast.success('Aktive Saison gesetzt')
-    startTransition(() => router.refresh())
-  }
-
-  async function handleCreateMatchday() {
-    if (!selectedSeasonId || !newMatchdayNum || !newDeadline) return
-    const result = await createMatchday({
-      seasonId: selectedSeasonId,
-      matchdayNumber: parseInt(newMatchdayNum),
-      tippDeadline: new Date(newDeadline).toISOString(),
+  function runMutation(operation: () => Promise<void>) {
+    startTransition(async () => {
+      try {
+        await operation()
+      } catch {
+        toast.error('Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.')
+      }
     })
-    if (result.error) {
-      toast.error(result.error)
-      return
-    }
-    toast.success('Spieltag erstellt')
-    setNewMatchdayNum('')
-    setNewDeadline('')
-    startTransition(() => router.refresh())
   }
 
-  async function handleStatusChange(matchdayId: string, status: MatchdayStatus) {
-    const result = await setMatchdayStatus(matchdayId, status)
-    if (result.error) {
-      toast.error(result.error)
-      return
-    }
-    toast.success('Status geändert')
-    startTransition(() => router.refresh())
+  function handleCreateSeason() {
+    if (!newYear) return
+    runMutation(async () => {
+      const result = await createSeason(newYear)
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+      toast.success(`Saison ${newYear}/${parseInt(newYear) + 1} erstellt`)
+      setNewYear('')
+      router.refresh()
+    })
   }
 
-  async function handleDeadlineUpdate(matchdayId: string, deadline: string) {
-    const result = await updateDeadline(matchdayId, new Date(deadline).toISOString())
-    if (result.error) {
-      toast.error(result.error)
-      return
-    }
-    toast.success('Deadline aktualisiert')
-    startTransition(() => router.refresh())
+  function handleDeleteSeason(seasonId: string) {
+    runMutation(async () => {
+      const result = await deleteSeason(seasonId)
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+      toast.success('Saison gelöscht')
+      router.refresh()
+    })
   }
 
-  async function handleSync(matchdayId: string, year: string, matchdayNumber: number) {
-    const result = await syncMatchday(matchdayId, year, matchdayNumber)
-    if (result.error) {
-      toast.error(result.error)
+  function handleSetActive(seasonId: string) {
+    runMutation(async () => {
+      const result = await setActiveSeason(seasonId)
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+      toast.success('Aktive Saison gesetzt')
+      router.refresh()
+    })
+  }
+
+  function handleCreateMatchday() {
+    if (!selectedSeasonId || !newMatchdayNum || !newDeadline) return
+    const parsedDeadline = parseAppDateTimeLocal(newDeadline)
+    if (!parsedDeadline) {
+      toast.error('Bitte gib eine gültige Deadline ein')
       return
     }
-    toast.success(`${result.upserted} Spiele synchronisiert`)
-    startTransition(() => router.refresh())
+    runMutation(async () => {
+      const result = await createMatchday({
+        seasonId: selectedSeasonId,
+        matchdayNumber: parseInt(newMatchdayNum),
+        tippDeadline: parsedDeadline.toISOString(),
+      })
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+      toast.success('Spieltag erstellt')
+      setNewMatchdayNum('')
+      setNewDeadline('')
+      router.refresh()
+    })
+  }
+
+  function handleStatusChange(matchdayId: string, status: MatchdayStatus) {
+    runMutation(async () => {
+      const result = await setMatchdayStatus(matchdayId, status)
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+      toast.success('Status geändert')
+      router.refresh()
+    })
+  }
+
+  function handleDeadlineUpdate(matchdayId: string, deadline: string) {
+    const parsedDeadline = parseAppDateTimeLocal(deadline)
+    if (!parsedDeadline) {
+      toast.error('Bitte gib eine gültige Deadline ein')
+      return
+    }
+    runMutation(async () => {
+      const result = await updateDeadline(matchdayId, parsedDeadline.toISOString())
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+      toast.success('Deadline aktualisiert')
+      router.refresh()
+    })
+  }
+
+  function handleSync(matchdayId: string) {
+    runMutation(async () => {
+      const result = await syncMatchday(matchdayId)
+      if ('error' in result) {
+        toast.error(result.error)
+        return
+      }
+      toast.success(`${result.upserted} Spiele synchronisiert`)
+      router.refresh()
+    })
   }
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 xl:grid-cols-3">
-        <section className="surface rounded-[1.4rem] p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Saison anlegen
-          </p>
+      <div className="grid gap-6 xl:grid-cols-3 2xl:gap-8">
+        <section className="surface rounded-xl p-4">
+          <h2 className="text-base font-semibold text-foreground">Saison anlegen</h2>
           <div className="mt-4 space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="newSeasonYear" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <Label htmlFor="newSeasonYear">
                 Startjahr
               </Label>
               <Input
@@ -243,15 +287,13 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
           </div>
         </section>
 
-        <section className="surface rounded-[1.4rem] p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Spieltag anlegen
-          </p>
+        <section className="surface rounded-xl p-4">
+          <h2 className="text-base font-semibold text-foreground">Spieltag anlegen</h2>
           <div className="mt-4 grid gap-3">
             <div className="space-y-2">
-              <Label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Saison</Label>
+              <Label htmlFor="newMatchdaySeason">Saison</Label>
               <Select value={selectedSeasonId} onValueChange={setSelectedSeasonId}>
-                <SelectTrigger>
+                <SelectTrigger id="newMatchdaySeason">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -265,7 +307,7 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="newMatchdayNum" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <Label htmlFor="newMatchdayNum">
                   Spieltag
                 </Label>
                 <Input
@@ -278,7 +320,7 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="newDeadline" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <Label htmlFor="newDeadline">
                   Deadline
                 </Label>
                 <Input
@@ -299,13 +341,11 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
           </div>
         </section>
 
-        <section className="surface rounded-[1.4rem] p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Saisonverwaltung
-          </p>
+        <section className="surface rounded-xl p-4">
+          <h2 className="text-base font-semibold text-foreground">Saisonverwaltung</h2>
           <div className="mt-4 space-y-3">
             {seasons.map((season) => (
-              <div key={season.id} className="flex items-center justify-between gap-3 rounded-[1rem] border border-border/70 bg-background/70 px-4 py-3">
+              <div key={season.id} className="flex items-center justify-between gap-3 rounded-lg bg-muted px-3 py-3">
                 <div className="min-w-0">
                   <p className="font-semibold text-foreground">
                     {season.year}/{parseInt(season.year) + 1}
@@ -323,9 +363,32 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
                       Aktivieren
                     </Button>
                   )}
-                  <Button size="sm" variant="destructive" onClick={() => handleDeleteSeason(season.id)} disabled={isPending}>
-                    <IconTrash className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        disabled={isPending}
+                        aria-label={`Saison ${season.year}/${parseInt(season.year) + 1} löschen`}
+                      >
+                        <IconTrash className="h-4 w-4" strokeWidth={1.5} />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Saison wirklich löschen?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Die Saison {season.year}/{parseInt(season.year) + 1} und ihre Spieltage werden dauerhaft entfernt. Dieser Schritt kann nicht rückgängig gemacht werden.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                        <AlertDialogAction variant="destructive" onClick={() => handleDeleteSeason(season.id)}>
+                          Saison löschen
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             ))}
@@ -333,20 +396,18 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
         </section>
       </div>
 
-      <section className="surface rounded-[1.4rem] p-5">
-        <div className="flex flex-col gap-4 border-b border-border/70 pb-4 md:flex-row md:items-end md:justify-between">
+      <section className="surface-raised rounded-xl p-4">
+        <div className="flex flex-col gap-4 border-b border-border pb-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
-              Spieltage
-            </p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+            <p className="text-sm font-medium text-primary-readable">Spieltage</p>
+            <h2 className="mt-1 text-xl font-semibold text-foreground">
               Spieltagsübersicht
             </h2>
           </div>
           <div className="space-y-2">
-            <Label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Saison</Label>
+            <Label htmlFor="matchdaySeasonFilter">Saison</Label>
             <Select value={selectedSeasonId} onValueChange={setSelectedSeasonId}>
-              <SelectTrigger className="min-w-52">
+              <SelectTrigger id="matchdaySeasonFilter" className="min-w-52">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -360,7 +421,7 @@ export function SpieltagVerwaltung({ seasons }: { seasons: Season[] }) {
           </div>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-2xl border border-border/70">
+        <div className="mt-4 overflow-hidden rounded-xl border border-border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -420,9 +481,14 @@ function SortableHead({
   className?: string
 }) {
   return (
-    <TableHead className={className}>
-      <button
+    <TableHead
+      className={className}
+      aria-sort={active ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'}
+    >
+      <Button
         type="button"
+        variant="ghost"
+        size="sm"
         onClick={onClick}
         className={cn(
           'inline-flex items-center gap-1 text-inherit transition-colors hover:text-foreground',
@@ -432,7 +498,7 @@ function SortableHead({
       >
         {label}
         <IconArrowsSort className={cn('h-3.5 w-3.5', active && direction === 'desc' && 'rotate-180')} strokeWidth={1.5} />
-      </button>
+      </Button>
     </TableHead>
   )
 }
@@ -447,10 +513,10 @@ function MatchdayTableRow({
   row: MatchdayRowData
   onStatusChange: (id: string, status: MatchdayStatus) => void
   onDeadlineUpdate: (id: string, deadline: string) => void
-  onSync: (id: string, year: string, num: number) => void
+  onSync: (id: string) => void
   isPending: boolean
 }) {
-  const [deadlineVal, setDeadlineVal] = useState(new Date(row.tippDeadline).toISOString().slice(0, 16))
+  const [deadlineVal, setDeadlineVal] = useState(formatAppDateTimeLocal(row.tippDeadline))
 
   return (
     <TableRow>
@@ -468,11 +534,16 @@ function MatchdayTableRow({
       <TableCell>
         <Input
           type="datetime-local"
+          aria-label={`Deadline für Spieltag ${row.matchdayNumber} der Saison ${row.seasonYear}/${parseInt(row.seasonYear) + 1}`}
           value={deadlineVal}
           onChange={(e) => setDeadlineVal(e.target.value)}
           onBlur={() => {
-            const normalized = new Date(row.tippDeadline).toISOString().slice(0, 16)
-            if (deadlineVal !== normalized) onDeadlineUpdate(row.id, deadlineVal)
+            const normalized = formatAppDateTimeLocal(row.tippDeadline)
+            if (!deadlineVal) {
+              setDeadlineVal(normalized)
+            } else if (deadlineVal !== normalized) {
+              onDeadlineUpdate(row.id, deadlineVal)
+            }
           }}
           className="h-9 min-w-48"
         />
@@ -481,7 +552,9 @@ function MatchdayTableRow({
         {row._count.matches}
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">
-        {row.syncedAt ? new Date(row.syncedAt).toLocaleString('de-DE') : 'Noch kein Sync'}
+        {row.syncedAt
+          ? formatAppDate(row.syncedAt, { dateStyle: 'short', timeStyle: 'short' })
+          : 'Noch kein Sync'}
       </TableCell>
       <TableCell>
         <div className="flex items-center justify-end gap-2">
@@ -489,7 +562,10 @@ function MatchdayTableRow({
             value={row.status}
             onValueChange={(value) => onStatusChange(row.id, value as MatchdayStatus)}
           >
-            <SelectTrigger className="h-9 w-36">
+            <SelectTrigger
+              aria-label={`Status für Spieltag ${row.matchdayNumber} der Saison ${row.seasonYear}/${parseInt(row.seasonYear) + 1}`}
+              className="h-9 w-36"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -503,7 +579,7 @@ function MatchdayTableRow({
           <Button
             size="sm"
             variant="outline"
-            onClick={() => onSync(row.id, row.seasonYear, row.matchdayNumber)}
+            onClick={() => onSync(row.id)}
             disabled={isPending}
             className="gap-1.5"
           >

@@ -1,14 +1,13 @@
 'use client'
 
 import {
-  ResponsiveContainer,
   LineChart,
   Line,
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
 } from 'recharts'
+import { ChartContainer, ChartTooltip } from '@/components/ui/chart'
 
 export interface LinePoint {
   st: string
@@ -23,9 +22,10 @@ export interface QualitySlice {
 }
 
 const TICK_STYLE = {
-  fontSize: 11,
+  fontSize: 12,
   fill: 'var(--muted-foreground)',
   fontFamily: 'var(--font-sans)',
+  fontVariantNumeric: 'tabular-nums',
 } as const
 
 export function PlayerCharts({
@@ -40,10 +40,10 @@ export function PlayerCharts({
   return (
     <div className="grid gap-4">
       {qualityData.length > 0 && (
-        <div className="surface overflow-hidden rounded-[1.35rem] border border-border/70 p-4 sm:p-5">
-          <h3 className="mb-4 text-sm font-bold uppercase tracking-[0.16em] text-foreground">
+        <div className="surface-raised overflow-hidden rounded-xl p-4">
+          <h2 className="mb-4 text-base font-semibold text-foreground">
             Tippqualität
-          </h3>
+          </h2>
           <div className="space-y-3">
             {qualityData.map((entry) => (
               <div key={entry.name} className="grid grid-cols-[minmax(0,1fr)_3.5rem] items-center gap-3">
@@ -71,21 +71,26 @@ export function PlayerCharts({
       )}
 
       {lineData.length > 1 && (
-        <div className="surface overflow-hidden rounded-[1.35rem] border border-border/70 p-4 sm:p-5">
-          <h3 className="mb-4 text-sm font-bold uppercase tracking-[0.16em] text-foreground">
+        <div className="surface-raised overflow-hidden rounded-xl p-4">
+          <h2 className="mb-4 text-base font-semibold text-foreground">
             Saison-Verlauf
-          </h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={lineData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+          </h2>
+          <ChartContainer
+            config={{}}
+            className="h-[220px] w-full aspect-auto"
+            role="img"
+            aria-label="Kumulativer Punkteverlauf des Spielers nach Spieltag"
+          >
+            <LineChart accessibilityLayer={false} data={lineData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="st" tick={TICK_STYLE} tickLine={false} axisLine={false} />
               <YAxis tick={TICK_STYLE} tickLine={false} axisLine={false} />
-              <Tooltip
+              <ChartTooltip
                 content={({ active, payload, label }) => {
                   if (!active || !payload?.length) return null
                   return (
                     <div className="rounded-lg border border-border bg-popover px-3 py-2 shadow-md text-xs">
-                      <p className="mb-1 font-bold uppercase tracking-wide text-muted-foreground">
+                      <p className="mb-1 font-semibold text-muted-foreground">
                         {label}
                       </p>
                       <p className="font-bold tabular-nums text-foreground">
@@ -104,7 +109,21 @@ export function PlayerCharts({
                 activeDot={{ r: 4, fill: lineColor }}
               />
             </LineChart>
-          </ResponsiveContainer>
+          </ChartContainer>
+          <table className="sr-only">
+            <caption>Kumulativer Punkteverlauf des Spielers nach Spieltag</caption>
+            <thead>
+              <tr><th scope="col">Spieltag</th><th scope="col">Gesamtpunkte</th></tr>
+            </thead>
+            <tbody>
+              {lineData.map((point) => (
+                <tr key={point.st}>
+                  <th scope="row">{point.st}</th>
+                  <td>{point.cumulative}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

@@ -91,7 +91,7 @@ Diese Platzhalter:
 
 ## Empfohlener Saison-Workflow
 
-1. `npm run generate:clubs`
+1. `npm run generate:clubs -- <season-start-year>`
 2. `npm run mirror:club-icons`
 3. `npm run list:missing-club-icons`
 4. falls nötig kleine Nachzieh-Batches mit `--limit`, `--offset` oder `--match`

@@ -1,4 +1,4 @@
-# Kicktipp Deluxe
+# Kicktipp Deluxe 5.0.0
 
 Bundesliga-Tippspiel für private Freundesrunden – als moderne Web-App mit Echtzeit-Synchronisation, Statistiken und Spieler-Profilen.
 
@@ -12,8 +12,9 @@ Bundesliga-Tippspiel für private Freundesrunden – als moderne Web-App mit Ech
 - **Synchronisation** – Spielstände werden automatisch von OpenLigaDB abgerufen (Cronjob oder manuell)
 - **Admin-Bereich** – Saisons anlegen, Spieltage verwalten, Ergebnisse korrigieren, Benutzerrollen vergeben
 - **Farbzuweisung** – jeder Spieler wählt eine einzigartige Farbe für die Tipp-Übersicht
-- **Light / Dark Mode** – richtet sich automatisch nach der Systemeinstellung
-- **PWA-fähig** – installierbar auf Mobilgeräten (manifest.json vorhanden)
+- **App-Shell** – Desktop-Sidebar und mobile Liquid-Glass-Bottom-Navigation mit kompaktem Dashboard-Layout
+- **Light / Dark / System** – Modus direkt im Kontomenü auswählen
+- **PWA-fähig** – mit KD-App-Icon, Safe Areas und Standalone-Manifest auf Mobilgeräten installierbar
 
 ---
 
@@ -26,16 +27,16 @@ Bundesliga-Tippspiel für private Freundesrunden – als moderne Web-App mit Ech
 | Styling | Tailwind CSS v4 + shadcn/ui |
 | Datenbank | MySQL / MariaDB via Prisma 7 |
 | Authentifizierung | NextAuth v4 (Credentials) |
-| Fonts | Barlow + Barlow Condensed (lokal eingebunden) |
-| Icons | Tabler Icons |
-| Charts | Recharts |
+| Fonts | Inter 4.1 Variable (lokal eingebunden) |
+| Icons | Phosphor Icons |
+| Charts | Recharts 3 über shadcn/ui Chart |
 | Externe API | OpenLigaDB (kostenlos, kein API-Key) |
 
 ---
 
 ## Voraussetzungen
 
-- Node.js 20+
+- Node.js 20.19+, 22.12+ oder 24+
 - npm 10+
 - Laufende MySQL- oder MariaDB-Instanz
 
@@ -59,9 +60,9 @@ cp .env.example .env
 # DATABASE_URL muss auf eine erreichbare MySQL/MariaDB-Datenbank zeigen
 
 # 5. Datenbank migrieren
-npx prisma migrate deploy
+npm run db:migrate
 
-# 6. Seed-Daten einspielen (Admin-User + Saison)
+# 6. Sichere Seed-Zugangsdaten in `.env` setzen und Seed-Daten einspielen
 npm run db:seed
 
 # 7. Entwicklungsserver starten
@@ -69,6 +70,8 @@ npm run dev
 ```
 
 Die App ist dann unter [http://localhost:3000](http://localhost:3000) erreichbar.
+
+Für die Installation als eigenständige App muss die Produktionsinstanz über HTTPS aufgerufen und anschließend über die Browserfunktion „Zum Home-Bildschirm“ beziehungsweise „App installieren“ hinzugefügt werden. Der Standalone-Modus ist bewusst online-first; ein Offline-Cache ist nicht enthalten.
 
 ---
 
@@ -80,14 +83,18 @@ Kopiere `.env.example` nach `.env` und trage die Werte ein:
 # MySQL/MariaDB-Verbindungsstring
 DATABASE_URL="mysql://user:password@localhost:3306/kicktipp_db"
 
-# Beliebiger langer Zufallsstring (z. B. openssl rand -base64 32)
+# Mindestens 32 zufällige Bytes (z. B. openssl rand -base64 32)
 NEXTAUTH_SECRET=dein-geheimes-secret
 
 # Basis-URL der App (lokal oder Produktions-URL)
 NEXTAUTH_URL=http://localhost:3000
 
-# Geheimnis für den Cron-Sync-Endpoint (/api/sync)
+# Separates Geheimnis mit mindestens 32 zufälligen Bytes für /api/sync
 CRON_SECRET=dein-cron-secret
+
+# Initialer Admin; für den Seed verpflichtend, niemals Standardwerte verwenden
+SEED_ADMIN_EMAIL=dein-admin@deine-domain.de
+SEED_ADMIN_PASSWORD=ein-einzigartiges-starkes-passwort
 ```
 
 ---
@@ -96,7 +103,7 @@ CRON_SECRET=dein-cron-secret
 
 ```bash
 # Neue Migration erstellen (nach Schema-Änderungen)
-npx prisma migrate dev --name beschreibung
+npm exec prisma -- migrate dev --name beschreibung
 
 # Migrationen in Produktion anwenden
 npm run db:migrate
@@ -108,15 +115,9 @@ npm run db:studio
 npm run db:seed
 ```
 
-**Standard-Zugangsdaten nach dem Seed:**
-
-| Feld | Wert |
-|---|---|
-| E-Mail | admin@kicktipp.local |
-| Passwort | changeme123 |
-| Rolle | ADMIN |
-
-> Das Passwort bitte nach dem ersten Login im Profil ändern.
+Der Seed legt den initialen Admin ausschließlich mit den explizit gesetzten
+`SEED_ADMIN_EMAIL`- und `SEED_ADMIN_PASSWORD`-Werten an. Das Passwort wird
+weder im Repository hinterlegt noch in der Konsole ausgegeben.
 
 ---
 
@@ -126,6 +127,17 @@ npm run db:seed
 npm run build
 npm run start
 ```
+
+`npm run build` erzeugt eine eigenständige Next.js-Standalone-Runtime und
+kopiert über `postbuild` auch `public` sowie `.next/static` hinein.
+`npm run start` startet anschließend `.next/standalone/server.js`; `next start`
+und eine geteilte externe `node_modules`-Installation werden nicht verwendet.
+
+Produktive Uberspace-Releases werden reproduzierbar aus einem exakten Commit
+in einem Linux-Docker-Container gebaut, mit Metadaten versehen und erst nach
+Smoke- sowie Funktionstest freigegeben. Die verbindliche Anleitung inklusive
+Backup- und Rollback-Grenzen steht in [DEPLOY.md](DEPLOY.md) und unter
+[docs/operations](docs/operations/README.md).
 
 ---
 
@@ -143,7 +155,7 @@ src/
 │   ├── login/              # Login-Seite
 │   └── registrieren/       # Registrierung
 ├── actions/                # Server Actions (Tipps, Sync, Auth …)
-├── components/             # Globale Komponenten (Nav, BottomNav …)
+├── components/             # shadcn/ui, Sidebar, App-Header, Bottom-Navigation und globale Komponenten
 ├── lib/                    # Hilfsfunktionen (Prisma, Auth, Punkte …)
 └── types/                  # TypeScript-Erweiterungen
 prisma/
@@ -151,7 +163,7 @@ prisma/
 ├── migrations/             # Migrationsverlauf
 └── seed.ts                 # Seed-Skript
 public/
-└── fonts/                  # Lokale Barlow-Schriften
+└── fonts/                  # Inter Variable normal/italic + Lizenz
 ```
 
 ---
@@ -181,6 +193,9 @@ Spielstände werden über die öffentliche [OpenLigaDB-API](https://www.openliga
 POST /api/sync
 Header: x-cron-secret: <CRON_SECRET>
 ```
+
+Das separate Secret muss mindestens 32 Zeichen lang sein und wird auf dem
+Server längenkonstant verglichen.
 
 ---
 

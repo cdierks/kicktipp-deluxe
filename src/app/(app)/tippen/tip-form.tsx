@@ -1,14 +1,19 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
-import { listStagger, microPress, panelEnter, statusPulse } from '@/lib/motion'
+import { useRouter } from 'next/navigation'
+import { motion, useReducedMotion } from 'framer-motion'
+import { listStagger, panelEnter, statusPulse } from '@/lib/motion'
 import { toast } from 'sonner'
 import { submitAllTips } from '@/actions/tip.actions'
 import { ClubIcon } from '@/components/club-icon'
 import { cn } from '@/lib/utils'
 import { getClubByName } from '@/lib/clubs'
 import { IconCheck, IconCircleCheckFilled, IconLoader2, IconPokerChip, IconAlertTriangle } from '@/components/app-icons'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { createTipRevision } from '@/lib/tip-revision'
+import { formatAppDate } from '@/lib/date-format'
 
 interface Match {
   id: string
@@ -29,10 +34,14 @@ interface Props {
 }
 
 const AUTOSAVE_DELAY_MS = 700
+const AUTOSAVE_RETRY_DELAY_MS = 1_500
+const MAX_AUTOSAVE_RETRIES = 2
 
 type SaveState = 'idle' | 'dirty' | 'saving' | 'saved' | 'error'
 
 export function TipForm({ matches, existingTips }: Props) {
+  const router = useRouter()
+  const prefersReducedMotion = useReducedMotion()
   const [tips, setTips] = useState<Record<string, { home: string; away: string }>>(
     Object.fromEntries(
       matches.map((m) => [
@@ -53,6 +62,14 @@ export function TipForm({ matches, existingTips }: Props) {
   const [hasInteracted, setHasInteracted] = useState(false)
   const isInitialRender = useRef(true)
   const saveSequence = useRef(0)
+  const lastQueuedSequence = useRef(0)
+  const saveChain = useRef<Promise<void>>(Promise.resolve())
+  const saveRetry = useRef({ sequence: 0, count: 0 })
+  const revision = useRef(createTipRevision(
+    Object.entries(existingTips).map(([matchId, tip]) => ({ matchId, ...tip })),
+  ))
+  const autosaveTimer = useRef<number | null>(null)
+  const hasPendingSave = useRef(false)
 
   const payload = useMemo(
     () =>
@@ -81,24 +98,106 @@ export function TipForm({ matches, existingTips }: Props) {
 
   function setScore(matchId: string, field: 'home' | 'away', value: string) {
     const num = value.replace(/\D/g, '').slice(0, 2)
+    saveSequence.current += 1
+    saveRetry.current = { sequence: saveSequence.current, count: 0 }
+    hasPendingSave.current = true
     setHasInteracted(true)
     setSaveState('dirty')
-    setTips((prev) => {
-      const updated = { ...prev, [matchId]: { ...prev[matchId], [field]: num } }
-      const t = updated[matchId]
-      if (t.home === '' && t.away === '' && jokerMatchId === matchId) {
-        setJokerMatchId(null)
-      }
-      return updated
-    })
+    const nextTip = { ...tips[matchId], [field]: num }
+    if ((nextTip.home === '' || nextTip.away === '') && jokerMatchId === matchId) {
+      setJokerMatchId(null)
+    }
+    setTips((prev) => ({ ...prev, [matchId]: { ...prev[matchId], [field]: num } }))
   }
 
   function toggleJoker(matchId: string) {
     const tip = tips[matchId]
     if (!tip || tip.home === '' || tip.away === '') return
+    saveSequence.current += 1
+    saveRetry.current = { sequence: saveSequence.current, count: 0 }
+    hasPendingSave.current = true
     setHasInteracted(true)
     setSaveState('dirty')
     setJokerMatchId((prev) => (prev === matchId ? null : matchId))
+  }
+
+  function queueSave(
+    currentPayload: typeof payload,
+    containsPartialTips: boolean,
+  ) {
+    const sequence = saveSequence.current
+    if (sequence === 0 || lastQueuedSequence.current === sequence) return
+    lastQueuedSequence.current = sequence
+
+    if (autosaveTimer.current !== null) {
+      window.clearTimeout(autosaveTimer.current)
+      autosaveTimer.current = null
+    }
+
+    setSaveState('saving')
+    setStatusMessage('Speichert…')
+
+    const request = saveChain.current.then(async () => {
+      const result = await submitAllTips({
+        baseRevision: revision.current,
+        matchIds: matches.map((match) => match.id),
+        tips: currentPayload,
+      })
+      if ('success' in result && result.success) revision.current = result.revision
+      return result
+    })
+    // Within this mounted form, later snapshots wait for the previous write so
+    // database commits cannot arrive in the opposite order from local edits.
+    saveChain.current = request.then(() => undefined, () => undefined)
+
+    const handleLatestFailure = (message: string, retryable: boolean) => {
+      if (sequence !== saveSequence.current) return
+
+      setSaveState('error')
+      if (!retryable) {
+        hasPendingSave.current = false
+        setStatusMessage(message)
+        toast.error(message)
+        router.refresh()
+        return
+      }
+
+      // Keep the latest snapshot eligible for both the bounded automatic retry
+      // and an explicit user retry. Older snapshots are never retried.
+      lastQueuedSequence.current = sequence - 1
+      setStatusMessage('Automatisches Speichern fehlgeschlagen.')
+
+      const retryCount = saveRetry.current.sequence === sequence
+        ? saveRetry.current.count + 1
+        : 1
+      saveRetry.current = { sequence, count: retryCount }
+      if (retryCount === 1) toast.error(message)
+      if (retryCount > MAX_AUTOSAVE_RETRIES) return
+
+      autosaveTimer.current = window.setTimeout(() => {
+        if (sequence === saveSequence.current && hasPendingSave.current) {
+          queueSave(currentPayload, containsPartialTips)
+        }
+      }, AUTOSAVE_RETRY_DELAY_MS * retryCount)
+    }
+
+    void request.then((result) => {
+      if (sequence !== saveSequence.current) return
+
+      if (result.error) {
+        handleLatestFailure(result.error, 'retryable' in result && result.retryable === true)
+        return
+      }
+
+      hasPendingSave.current = false
+      saveRetry.current = { sequence, count: 0 }
+      setSaveState(containsPartialTips ? 'dirty' : 'saved')
+      setStatusMessage(
+        containsPartialTips
+          ? 'Gespeichert. Unvollständige Eingaben gelten noch nicht als Tipp.'
+          : 'Alle Änderungen gespeichert',
+      )
+    }).catch(() => handleLatestFailure('Tipps konnten nicht gespeichert werden', true))
   }
 
   useEffect(() => {
@@ -116,57 +215,69 @@ export function TipForm({ matches, existingTips }: Props) {
       setStatusMessage('Änderungen werden automatisch gespeichert.')
     }
 
-    const timer = window.setTimeout(async () => {
-      const sequence = ++saveSequence.current
-      setSaveState('saving')
-      setStatusMessage('Speichert…')
+    autosaveTimer.current = window.setTimeout(
+      () => queueSave(payload, hasPartialTips),
+      AUTOSAVE_DELAY_MS,
+    )
 
-      if (payload.length === 0) {
-        if (sequence !== saveSequence.current) return
-        setSaveState(hasPartialTips ? 'dirty' : 'saved')
-        setStatusMessage(
-          hasPartialTips
-            ? 'Unvollständige Tipps werden gespeichert, sobald beide Tore eingetragen sind.'
-            : 'Alle Änderungen gespeichert',
-        )
-        return
+    return () => {
+      if (autosaveTimer.current !== null) {
+        window.clearTimeout(autosaveTimer.current)
+        autosaveTimer.current = null
       }
-
-      const result = await submitAllTips(payload)
-      if (sequence !== saveSequence.current) return
-
-      if (result.error) {
-        setSaveState('error')
-        setStatusMessage('Automatisches Speichern fehlgeschlagen.')
-        toast.error(result.error)
-        return
-      }
-
-      setSaveState(hasPartialTips ? 'dirty' : 'saved')
-      setStatusMessage(
-        hasPartialTips
-          ? 'Gespeichert. Unvollständige Tipps bleiben lokal, bis beide Tore gesetzt sind.'
-          : 'Alle Änderungen gespeichert',
-      )
-    }, AUTOSAVE_DELAY_MS)
-
-    return () => window.clearTimeout(timer)
+    }
   }, [hasInteracted, hasPartialTips, payload])
+
+  useEffect(() => {
+    const flushPendingSave = () => {
+      if (hasPendingSave.current) queueSave(payload, hasPartialTips)
+    }
+    const flushBeforeClientNavigation = (event: MouseEvent) => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+      const target = event.target instanceof Element ? event.target.closest('a[href]') : null
+      if (target && target.getAttribute('target') !== '_blank') flushPendingSave()
+    }
+    const flushWhenHidden = () => {
+      if (document.visibilityState === 'hidden') flushPendingSave()
+    }
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!hasPendingSave.current) return
+      event.preventDefault()
+      event.returnValue = ''
+    }
+
+    window.addEventListener('pagehide', flushPendingSave)
+    window.addEventListener('popstate', flushPendingSave)
+    window.addEventListener('beforeunload', warnBeforeUnload)
+    document.addEventListener('click', flushBeforeClientNavigation, true)
+    document.addEventListener('visibilitychange', flushWhenHidden)
+    return () => {
+      window.removeEventListener('pagehide', flushPendingSave)
+      window.removeEventListener('popstate', flushPendingSave)
+      window.removeEventListener('beforeunload', warnBeforeUnload)
+      document.removeEventListener('click', flushBeforeClientNavigation, true)
+      document.removeEventListener('visibilitychange', flushWhenHidden)
+    }
+  }, [hasPartialTips, payload])
 
   const statusToneClass = cn(
     'text-muted-foreground',
-    saveState === 'saving' && 'text-primary',
-    saveState === 'saved' && 'text-emerald-600 dark:text-emerald-400',
-    saveState === 'error' && 'text-destructive',
+    saveState === 'saving' && 'text-primary-readable',
+    saveState === 'saved' && 'text-success-readable',
+    saveState === 'error' && 'text-error-readable',
   )
 
   return (
-    <motion.div variants={panelEnter} initial="hidden" animate="show">
+    <motion.div
+      variants={prefersReducedMotion ? undefined : panelEnter}
+      initial={prefersReducedMotion ? false : 'hidden'}
+      animate="show"
+    >
       <div className="space-y-4">
         {!jokerMatchId && (
-          <div className="rounded-[1.05rem] border border-amber-400/35 bg-amber-400/[0.08] px-4 py-3">
+          <div className="rounded-lg border border-warning-300 bg-warning-100 px-4 py-3 dark:border-warning-700 dark:bg-warning-900">
             <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400/15 text-amber-500">
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-warning-200 text-warning-800 dark:bg-warning-800 dark:text-warning-200">
                 <IconAlertTriangle className="h-4.5 w-4.5" strokeWidth={1.7} />
               </span>
               <div>
@@ -181,12 +292,12 @@ export function TipForm({ matches, existingTips }: Props) {
           </div>
         )}
 
-        <div className="surface rounded-[1.4rem] p-4 sm:p-5">
+        <div className="surface-raised overflow-hidden rounded-xl">
           <motion.ul
-            variants={listStagger}
-            initial="hidden"
+            variants={prefersReducedMotion ? undefined : listStagger}
+            initial={prefersReducedMotion ? false : 'hidden'}
             animate="show"
-            className="list-none space-y-3"
+            className="list-none divide-y divide-border"
           >
             {matches.map((match) => {
               const tip = tips[match.id]
@@ -200,13 +311,13 @@ export function TipForm({ matches, existingTips }: Props) {
               return (
                 <motion.li
                   key={match.id}
-                  variants={panelEnter}
+                  variants={prefersReducedMotion ? undefined : panelEnter}
                   className={cn(
-                    'rounded-[1.05rem] border border-border/70 bg-background/70 px-4 py-4 transition-all',
+                    'bg-card px-4 py-4 transition-colors',
                     isActiveJoker
-                      ? 'border-amber-400/45 bg-amber-400/[0.06] ring-1 ring-amber-400/30'
+                      ? 'bg-warning-100 dark:bg-warning-900'
                       : isComplete
-                        ? 'border-primary/30 bg-primary/[0.03]'
+                        ? 'bg-primary-50 dark:bg-primary-950'
                         : '',
                   )}
                 >
@@ -233,87 +344,98 @@ export function TipForm({ matches, existingTips }: Props) {
                       <div className="shrink-0 text-right">
                         {isComplete && (
                           <div className="mb-2 flex justify-end">
-                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                            <span className="inline-flex items-center gap-1 rounded-full border border-success-400 bg-success-100 px-2 py-1 text-xs font-semibold text-success-900 dark:border-success-700 dark:bg-success-900 dark:text-success-100">
                               <IconCircleCheckFilled className="h-3.5 w-3.5" />
                               Getippt
                             </span>
                           </div>
                         )}
                         <p className="text-xs font-medium text-muted-foreground" suppressHydrationWarning>
-                          {matchDate.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric' })}
+                          {formatAppDate(matchDate, { weekday: 'short', day: 'numeric', month: 'numeric' })}
                         </p>
                         <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-                          {matchDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr
+                          {formatAppDate(matchDate, { hour: '2-digit', minute: '2-digit' })} Uhr
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-center gap-2">
-                      <input
+                      <Input
                         type="text"
                         inputMode="numeric"
+                        aria-label={`Tipp für ${match.homeTeam} gegen ${match.awayTeam}`}
                         value={tip.home}
                         onChange={(e) => setScore(match.id, 'home', e.target.value)}
                         onFocus={(e) => {
                           setActiveField({ matchId: match.id, field: 'home' })
                           e.currentTarget.select()
                         }}
-                        onBlur={() => setActiveField(null)}
+                        onBlur={() => {
+                          setActiveField(null)
+                          queueSave(payload, hasPartialTips)
+                        }}
                         className={cn(
-                          'h-12 w-12 rounded-xl border bg-background text-center text-2xl font-bold tabular-nums transition-all outline-none',
+                          'h-12 w-12 rounded-xl text-center text-2xl font-bold tabular-nums',
                           activeField?.matchId === match.id && activeField?.field === 'home'
                             ? 'border-primary ring-1 ring-primary/30'
-                            : 'border-border/60 focus:border-primary',
+                            : 'border-border focus:border-primary',
                         )}
                         placeholder={activeField?.matchId === match.id && activeField?.field === 'home' ? '' : '–'}
                       />
                       <span className="text-xl font-bold text-muted-foreground">:</span>
-                      <input
+                      <Input
                         type="text"
                         inputMode="numeric"
+                        aria-label={`Tipp für ${match.awayTeam} gegen ${match.homeTeam}`}
                         value={tip.away}
                         onChange={(e) => setScore(match.id, 'away', e.target.value)}
                         onFocus={(e) => {
                           setActiveField({ matchId: match.id, field: 'away' })
                           e.currentTarget.select()
                         }}
-                        onBlur={() => setActiveField(null)}
+                        onBlur={() => {
+                          setActiveField(null)
+                          queueSave(payload, hasPartialTips)
+                        }}
                         className={cn(
-                          'h-12 w-12 rounded-xl border bg-background text-center text-2xl font-bold tabular-nums transition-all outline-none',
+                          'h-12 w-12 rounded-xl text-center text-2xl font-bold tabular-nums',
                           activeField?.matchId === match.id && activeField?.field === 'away'
                             ? 'border-primary ring-1 ring-primary/30'
-                            : 'border-border/60 focus:border-primary',
+                            : 'border-border focus:border-primary',
                         )}
                         placeholder={activeField?.matchId === match.id && activeField?.field === 'away' ? '' : '–'}
                       />
-                      <motion.button
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="icon-lg"
                         onClick={() => toggleJoker(match.id)}
+                        onBlur={() => queueSave(payload, hasPartialTips)}
                         disabled={!hasTip}
-                        whileTap={hasTip ? microPress : undefined}
                         className={cn(
-                          'ml-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition-all',
+                          'ml-1 h-12 w-12 shrink-0 rounded-xl',
                           isActiveJoker
-                            ? 'border-amber-400 bg-amber-400/15 text-amber-500 shadow-sm'
+                            ? 'border-warning-400 bg-warning-100 text-warning-800 shadow-sm dark:bg-warning-900 dark:text-warning-200'
                             : hasTip
-                              ? 'border-border/60 text-muted-foreground hover:border-amber-400/50 hover:text-amber-500/70'
+                              ? 'border-border text-muted-foreground hover:border-warning-400 hover:text-warning-700 dark:hover:text-warning-300'
                               : 'border-border/30 text-muted-foreground/30 cursor-not-allowed',
                         )}
                         aria-pressed={isActiveJoker}
+                        aria-label={`Joker für ${match.homeTeam} gegen ${match.awayTeam}`}
                         title="Joker – verdoppelt die Punkte"
                       >
                         <IconPokerChip className="h-5 w-5" strokeWidth={1.5} />
-                      </motion.button>
+                      </Button>
                     </div>
                   </div>
 
                   <div className="hidden items-center gap-3 sm:flex">
                     <div className="w-20 shrink-0">
                       <p className="text-xs font-medium text-muted-foreground" suppressHydrationWarning>
-                        {matchDate.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric' })}
+                        {formatAppDate(matchDate, { weekday: 'short', day: 'numeric', month: 'numeric' })}
                       </p>
                       <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-                        {matchDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr
+                        {formatAppDate(matchDate, { hour: '2-digit', minute: '2-digit' })} Uhr
                       </p>
                     </div>
 
@@ -327,61 +449,72 @@ export function TipForm({ matches, existingTips }: Props) {
                     </div>
 
                     <div className="flex shrink-0 items-center gap-1.5">
-                      <input
+                      <Input
                         type="text"
                         inputMode="numeric"
+                        aria-label={`Tipp für ${match.homeTeam} gegen ${match.awayTeam}`}
                         value={tip.home}
                         onChange={(e) => setScore(match.id, 'home', e.target.value)}
                         onFocus={(e) => {
                           setActiveField({ matchId: match.id, field: 'home' })
                           e.currentTarget.select()
                         }}
-                        onBlur={() => setActiveField(null)}
+                        onBlur={() => {
+                          setActiveField(null)
+                          queueSave(payload, hasPartialTips)
+                        }}
                         className={cn(
-                          'h-12 w-12 rounded-xl border bg-background text-center text-2xl font-bold tabular-nums transition-all outline-none',
+                          'h-12 w-12 rounded-xl text-center text-2xl font-bold tabular-nums',
                           activeField?.matchId === match.id && activeField?.field === 'home'
                             ? 'border-primary ring-1 ring-primary/30'
-                            : 'border-border/60 focus:border-primary',
+                            : 'border-border focus:border-primary',
                         )}
                         placeholder={activeField?.matchId === match.id && activeField?.field === 'home' ? '' : '–'}
                       />
                       <span className="text-xl font-bold text-muted-foreground">:</span>
-                      <input
+                      <Input
                         type="text"
                         inputMode="numeric"
+                        aria-label={`Tipp für ${match.awayTeam} gegen ${match.homeTeam}`}
                         value={tip.away}
                         onChange={(e) => setScore(match.id, 'away', e.target.value)}
                         onFocus={(e) => {
                           setActiveField({ matchId: match.id, field: 'away' })
                           e.currentTarget.select()
                         }}
-                        onBlur={() => setActiveField(null)}
+                        onBlur={() => {
+                          setActiveField(null)
+                          queueSave(payload, hasPartialTips)
+                        }}
                         className={cn(
-                          'h-12 w-12 rounded-xl border bg-background text-center text-2xl font-bold tabular-nums transition-all outline-none',
+                          'h-12 w-12 rounded-xl text-center text-2xl font-bold tabular-nums',
                           activeField?.matchId === match.id && activeField?.field === 'away'
                             ? 'border-primary ring-1 ring-primary/30'
-                            : 'border-border/60 focus:border-primary',
+                            : 'border-border focus:border-primary',
                         )}
                         placeholder={activeField?.matchId === match.id && activeField?.field === 'away' ? '' : '–'}
                       />
-                      <motion.button
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="icon-lg"
                         onClick={() => toggleJoker(match.id)}
+                        onBlur={() => queueSave(payload, hasPartialTips)}
                         disabled={!hasTip}
-                        whileTap={hasTip ? microPress : undefined}
                         className={cn(
-                          'ml-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition-all',
+                          'ml-1 h-12 w-12 shrink-0 rounded-xl',
                           isActiveJoker
-                            ? 'border-amber-400 bg-amber-400/15 text-amber-500 shadow-sm'
+                            ? 'border-warning-400 bg-warning-100 text-warning-800 shadow-sm dark:bg-warning-900 dark:text-warning-200'
                             : hasTip
-                              ? 'border-border/60 text-muted-foreground hover:border-amber-400/50 hover:text-amber-500/70'
+                              ? 'border-border text-muted-foreground hover:border-warning-400 hover:text-warning-700 dark:hover:text-warning-300'
                               : 'border-border/30 text-muted-foreground/30 cursor-not-allowed',
                         )}
                         aria-pressed={isActiveJoker}
+                        aria-label={`Joker für ${match.homeTeam} gegen ${match.awayTeam}`}
                         title="Joker – verdoppelt die Punkte"
                       >
                         <IconPokerChip className="h-5 w-5" strokeWidth={1.5} />
-                      </motion.button>
+                      </Button>
                     </div>
 
                     <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -395,7 +528,7 @@ export function TipForm({ matches, existingTips }: Props) {
 
                     <div className="w-16 shrink-0">
                       {isComplete && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-success-400 bg-success-100 px-2.5 py-1 text-xs font-semibold text-success-900 dark:border-success-700 dark:bg-success-900 dark:text-success-100">
                           <IconCheck className="h-3.5 w-3.5" strokeWidth={2} />
                           Fertig
                         </span>
@@ -411,17 +544,24 @@ export function TipForm({ matches, existingTips }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-2 px-0.5 text-xs">
           <p>
             {jokerMatchId
-              ? <span className="text-amber-500 font-semibold">Joker gesetzt – Punkte zählen doppelt.</span>
+              ? <span className="font-semibold text-warning-700 dark:text-warning-300">Joker gesetzt – Punkte zählen doppelt.</span>
               : <span className="text-muted-foreground">Kein Joker aktiv. Chip-Button drücken zum Aktivieren.</span>}
           </p>
-          <p className={cn('inline-flex items-center gap-1.5', statusToneClass)}>
-            {saveState === 'saving' && (
-              <motion.span animate={statusPulse} className="inline-flex">
-                <IconLoader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.75} />
-              </motion.span>
+          <div className="flex items-center gap-2">
+            <p role="status" aria-live="polite" className={cn('inline-flex items-center gap-1.5', statusToneClass)}>
+              {saveState === 'saving' && (
+                <motion.span animate={prefersReducedMotion ? undefined : statusPulse} className="inline-flex">
+                  <IconLoader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.75} />
+                </motion.span>
+              )}
+              {statusMessage}
+            </p>
+            {saveState === 'error' && hasPendingSave.current && (
+              <Button type="button" variant="outline" size="sm" onClick={() => queueSave(payload, hasPartialTips)}>
+                Erneut versuchen
+              </Button>
             )}
-            {statusMessage}
-          </p>
+          </div>
         </div>
       </div>
     </motion.div>

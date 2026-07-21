@@ -2,110 +2,124 @@
 
 ## Laufzeitprofil
 
-`kicktipp-deluxe` ist eine serverseitig gerenderte Next.js-Anwendung mit App Router, Prisma 7 und MariaDB/MySQL.
+Kicktipp Deluxe 5.0.0 ist eine serverseitig gerenderte Next.js-App mit App
+Router, Prisma 7, NextAuth und MariaDB/MySQL.
 
-Im Betrieb sind diese Laufzeitbausteine relevant:
+Erforderlich sind:
 
-- Node.js 20+
-- npm 10+
-- MariaDB oder MySQL
-- NextAuth mit Credentials-Login
-- OpenLigaDB als externe Datenquelle für Spielstände und Vereinsdaten
+- Node.js `^20.19.0`, `^22.12.0` oder `>=24.0.0`;
+- npm 10 oder neuer;
+- MariaDB beziehungsweise MySQL;
+- Docker für reproduzierbare Linux-Produktionsbuilds;
+- OpenLigaDB als externe Quelle für Spielstände und Clubdaten.
 
 ## Pflichtvariablen
 
-Die Anwendung erwartet mindestens diese Umgebungsvariablen:
-
 ```env
-DATABASE_URL="mysql://user:password@localhost/kicktipp"
-NEXTAUTH_SECRET="generate-with-openssl-rand-base64-32"
-NEXTAUTH_URL="https://yourdomain.uberspace.de"
-CRON_SECRET="generate-with-openssl-rand-base64-32"
+DATABASE_URL="mysql://user:password@localhost:3306/kicktipp"
+NEXTAUTH_SECRET="mindestens-32-zufaellige-zeichen"
+NEXTAUTH_URL="https://kicktipp.example.org"
+CRON_SECRET="anderes-mindestens-32-zeichen-secret"
 ```
 
 Quelle: [.env.example](../../.env.example)
 
-## Bedeutung der Variablen
+Die zentrale Laufzeitvalidierung verlangt:
 
-### `DATABASE_URL`
+- eine vollständige MySQL-URL mit Host, Benutzer und Datenbankname;
+- eine absolute HTTP(S)-URL für NextAuth;
+- HTTPS für jeden öffentlichen Produktionshost;
+- voneinander unabhängige, mindestens 32 Zeichen lange Secrets.
 
-- Pflichtvariable für Prisma und Seed
-- erwartet ein MySQL-kompatibles URL-Format
-- wird in der Laufzeit explizit in Host, Port, Benutzer, Passwort und Datenbankname zerlegt
-- Standardport ist `3306`, falls kein Port in der URL angegeben ist
+Für `localhost`, Loopback, private IPv4-Netze, Link-Local und private IPv6-Ziele
+darf eine bewusst lokal betriebene Standalone-Instanz auch im
+Produktionsmodus HTTP verwenden. Diese Ausnahme gilt nicht für öffentlich
+erreichbare Domains.
 
-Beispiel:
+`CRON_SECRET` wird für `POST /api/sync` benötigt. Der Header
+`x-cron-secret` wird längenkonstant verglichen; Platzhalter oder zu kurze Werte
+sind unzulässig.
+
+## Seed-Variablen
+
+Nur für `npm run db:seed` werden zusätzlich benötigt:
 
 ```env
-DATABASE_URL="mysql://user:password@localhost:3306/kicktipp"
+SEED_ADMIN_EMAIL="admin@example.org"
+SEED_ADMIN_PASSWORD="ein-einzigartiges-starkes-passwort"
 ```
 
-### `NEXTAUTH_SECRET`
+Es gibt keine Default-Zugangsdaten. Beispielwerte, fehlende Werte und
+Passwörter außerhalb der zulässigen Länge führen zum Abbruch.
 
-- Pflichtsecret für NextAuth
-- muss lang, zufällig und stabil sein
-- ein Wechsel invalidiert bestehende Sessions
+## Entwicklungs- und Produktionsstart
 
-### `NEXTAUTH_URL`
+Lokal:
 
-- öffentliche Basis-URL der laufenden Instanz
-- muss in Produktion auf die echte Domain zeigen
-- eine falsche URL führt typischerweise zu fehlerhaften Redirects oder Auth-Problemen
+```bash
+npm run dev
+```
 
-### `CRON_SECRET`
+Ein Produktionsbuild erzeugt eine selbstständige Next.js-Runtime. `postbuild`
+kopiert `public` und `.next/static` in den Standalone-Baum; `npm run start`
+startet anschließend:
 
-- Shared Secret für `POST /api/sync`
-- wird über den Request-Header `x-cron-secret` übergeben
-- eine fehlende oder falsche Übergabe führt zu `401 Unauthorized`
+```text
+node .next/standalone/server.js
+```
 
-## Optionale Seed-Variablen
+Im produktiven Release liegt derselbe Entrypoint als `<release>/server.js`.
+Der Server wird nicht mit `next start` und nicht aus einer geteilten externen
+`node_modules`-Installation betrieben.
 
-Das Seed-Skript akzeptiert zusätzlich:
+## Supervisor-Laufzeit
 
-- `SEED_ADMIN_EMAIL`
-- `SEED_ADMIN_PASSWORD`
+Die versionierte Service-Datei setzt:
 
-Wenn sie nicht gesetzt sind, werden diese Defaults verwendet:
+```text
+NODE_ENV=production
+PORT=3000
+HOSTNAME=127.0.0.1
+TZ=Europe/Berlin
+```
 
-- E-Mail: `admin@kicktipp.local`
-- Passwort: `changeme123`
+`HOSTNAME` bindet den Standalone-Server ausschließlich an Loopback; der
+öffentliche Zugriff läuft über das konfigurierte Uberspace-Backend. `TZ` macht
+serverseitige Bundesliga-Datumsgrenzen deterministisch. Fachliche Formatter
+sollen die Zeitzone dennoch explizit angeben, wenn Daten außerhalb dieses
+Prozesses verarbeitet werden.
 
-## Externe Abhängigkeiten
+`check.sh` vergleicht die produktive Service-Datei exakt mit der versionierten
+Konfiguration und verweigert einen Deploy bei Abweichungen.
+
+## Secrets und Dateirechte
+
+- Secrets niemals committen, loggen oder in Build-Metadaten schreiben.
+- Die produktive `.env` liegt serverseitig im aktiven Release.
+- `create-release.sh` kopiert sie serverseitig in den neuen Release und setzt
+  Modus `600`.
+- `link-runtime.sh` verweigert Releases mit abweichendem `.env`-Modus.
+- Die lokale `.env` wird nur für den Container-Build benötigt und nicht aus dem
+  Standalone-Artefakt hochgeladen.
+- Backup-Archive enthalten die produktive `.env` und benötigen deshalb
+  denselben Zugriffsschutz wie Secrets.
+
+## Externe Abhängigkeiten und Grenzen
 
 ### Datenbank
 
-- lokale oder entfernte MariaDB-/MySQL-Instanz
-- für die produktive Uberspace-Installation: MariaDB auf `localhost`, Datenbank `kicktipp`
+Die dokumentierte Produktion nutzt MariaDB auf `localhost`, Datenbank
+`kicktipp`. Ein Verbindungsfehler trifft Login, Server Actions und
+Synchronisation unmittelbar.
 
 ### OpenLigaDB
 
-- keine API-Credentials nötig
-- Ausfall oder Fehler der API betrifft Sync und Vereinsdaten-Aktualisierung
+Für OpenLigaDB ist kein API-Key erforderlich. Ein Ausfall beeinträchtigt die
+Ergebnis-Synchronisation, nicht den Zugriff auf bereits gespeicherte Daten.
 
-### Prozesslaufzeit
+### Uberspace
 
-- lokal typischerweise `npm run dev` oder `npm run start`
-- in Produktion aktuell `supervisord` mit `next start --port 3000`
-
-## Betriebsgrenzen
-
-Die aktuell dokumentierte Produktionsrealität ist auf Uberspace geprägt durch:
-
-- knappe RAM-Reserven für Server-Builds
-- möglich knappe Disk-Quota für doppelte `node_modules`
-- bevorzugten lokalen Produktionsbuild mit reduziertem `.next`-Upload
-
-Diese Einschränkungen gelten nicht zwangsläufig für andere Hosts, sind aber für diese Codebasis und das vorhandene Deploy-Verfahren betriebsrelevant.
-
-## Secrets und Ablage
-
-Für die aktuelle Produktion gilt:
-
-- die produktive `.env` liegt auf dem Server unter `~/kicktipp-deluxe/.env`
-- neue Releases übernehmen diese Datei beim Upload
-- Secrets gehören nicht ins Repository
-
-Beim Self-Hosting gilt derselbe Grundsatz:
-
-- `.env` außerhalb des Versionskontrollflusses pflegen
-- vor Deploys sicherstellen, dass die Zielinstanz eine vollständige `.env` besitzt
+Der Host hat begrenzte Build-Ressourcen. Deshalb ist ausschließlich der lokale
+Docker-Build mit Upload des eigenständigen Linux-Standalone-Artefakts
+dokumentiert. Ein Build auf dem Produktionshost ist kein unterstützter
+Fallback.

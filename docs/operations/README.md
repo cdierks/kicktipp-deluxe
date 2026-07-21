@@ -1,4 +1,4 @@
-# Betriebsreferenz
+# Betriebsreferenz für Kicktipp Deluxe 5.0.0
 
 Diese Referenz beschreibt den operativen Betrieb von `kicktipp-deluxe` für zwei Fälle:
 

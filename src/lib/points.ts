@@ -17,17 +17,17 @@ export function calculatePoints(
   const tipDiff = tipHome - tipAway
   const actualDiff = actualHome - actualAway
 
-  // Correct outcome determination
+  // The sign encodes home win, draw, and away win without branching three times.
   const tipOutcome = Math.sign(tipDiff)
   const actualOutcome = Math.sign(actualDiff)
 
   if (tipOutcome !== actualOutcome) return 0
 
-  // Correct outcome
   let base: number
-  if (tipHome === actualHome && tipAway === actualAway) base = 4 // exact
-  else if (tipDiff === actualDiff) base = 3 // correct goal difference
-  else base = 2 // correct outcome only
+  if (tipHome === actualHome && tipAway === actualAway) base = 4
+  else if (tipDiff === actualDiff) base = 3
+  else base = 2
 
+  // A Joker doubles only a successful base score; misses have returned above.
   return isJoker ? base * 2 : base
 }

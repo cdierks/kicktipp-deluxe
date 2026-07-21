@@ -17,7 +17,7 @@ autorestart=yes
 startsecs=15
 stderr_logfile=/home/kicktipp/logs/supervisord/kicktipp.err
 stdout_logfile=/home/kicktipp/logs/supervisord/kicktipp.log
-environment=NODE_ENV="production",PORT="3000"
+environment=NODE_ENV="production",PORT="3000",HOSTNAME="127.0.0.1",TZ="Europe/Berlin"
 ```
 
 Quelle: [scripts/kicktipp.ini](../../scripts/kicktipp.ini)
@@ -29,6 +29,8 @@ Im Normalbetrieb gilt:
 - `supervisorctl status kicktipp` zeigt `RUNNING`
 - die App antwortet lokal auf `http://127.0.0.1:3000`
 - die Domain ist auf dieses Backend gemappt
+- der Prozess bindet ausschließlich an Loopback und nutzt `Europe/Berlin` als
+  deterministische Server-Zeitzone
 
 ## Relevante Pfade auf dem Host
 
@@ -37,6 +39,8 @@ Im Normalbetrieb gilt:
 - vorheriger aktiver Stand: `/home/kicktipp/kicktipp-deluxe-predeploy-*`
 - Standalone-Entrypoint im aktiven Release: `/home/kicktipp/kicktipp-deluxe/server.js`
 - Standalone-Static-Dateien: `/home/kicktipp/kicktipp-deluxe/.next/static`
+- Release-Metadaten: `/home/kicktipp/kicktipp-deluxe/RELEASE_METADATA`
+- gepinnte Migration: `/home/kicktipp/kicktipp-deluxe/.migration`
 - Supervisor-Logs:
   - `/home/kicktipp/logs/supervisord/kicktipp.log`
   - `/home/kicktipp/logs/supervisord/kicktipp.err`
@@ -75,6 +79,9 @@ supervisorctl start kicktipp
 
 - `BACKOFF`, `FATAL` oder dauerhaftes Neustarten im Supervisor-Status
 - fehlendes `server.js` oder fehlende `.next/static` im aktiven Release
+- fehlende oder widersprüchliche `RELEASE_METADATA`
+- eine `.env` mit anderem Modus als `600`
+- eine Service-Datei ohne Loopback-Bindung oder festgelegte Zeitzone
 - `500` auf `/api/auth/signin`
 - `500` auf Server-Routen nach ansonsten erfolgreichem Start
 - App startet, aber geschützte Seiten oder Auth-Endpunkte brechen weg
@@ -99,6 +106,7 @@ Betrieblich relevant:
 3. `curl -I --max-time 20 https://kicktipp.schultypografie.de/api/auth/signin`
 4. Supervisor-Logs prüfen
 5. aktives Release und Symlink-Ziel prüfen
-6. Standalone-Entrypoint und Static-Artefakte im aktiven Release prüfen
+6. `RELEASE_METADATA`, `.env`-Modus, Standalone-Entrypoint und Static-Artefakte
+   im aktiven Release prüfen
 
 Wenn `/login` funktioniert, aber Server-Routen oder Auth-Endpunkte `500` liefern, ist ein Release-spezifisches Laufzeitproblem wahrscheinlich, nicht zwingend ein kompletter Prozessausfall.

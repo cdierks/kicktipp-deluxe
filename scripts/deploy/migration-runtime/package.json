@@ -1,0 +1,13 @@
+{
+  "name": "kicktipp-migration-runtime",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "dotenv": "17.4.2",
+    "prisma": "7.8.0"
+  },
+  "overrides": {
+    "@hono/node-server": "1.19.13",
+    "fast-uri": "3.1.2"
+  }
+}

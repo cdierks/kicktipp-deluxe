@@ -3,22 +3,14 @@ import localFont from 'next/font/local'
 import './globals.css'
 import { Providers } from '@/components/providers'
 import { Toaster } from '@/components/ui/sonner'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
-const ibmPlexSans = localFont({
+const inter = localFont({
   src: [
-    { path: '../../public/fonts/ibm-plex-sans-variable.ttf', weight: '100 700', style: 'normal' },
+    { path: '../../public/fonts/InterVariable.woff2', weight: '100 900', style: 'normal' },
+    { path: '../../public/fonts/InterVariable-Italic.woff2', weight: '100 900', style: 'italic' },
   ],
-  variable: '--font-ibm-plex-sans',
-  display: 'swap',
-})
-
-const ibmPlexSansCondensed = localFont({
-  src: [
-    { path: '../../public/fonts/ibm-plex-sans-condensed-500.ttf', weight: '500', style: 'normal' },
-    { path: '../../public/fonts/ibm-plex-sans-condensed-600.ttf', weight: '600', style: 'normal' },
-    { path: '../../public/fonts/ibm-plex-sans-condensed-700.ttf', weight: '700', style: 'normal' },
-  ],
-  variable: '--font-ibm-plex-sans-condensed',
+  variable: '--font-inter',
   display: 'swap',
 })
 
@@ -36,7 +28,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'Kicktipp Deluxe',
   },
 }
@@ -45,6 +37,8 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
+  themeColor: 'oklch(46.18% 0.15 269.98)',
+  colorScheme: 'light dark',
 }
 
 export default function RootLayout({
@@ -54,10 +48,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="de" suppressHydrationWarning>
-      <body className={`${ibmPlexSans.variable} ${ibmPlexSansCondensed.variable} antialiased`}>
+      <body className={`${inter.variable} antialiased`}>
         <Providers>
-          {children}
-          <Toaster richColors />
+          <TooltipProvider>
+            {children}
+            <Toaster richColors />
+          </TooltipProvider>
         </Providers>
       </body>
     </html>

@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { getVerifiedUser } from '@/lib/auth-guards'
 import { prisma } from '@/lib/prisma'
-import { IconPalette } from '@/components/app-icons'
 import { ColorAdmin } from './color-admin'
+import { PageHeader } from '@/components/page-header'
+import { PageFrame } from '@/components/page-frame'
 
 export default async function FarbenAdminPage() {
-  const session = await getSession()
-  if (!session || session.user.role !== 'ADMIN') redirect('/dashboard')
+  const user = await getVerifiedUser()
+  if (user?.role !== 'ADMIN') redirect('/dashboard')
 
   const [palette, usersWithColor] = await Promise.all([
     prisma.colorPalette.findMany({ orderBy: { order: 'asc' } }),
@@ -28,18 +29,13 @@ export default async function FarbenAdminPage() {
   }))
 
   return (
-    <div className="max-w-2xl">
-      <div className="mb-6 flex items-center gap-3">
-        <IconPalette className="h-7 w-7 text-primary shrink-0" />
-        <h1 className="text-3xl font-bold uppercase tracking-wider text-foreground">
-          Farbpalette
-        </h1>
-      </div>
-      <p className="mb-6 text-sm text-muted-foreground font-sans">
-        Nutzer können sich eine dieser Farben im Profil zuweisen. Sie wird als Avatar-Farbe
-        und in den Diagrammen verwendet. Jede Farbe kann nur einmal vergeben werden.
-      </p>
+    <PageFrame>
+      <PageHeader
+        eyebrow="Adminbereich"
+        title="Farbpalette"
+        description="Nutzer können eine eindeutige Farbe für Avatar und Diagramme auswählen. Jede Farbe kann nur einmal vergeben werden."
+      />
       <ColorAdmin colors={colors} />
-    </div>
+    </PageFrame>
   )
 }

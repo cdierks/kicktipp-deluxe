@@ -7,6 +7,7 @@ import { addPaletteColor, removePaletteColor } from '@/actions/color.actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { IconTrash, IconPlus } from '@/components/app-icons'
 
 interface PaletteColor {
@@ -27,107 +28,120 @@ export function ColorAdmin({ colors }: { colors: PaletteColor[] }) {
     fd.set('hex', hex)
     fd.set('label', label)
     startTransition(async () => {
-      const res = await addPaletteColor(fd)
-      if (res.error) toast.error(res.error)
-      else { toast.success('Farbe hinzugefügt'); setHex('#'); setLabel('') }
+      try {
+        const res = await addPaletteColor(fd)
+        if (res.error) toast.error(res.error)
+        else { toast.success('Farbe hinzugefügt'); setHex('#'); setLabel('') }
+      } catch {
+        toast.error('Die Farbe konnte nicht hinzugefügt werden. Bitte versuche es erneut.')
+      }
     })
   }
 
   function handleRemove(id: string) {
     startTransition(async () => {
-      const res = await removePaletteColor(id)
-      if (res.error) toast.error(res.error)
-      else toast.success('Farbe entfernt')
+      try {
+        const res = await removePaletteColor(id)
+        if (res.error) toast.error(res.error)
+        else toast.success('Farbe entfernt')
+      } catch {
+        toast.error('Die Farbe konnte nicht entfernt werden. Bitte versuche es erneut.')
+      }
     })
   }
 
   return (
-    <div className="space-y-6">
-      {/* Palette list */}
-      <div className="rounded-lg border border-border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/40">
-              <th className="px-4 py-2.5 text-left text-xs uppercase tracking-wide text-muted-foreground">Farbe</th>
-              <th className="px-4 py-2.5 text-left text-xs uppercase tracking-wide text-muted-foreground">Hex</th>
-              <th className="px-4 py-2.5 text-left text-xs uppercase tracking-wide text-muted-foreground">Bezeichnung</th>
-              <th className="px-4 py-2.5 text-left text-xs uppercase tracking-wide text-muted-foreground">Vergeben an</th>
-              <th className="px-4 py-2.5" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] 2xl:gap-8">
+      <div className="surface-raised overflow-hidden rounded-xl">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Farbe</TableHead>
+              <TableHead>Hex</TableHead>
+              <TableHead>Bezeichnung</TableHead>
+              <TableHead>Vergeben an</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {colors.map((c) => (
-              <tr key={c.id} className="bg-card hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3">
+              <TableRow key={c.id} className="bg-card">
+                <TableCell>
                   <span
-                    className="inline-block h-7 w-7 rounded-full border border-border/60 shadow-sm"
+                    className="inline-block h-7 w-7 rounded-full border border-border shadow-sm"
                     style={{ backgroundColor: c.hex }}
                   />
-                </td>
-                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{c.hex}</td>
-                <td className="px-4 py-3 font-sans font-medium text-foreground">{c.label}</td>
-                <td className="px-4 py-3">
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground tabular-nums">{c.hex}</TableCell>
+                <TableCell className="font-medium text-foreground">{c.label}</TableCell>
+                <TableCell>
                   {c.claimedBy ? (
                     <Link
                       href={`/spieler/${c.claimedBy.nickname}`}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-sans font-medium text-primary transition-colors hover:bg-primary/15 hover:underline underline-offset-4"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-sans font-medium text-primary-800 transition-colors hover:bg-primary-200 hover:underline underline-offset-4 dark:bg-primary-900 dark:text-primary-100 dark:hover:bg-primary-800"
                     >
                       {c.claimedBy.nickname}
                     </Link>
                   ) : (
                     <span className="text-xs text-muted-foreground font-sans">—</span>
                   )}
-                </td>
-                <td className="px-4 py-3 text-right">
+                </TableCell>
+                <TableCell className="text-right">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    className="h-7 w-7 text-muted-foreground hover:text-error-readable"
                     onClick={() => handleRemove(c.id)}
                     disabled={pending}
                     title="Farbe entfernen"
                   >
                     <IconTrash className="h-3.5 w-3.5" strokeWidth={1} />
                   </Button>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
-      {/* Add form */}
-      <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3">
+      <form onSubmit={handleAdd} className="surface rounded-xl p-4 xl:sticky xl:top-20">
+        <div className="mb-4">
+          <h2 className="text-base font-semibold text-foreground">Farbe hinzufügen</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Erweitert die verfügbare Spielerpalette.</p>
+        </div>
+        <div className="space-y-4">
         <div className="space-y-1.5">
-          <Label className="text-xs uppercase tracking-wide">Hex-Farbe</Label>
+          <Label htmlFor="paletteHex">Hex-Farbe</Label>
           <div className="flex items-center gap-2">
             <span
-              className="h-9 w-9 shrink-0 rounded-md border border-border shadow-sm"
+              className="h-10 w-10 shrink-0 rounded-lg border border-border"
               style={{ backgroundColor: /^#[0-9a-f]{6}$/i.test(hex) ? hex : 'transparent' }}
             />
             <Input
+              id="paletteHex"
               value={hex}
               onChange={(e) => setHex(e.target.value)}
-              placeholder="#2a61a1"
-              className="w-32 font-mono text-sm"
+              placeholder="#394eab"
+              className="min-w-0 flex-1 text-sm tabular-nums"
               required
             />
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs uppercase tracking-wide">Bezeichnung</Label>
+          <Label htmlFor="paletteLabel">Bezeichnung</Label>
           <Input
+            id="paletteLabel"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             placeholder="z.B. Kobaltblau"
-            className="w-44"
             required
           />
         </div>
-        <Button type="submit" disabled={pending} className="gap-1.5 uppercase tracking-wide text-xs">
+        <Button type="submit" disabled={pending} className="w-full gap-1.5">
           <IconPlus className="h-3.5 w-3.5" strokeWidth={1} />
           Hinzufügen
         </Button>
+        </div>
       </form>
     </div>
   )

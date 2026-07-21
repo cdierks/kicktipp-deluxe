@@ -2,15 +2,10 @@ import { withAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'
 
 export default withAuth(
-  function middleware(req) {
-    const { token } = req.nextauth
-    const pathname = req.nextUrl.pathname
-
-    // Admin routes require ADMIN role
-    if (pathname.startsWith('/admin') && token?.role !== 'ADMIN') {
-      return NextResponse.redirect(new URL('/dashboard', req.url))
-    }
-
+  function middleware() {
+    // Authorization is resolved from the database by protected pages/actions.
+    // Middleware only verifies authentication because JWT role claims can lag
+    // behind an administrator's role change.
     return NextResponse.next()
   },
   {
@@ -22,6 +17,7 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    '/((?!login|registrieren|api/auth|_next/static|_next/image|favicon.ico).*)',
+    // Public assets must remain reachable for login, favicons and PWA install.
+    '/((?!login|registrieren|api/auth|api/sync|_next/static|_next/image|.*\\..*).*)',
   ],
 }

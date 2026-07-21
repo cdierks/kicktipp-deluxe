@@ -4,6 +4,7 @@ import {
   ArrowsDownUp,
   BookmarkSimple,
   CalendarBlank,
+  CaretDown,
   CaretLeft,
   CaretRight,
   ChartBar,
@@ -46,8 +47,22 @@ import {
 type IconProps = Omit<ComponentProps<typeof Sun>, 'weight'> & { strokeWidth?: number }
 
 function withWeight(Icon: ComponentType<ComponentProps<typeof Sun>>, weight: ComponentProps<typeof Sun>['weight'] = 'regular') {
-  return function WrappedIcon({ strokeWidth: _strokeWidth, ...props }: IconProps) {
-    return <Icon {...props} weight={weight} />
+  return function WrappedIcon({ strokeWidth, ...props }: IconProps) {
+    // Legacy Lucide call sites express visual emphasis as stroke width. Map
+    // that intent to Phosphor's native weight scale instead of discarding it.
+    const resolvedWeight = weight === 'fill'
+      ? weight
+      : strokeWidth === undefined
+        ? weight
+        : strokeWidth <= 1
+          ? 'thin'
+          : strokeWidth <= 1.5
+            ? 'light'
+            : strokeWidth <= 2
+              ? 'regular'
+              : 'bold'
+
+    return <Icon {...props} weight={resolvedWeight} />
   }
 }
 
@@ -62,6 +77,7 @@ export const IconShield = withWeight(Shield)
 export const IconUserOff = withWeight(UserMinus)
 export const IconChevronLeft = withWeight(CaretLeft)
 export const IconChevronRight = withWeight(CaretRight)
+export const IconChevronDown = withWeight(CaretDown)
 export const IconTrophy = withWeight(Trophy)
 export const IconMedal = withWeight(Medal)
 export const IconBallFootball = withWeight(SoccerBall)

@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-18T10:06:58Z",
+  "title": "Design System: Kicktipp Deluxe",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Primary", "tonalRamp": ["oklch(97.18% 0.01 258.36)", "oklch(93.24% 0.02 263.20)", "oklch(88.21% 0.04 261.52)", "oklch(80.26% 0.07 259.63)", "oklch(70.34% 0.10 260.52)", "oklch(61.26% 0.14 265.06)", "oklch(53.74% 0.16 268.13)", "oklch(46.18% 0.15 269.98)", "oklch(42.74% 0.13 271.73)", "oklch(38.13% 0.10 271.51)", "oklch(28.64% 0.06 274.29)"] },
+      "secondary": { "role": "secondary", "displayName": "Secondary", "tonalRamp": ["oklch(98.14% 0.01 196.80)", "oklch(94.89% 0.03 199.04)", "oklch(90.10% 0.06 200.44)", "oklch(83.22% 0.09 201.27)", "oklch(74.48% 0.11 202.86)", "oklch(66.30% 0.10 204.92)", "oklch(56.96% 0.09 210.37)", "oklch(49.32% 0.07 212.00)", "oklch(43.40% 0.06 213.91)", "oklch(38.60% 0.05 218.94)", "oklch(29.12% 0.04 220.82)"] },
+      "neutral": { "role": "neutral", "displayName": "Neutral", "tonalRamp": ["oklch(97.59% 0.00 264.70)", "oklch(94.87% 0.01 264.61)", "oklch(88.69% 0.01 259.84)", "oklch(78.62% 0.02 259.20)", "oklch(66.51% 0.04 256.79)", "oklch(55.44% 0.04 257.42)", "oklch(48.62% 0.04 260.28)", "oklch(42.19% 0.03 261.30)", "oklch(38.08% 0.03 260.61)", "oklch(34.77% 0.02 264.23)", "oklch(27.17% 0.01 261.69)"] },
+      "success": { "role": "success", "displayName": "Success", "tonalRamp": ["oklch(98.47% 0.04 125.15)", "oklch(96.68% 0.08 127.45)", "oklch(94.08% 0.15 129.36)", "oklch(91.47% 0.22 131.78)", "oklch(87.85% 0.26 135.62)", "oklch(80.94% 0.24 136.18)", "oklch(68.39% 0.21 136.57)", "oklch(56.01% 0.17 136.51)", "oklch(47.15% 0.14 135.90)", "oklch(41.92% 0.12 135.79)", "oklch(28.58% 0.09 136.04)"] },
+      "warning": { "role": "warning", "displayName": "Warning", "tonalRamp": ["oklch(98.10% 0.01 80.68)", "oklch(95.89% 0.04 83.76)", "oklch(90.76% 0.07 78.61)", "oklch(84.65% 0.11 75.25)", "oklch(76.94% 0.14 65.62)", "oklch(71.52% 0.16 57.45)", "oklch(65.30% 0.17 49.43)", "oklch(56.04% 0.15 45.69)", "oklch(47.56% 0.12 43.57)", "oklch(41.47% 0.10 44.61)", "oklch(27.10% 0.06 42.10)"] },
+      "error": { "role": "error", "displayName": "Error", "tonalRamp": ["oklch(97.05% 0.01 17.51)", "oklch(94.21% 0.03 17.71)", "oklch(89.37% 0.05 15.17)", "oklch(81.12% 0.10 16.17)", "oklch(71.81% 0.15 17.70)", "oklch(63.71% 0.20 19.85)", "oklch(57.36% 0.21 20.41)", "oklch(50.04% 0.19 19.51)", "oklch(44.38% 0.16 16.96)", "oklch(40.17% 0.14 13.73)", "oklch(26.53% 0.09 15.24)"] }
+    },
+    "semanticColors": {
+      "light": { "background": "neutral-50", "foreground": "neutral-950", "primary": "primary-600", "primary-readable": "primary-700", "secondary": "secondary-500", "success": "success-500", "success-readable": "success-800", "warning": "warning-500", "error": "error-600", "error-readable": "error-700", "control-border": "neutral-500" },
+      "dark": { "background": "neutral-950", "foreground": "neutral-50", "primary": "primary-400", "primary-readable": "primary-300", "secondary": "secondary-400", "success": "success-400", "success-readable": "success-300", "warning": "warning-400", "error": "error-400", "error-readable": "error-300", "control-border": "neutral-400" }
+    },
+    "colorExceptions": [
+      "User-selected colors stored in the database",
+      "Original club logo artwork",
+      "transparent, currentColor, inherit and functional alpha states"
+    ],
+    "typographyMeta": {
+      "display": { "displayName": "Page title", "purpose": "Compact page context, never marketing hero copy." },
+      "body": { "displayName": "Interface text", "purpose": "Navigation, forms, explanations, and data labels." },
+      "label": { "displayName": "Data label", "purpose": "Sentence-case labels and compact table metadata." },
+      "tabLabel": { "displayName": "Mobile tab label", "purpose": "Persistent one-word labels in the compact bottom navigation; fixed at 11px." }
+    },
+    "shadows": [
+      { "name": "floating-overlay", "value": "0 4px 8px var(--color-neutral-300)", "purpose": "Light-mode overlays only; dark mode uses surface lightness." },
+      { "name": "pressed-surface", "value": "0 1px 2px var(--color-neutral-200)", "purpose": "Optional interactive feedback." },
+      { "name": "sidebar-raised", "value": "0 1px 2px var(--color-neutral-300), 0 3px 6px var(--color-neutral-200)", "purpose": "Short directional depth for sidebar controls; dark mode uses neutral-950." },
+      { "name": "sidebar-inset", "value": "inset 0 1px 3px var(--color-neutral-300)", "purpose": "Pressed navigation and recessed theme controls." },
+      { "name": "content-plane", "value": "inset 0 1px 0 var(--color-neutral-50), 0 1px 2px var(--color-neutral-300), 0 3px 8px var(--color-neutral-300)", "purpose": "One raised desktop plane for every authenticated route; dark mode uses neutral-700 and neutral-950." },
+      { "name": "raised-panel", "value": "inset 0 1px 0 var(--color-neutral-50), 0 1px 2px var(--color-neutral-300), 0 3px 6px var(--color-neutral-200)", "purpose": "Short depth for self-contained primary panels only; nested structures remain flat." },
+      { "name": "mobile-liquid-dock", "value": "inset 0 1px 0 var(--mobile-glass-highlight), 0 2px 6px var(--mobile-glass-shadow)", "purpose": "The single floating navigation layer below 64rem; backdrop blur is capability-driven and never nested." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "description": "Primary-600 in light mode and Primary-400 in dark mode with an adjacent ramp hover state.",
+      "html": "<button class=\"ds-btn-primary\">Speichern</button>",
+      "css": ".ds-btn-primary{background:var(--primary);color:var(--primary-foreground);border-radius:10px}.ds-btn-primary:hover{background:var(--color-primary-700)}"
+    },
+    {
+      "name": "Match Row",
+      "kind": "custom",
+      "description": "Neutral surface with Primary points, Warning Joker state and semantic status colors.",
+      "html": "<article class=\"ds-match-row\"><time>15:30</time><strong>Köln – Bremen</strong><span>2:1</span></article>",
+      "css": ".ds-match-row{background:var(--card);color:var(--card-foreground);border:1px solid var(--border)}"
+    },
+    {
+      "name": "Mobile Liquid Dock",
+      "kind": "navigation",
+      "description": "Four persistent top-level tabs on one Regular Liquid Glass surface with an opaque accessibility fallback.",
+      "html": "<nav class=\"mobile-liquid-dock\" aria-label=\"Hauptnavigation\">...</nav>",
+      "css": ".mobile-liquid-dock{background:var(--mobile-glass-background);backdrop-filter:blur(20px) saturate(135%)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Kompaktes Match-Center",
+    "overview": "A restrained product palette: neutral surfaces, Primary actions, Secondary navigation and strictly semantic Success, Warning and Error states.",
+    "keyCharacteristics": ["Six closed OKLCH ramps", "Semantic light and dark mappings", "Layered-material desktop shell", "One capability-driven Liquid Glass mobile navigation layer", "One 100rem frame with responsive 12/16/24/32px gutters", "Player colors and club logos remain domain exceptions", "No off-palette UI colors"],
+    "rules": [
+      { "name": "Closed Palette", "body": "Every UI, status, table-zone and categorical chart color comes from one of the six documented ramps.", "section": "colors" },
+      { "name": "Meaning Before Decoration", "body": "Color identifies action, selection, category or status and never acts as unmotivated decoration.", "section": "colors" },
+      { "name": "One Inter", "body": "Inter is the only font family across the interface.", "section": "typography" },
+      { "name": "Layered Navigation", "body": "Desktop uses the collapsible sidebar; below 64rem the same four URL-addressable destinations remain visible in a persistent bottom tab bar.", "section": "navigation" },
+      { "name": "Single Glass Layer", "body": "Backdrop blur is reserved for one mobile navigation dock. Tabs, sheets and content never stack another glass effect above it, and opaque accessibility fallbacks are mandatory.", "section": "navigation" },
+      { "name": "Two-Level Content", "body": "The desktop content plane and self-contained primary panels are the only persistent content elevations; rows, cells and form groups stay flat.", "section": "layout" },
+      { "name": "Route Titles", "body": "Every H1 names the active navigation destination; matchday, season and status remain supporting context.", "section": "typography" },
+      { "name": "Table Ownership", "body": "The outer panel owns radius and elevation. Tables remain flat with muted headers, neutral row hover and compact legend-matched rank markers instead of side stripes.", "section": "layout" },
+      { "name": "Filled vs Readable", "body": "Filled semantic tokens use their foreground partners; colored text on neutral surfaces uses the stronger primary-, success- or error-readable token, while control-border remains stronger than structural border.", "section": "colors" }
+    ]
+  }
+}

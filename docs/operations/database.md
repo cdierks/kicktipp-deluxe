@@ -1,124 +1,101 @@
 # Datenbank
 
-## Datenbanktechnologie
+## Laufzeit und Verbindung
 
-Die Anwendung verwendet Prisma 7 mit dem MariaDB-Adapter und einer MySQL-kompatiblen Datenbank.
+Kicktipp Deluxe 5.0.0 verwendet Prisma 7 mit dem MariaDB-Adapter und eine
+MySQL-kompatible Datenbank. `DATABASE_URL` muss eine vollständige
+`mysql://`-URL mit Host, Benutzer und Datenbankname sein; ohne Port gilt `3306`.
 
-Die Prisma-Initialisierung zerlegt `DATABASE_URL` in:
+Für die dokumentierte Produktion:
 
-- Host
-- Port
-- Benutzer
-- Passwort
-- Datenbankname
+```text
+Server: localhost
+Datenbank: kicktipp
+```
 
-Wenn kein Port angegeben ist, wird `3306` verwendet.
+Die Anwendung validiert die URL beim Start. Öffentliche Produktionshosts
+benötigen außerdem eine HTTPS-`NEXTAUTH_URL`; lokale, Loopback- und private
+Netzwerkziele dürfen für eine bewusste Standalone-Installation HTTP verwenden.
+Auth- und Cron-Secrets müssen mindestens 32 Zeichen lang sein.
 
-## Produktive Erwartung
+## Migrationen in Produktion
 
-Für die aktuell dokumentierte Uberspace-Instanz gilt:
+Der Standard-Deploy führt Migrationen nur mit `run.sh --migrate` aus. Dabei
+kommt nicht ein globales `npx` und nicht die Runtime des alten Releases zum
+Einsatz, sondern die im neuen Release über Lockfile gepinnte Runtime:
 
-- Datenbankserver: `localhost`
-- Datenbankname: `kicktipp`
+```text
+<release>/.migration/node_modules/.bin/prisma migrate deploy \
+  --config <release>/.migration/prisma.config.ts
+```
 
-## Produktionsmigrationen
+`link-runtime.sh` prüft vor dem Umschalten, dass diese Runtime vorhanden ist
+und Prisma exakt Version 7.8.0 meldet.
 
-Das für Produktion vorgesehene Kommando ist:
+Vor jeder Produktionsmigration:
+
+1. valides App- und DB-Backup erstellen;
+2. Migration gegen eine Kopie des Produktionsstands testen;
+3. Expand/Contract-Kompatibilität mit altem und neuem Release bestätigen;
+4. SQL-Restore-Plan und verantwortliche Person festlegen;
+5. erst dann `bash scripts/deploy/run.sh --migrate` ausführen.
+
+Der automatische App-Rollback nimmt keine Datenbankmigration zurück.
+Destruktive Änderungen wie Drop, Rename oder irreversible Datenkonvertierung
+müssen deshalb in getrennten, kontrollierten Schritten erfolgen.
+
+## Lokale Schemaentwicklung
+
+```bash
+npm exec prisma -- migrate dev --name beschreibung
+npm run typecheck
+npm run test
+```
+
+`migrate dev` ist kein Produktionskommando. Für die lokale, bereits installierte
+Toolchain stehen außerdem bereit:
 
 ```bash
 npm run db:migrate
+npm run db:studio
+npm run db:seed
 ```
-
-Dieses Skript führt intern aus:
-
-```bash
-npx prisma migrate deploy
-```
-
-Für produktive Systeme gilt:
-
-- Migrationen nur mit bekanntem Release-Stand ausführen
-- vor Migrationen App- und DB-Backup anlegen
-- nach Migrationen sofort Verifikation fahren
-
-## Entwicklung gegen die Datenbank
-
-Für lokale Schemaentwicklung ist dokumentiert:
-
-```bash
-npx prisma migrate dev --name beschreibung
-```
-
-Das ist kein Produktionskommando.
 
 ## Seed-Verhalten
 
-Das Seed-Skript ist idempotent für zentrale Initialdaten.
+Vor `npm run db:seed` müssen `SEED_ADMIN_EMAIL` und `SEED_ADMIN_PASSWORD`
+explizit gesetzt sein. Das Seed-Skript besitzt keine Standard-Zugangsdaten und
+weist Beispielwerte zurück. Das Passwort muss mindestens 12 Zeichen haben und
+darf höchstens 72 UTF-8-Bytes umfassen; es wird nicht protokolliert.
 
-Es erzeugt oder pflegt:
+Der Seed pflegt idempotent:
 
-- einen Admin-Benutzer, falls noch keiner mit der konfigurierten E-Mail existiert
-- eine Standard-Farbpalette
-- eine Saison für das aktuelle Kalenderjahr mit `active: true`, falls sie noch nicht existiert
-- die App-Einstellung `registrationEnabled=true`
+- den initialen Admin, sofern die konfigurierte E-Mail noch nicht existiert;
+- die Standard-Farbpalette;
+- die jahreszeitlich passende Bundesliga-Saison, ohne eine bestehende aktive
+  Saison zu überschreiben;
+- die Einstellung `registrationEnabled=true`.
 
-Standardwerte ohne Seed-Overrides:
+## Betriebsrelevante Invarianten
 
-- Admin-E-Mail: `admin@kicktipp.local`
-- Admin-Passwort: `changeme123`
-- Admin-Nickname: `admin`
+- `User`: eindeutige E-Mail und Nickname; mindestens ein Admin muss erhalten
+  bleiben.
+- `Season`: eindeutiges Jahr; fachlich höchstens eine aktive Saison.
+- `Matchday`: eindeutige Kombination aus Saison und Spieltagsnummer; fachlich
+  höchstens ein aktiver Spieltag.
+- `Match`: global eindeutige OpenLigaDB-ID.
+- `Tip`: eindeutige Kombination aus Benutzer und Spiel; Punkte sind bis zur
+  Wertung `null`.
+- `AppSetting`: eindeutiger Schlüssel; `registrationEnabled` ist exakt `true`
+  oder `false`.
 
-Nach Erstinstallation muss dieses Passwort geändert werden.
+Die Saisonaktivierung und die Spieltagsaktivierung sind getrennte
+Betriebszustände. Nach Importen, Migrationen oder manuellen Eingriffen beide
+explizit prüfen.
 
-## Datenmodell mit Betriebsrelevanz
+## Direkte Datenbearbeitung
 
-### `User`
-
-- enthält Logins, Rollen und Profilattribute
-- Rollenwerte: `USER`, `ADMIN`
-- ohne funktionierende `User`-Tabelle kein Login
-
-### `Season`
-
-- pro Jahr genau ein `year`-Wert
-- `active` markiert die aktuelle Spielsaison
-
-### `Matchday`
-
-- eindeutige Kombination aus `seasonId` und `matchdayNumber`
-- `status` beschreibt den Betriebszustand eines Spieltags
-- `tippDeadline` ist fachlich kritisch für die Tippabgabe
-- `syncedAt` zeigt den letzten erfolgreichen Sync
-
-### `Match`
-
-- `openligaMatchId` ist eindeutig
-- Spielstände und Status werden mit OpenLigaDB abgeglichen
-
-### `Tip`
-
-- eindeutige Kombination aus `userId` und `matchId`
-- Punkte können `null` sein, bis sie berechnet wurden
-
-### `AppSetting`
-
-- enthält Schalter für Anwendungsverhalten
-- aktuell relevant: `registrationEnabled`
-
-## Operative Prüfpunkte
-
-- ist `DATABASE_URL` korrekt und erreichbar
-- ist die erwartete Datenbank ausgewählt
-- passen Schema und laufendes Release zusammen
-- existiert mindestens ein Admin-Zugang
-- ist genau eine Saison fachlich aktiv
-
-## Prisma Studio
-
-Für manuelle Dateninspektion steht lokal zur Verfügung:
-
-```bash
-npm run db:studio
-```
-
-Im produktiven Betrieb ist direkte Datenbearbeitung über Studio nur mit Vorsicht sinnvoll. Bevorzugt werden reproduzierbare Migrationen, Admin-Funktionen oder klar dokumentierte SQL-Eingriffe.
+Prisma Studio ist für lokale Inspektion verfügbar. In Produktion sind
+reproduzierbare Migrationen, abgesicherte Admin-Funktionen oder dokumentierte
+SQL-Eingriffe vorzuziehen. Vor jeder direkten Änderung Backup, Transaktion,
+Rollback-Plan und anschließende Fachprüfung festlegen.

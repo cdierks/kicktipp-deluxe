@@ -10,9 +10,13 @@ export function RegistrationToggle({ enabled }: { enabled: boolean }) {
 
   function toggle() {
     startTransition(async () => {
-      const res = await setRegistrationEnabled(!enabled)
-      if (res.error) toast.error(res.error)
-      else toast.success(enabled ? 'Registrierung deaktiviert' : 'Registrierung aktiviert')
+      try {
+        const res = await setRegistrationEnabled(!enabled)
+        if (res.error) toast.error(res.error)
+        else toast.success(enabled ? 'Registrierung deaktiviert' : 'Registrierung aktiviert')
+      } catch {
+        toast.error('Die Einstellung konnte nicht gespeichert werden. Bitte versuche es erneut.')
+      }
     })
   }
 
@@ -26,7 +30,12 @@ export function RegistrationToggle({ enabled }: { enabled: boolean }) {
             : 'Gesperrt – Formular wird ausgeblendet'}
         </p>
       </div>
-      <Switch checked={enabled} onCheckedChange={toggle} disabled={pending} />
+      <Switch
+        aria-label="Neue Registrierungen erlauben"
+        checked={enabled}
+        onCheckedChange={toggle}
+        disabled={pending}
+      />
     </div>
   )
 }

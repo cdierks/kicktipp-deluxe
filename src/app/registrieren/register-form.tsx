@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ClubCombobox } from '@/components/club-combobox'
 import { AuthShell } from '@/components/auth-shell'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export function RegisterForm() {
   const router = useRouter()
@@ -20,19 +21,24 @@ export function RegisterForm() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const fd = new FormData(e.currentTarget)
-    const result = await registerUser({
-      email:        fd.get('email') as string,
-      password:     fd.get('password') as string,
-      name:         fd.get('name') as string,
-      nickname:     fd.get('nickname') as string,
-      favoriteTeam: favoriteTeam || undefined,
-    })
-    setLoading(false)
-    if (result.error) {
-      setError(result.error)
-    } else {
+    try {
+      const fd = new FormData(e.currentTarget)
+      const result = await registerUser({
+        email: fd.get('email') as string,
+        password: fd.get('password') as string,
+        name: fd.get('name') as string,
+        nickname: fd.get('nickname') as string,
+        favoriteTeam: favoriteTeam || undefined,
+      })
+      if (result.error) {
+        setError(result.error)
+        return
+      }
       router.push('/login?registered=1')
+    } catch {
+      setError('Die Registrierung ist gerade nicht erreichbar. Bitte versuche es erneut.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -43,24 +49,16 @@ export function RegisterForm() {
       description="Mit einem Konto verwaltest du Tipps, Spielerfarbe und Profil in einer klaren Oberfläche."
     >
       <div>
-        <div className="mb-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Zugang
-          </p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground">
-            Konto erstellen
-          </h2>
-        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <Label htmlFor="name">
                 Vor- und Nachname
               </Label>
               <Input id="name" name="name" required minLength={2} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="nickname" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <Label htmlFor="nickname">
                 Spitzname
               </Label>
               <Input
@@ -72,33 +70,29 @@ export function RegisterForm() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="email" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <Label htmlFor="email">
               E-Mail
             </Label>
             <Input id="email" name="email" type="email" autoComplete="email" required />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <Label htmlFor="password">
               Passwort
             </Label>
             <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <Label>
               Lieblingsclub{' '}
-              <span className="normal-case font-normal text-muted-foreground/60">(optional)</span>
+              <span className="font-normal text-muted-foreground">(optional)</span>
             </Label>
             <ClubCombobox value={favoriteTeam} onChange={setFavoriteTeam} />
           </div>
 
-          {error && (
-            <p className="rounded-2xl border border-destructive/15 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
-              {error}
-            </p>
-          )}
+          {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
           <Button
             type="submit"
-            className="w-full font-bold tracking-wide"
+            className="w-full font-bold"
             disabled={loading}
           >
             {loading ? 'Registrieren…' : 'Konto erstellen'}
@@ -107,7 +101,7 @@ export function RegisterForm() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Bereits ein Konto?{' '}
-          <Link href="/login" className="font-semibold text-primary underline-offset-4 hover:underline">
+          <Link href="/login" className="font-semibold text-primary-readable underline-offset-4 hover:underline">
             Anmelden
           </Link>
         </p>

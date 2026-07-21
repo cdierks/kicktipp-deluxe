@@ -1,3 +1,7 @@
+import type { MatchStatus, MatchdayStatus } from '@/generated/prisma/enums'
+import { formatAppDate } from '@/lib/date-format'
+import { isDeadlinePassed } from '@/lib/deadline'
+
 export type MatchdayComparisonType =
   | 'BESTWERT'
   | 'MIT_FELD'
@@ -48,7 +52,7 @@ export interface MatchdayMatchRow {
 
 export interface MatchdaySummaryData {
   myPoints: number
-  myRank: number
+  myRank: number | null
   totalPlayers: number
   insight: string
 }
@@ -86,13 +90,13 @@ interface RawMatch {
   homeScore: number | null
   awayScore: number | null
   matchDate: Date
-  status: string
+  status: MatchStatus
 }
 
 interface RawMatchday {
   id: string
   matchdayNumber: number
-  status: string
+  status: MatchdayStatus
   tippDeadline: Date
   season: { year: string }
   matches: RawMatch[]
@@ -123,22 +127,16 @@ interface BuildMatchdayPageViewModelArgs {
   now?: Date
 }
 
-const WEEKDAY_SHORT = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'] as const
-
-function pad2(value: number) {
-  return value.toString().padStart(2, '0')
-}
-
 function formatKickoffLabels(value: Date) {
-  const weekday = WEEKDAY_SHORT[value.getDay()]
-  const day = pad2(value.getDate())
-  const month = pad2(value.getMonth() + 1)
-  const hour = pad2(value.getHours())
-  const minute = pad2(value.getMinutes())
-
   return {
-    short: `${hour}:${minute}`,
-    long: `${weekday} ${day}.${month}., ${hour}:${minute}`,
+    short: formatAppDate(value, { hour: '2-digit', minute: '2-digit' }),
+    long: formatAppDate(value, {
+      weekday: 'short',
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
   }
 }
 
@@ -161,8 +159,8 @@ function getStatusLabel(status: RawMatchday['status']) {
 function formatMatchStatus(match: RawMatch, now: Date): MatchdayMatchRow['status'] {
   const kickoff = new Date(match.matchDate)
   const hasResult = match.homeScore !== null && match.awayScore !== null
-  if (hasResult || match.status === 'FINISHED') return 'FINISHED'
-  if (match.status === 'ACTIVE') return 'LIVE'
+  if (hasResult || match.status === 'COMPLETED') return 'FINISHED'
+  if (match.status === 'LIVE') return 'LIVE'
   if (kickoff <= now) return 'LOCKED'
   return 'OPEN'
 }
@@ -192,10 +190,14 @@ function summarizePredictionGroups(rows: ParticipantPredictionRow[]) {
 function getInsight({
   ranking,
   currentUserId,
+  hasEvaluation,
 }: {
   ranking: MatchdayRankingEntry[]
   currentUserId: string
+  hasEvaluation: boolean
 }) {
+  if (!hasEvaluation) return 'Noch keine Wertung im Spieltag'
+
   const myIndex = ranking.findIndex((entry) => entry.userId === currentUserId)
   const me = ranking[myIndex]
   if (!me) return 'Noch keine Wertung im Spieltag'
@@ -325,15 +327,15 @@ function buildComparison({
     }
   }
 
-  if ((grouped.uniqueLeader && grouped.uniqueLeader[0] === myPrediction) || matchingCount >= 2) {
+  if (grouped.uniqueLeader && grouped.uniqueLeader[0] !== myPrediction) {
     return {
-      comparisonSummary: `${matchingCount} von ${submittedCount} tippen wie du`,
-      comparisonType: 'MIT_FELD' as const,
+      comparisonSummary: `Trend im Feld: ${grouped.uniqueLeader[0]}`,
+      comparisonType: 'GEGEN_TREND' as const,
       details: {
         revealComparison: true,
-        fieldTrend: grouped.uniqueLeader ? `${grouped.uniqueLeader[1]} von ${submittedCount}` : 'Kein klarer Trend',
-        commonPrediction: grouped.uniqueLeader?.[0] ?? null,
-        myStatus: 'Du liegst mit dem Feld',
+        fieldTrend: `${grouped.uniqueLeader[1]} von ${submittedCount}`,
+        commonPrediction: grouped.uniqueLeader[0],
+        myStatus: 'Du gehst gegen den Trend',
         bestScore: bestPoints !== null ? `${bestPoints} Punkte` : null,
         submissionCount: submittedCount,
         participantPredictions: withMarkers,
@@ -342,15 +344,13 @@ function buildComparison({
   }
 
   return {
-    comparisonSummary: grouped.uniqueLeader
-      ? `Trend im Feld: ${grouped.uniqueLeader[0]}`
-      : `${matchingCount} von ${submittedCount} tippen wie du`,
-    comparisonType: 'GEGEN_TREND' as const,
+    comparisonSummary: `${matchingCount} von ${submittedCount} tippen wie du`,
+    comparisonType: 'MIT_FELD' as const,
     details: {
       revealComparison: true,
       fieldTrend: grouped.uniqueLeader ? `${grouped.uniqueLeader[1]} von ${submittedCount}` : 'Kein klarer Trend',
       commonPrediction: grouped.uniqueLeader?.[0] ?? null,
-      myStatus: 'Du gehst gegen den Trend',
+      myStatus: 'Du liegst mit dem Feld',
       bestScore: bestPoints !== null ? `${bestPoints} Punkte` : null,
       submissionCount: submittedCount,
       participantPredictions: withMarkers,
@@ -389,9 +389,11 @@ export function buildMatchdayPageViewModel({
       return a.nickname.localeCompare(b.nickname, 'de')
     })
 
-  const myRankIndex = Math.max(0, ranking.findIndex((entry) => entry.isCurrentUser))
-  const myEntry = ranking[myRankIndex]
+  const currentUserRankIndex = ranking.findIndex((entry) => entry.isCurrentUser)
+  const myEntry = currentUserRankIndex >= 0 ? ranking[currentUserRankIndex] : undefined
+  const hasMatchdayEvaluation = Object.keys(matchdayPointsMap).length > 0
 
+  const deadlinePassed = isDeadlinePassed(matchday.tippDeadline, now)
   const matches = matchday.matches.map((match) => {
     const tips = tipIndex[match.id] ?? {}
     const matchStatus = formatMatchStatus(match, now)
@@ -409,7 +411,7 @@ export function buildMatchdayPageViewModel({
     })
 
     const comparison = buildComparison({
-      comparisonUnlocked: now > matchday.tippDeadline,
+      comparisonUnlocked: deadlinePassed,
       matchStatus,
       participantPredictions,
       currentUserId,
@@ -448,16 +450,18 @@ export function buildMatchdayPageViewModel({
       seasonLabel: `Saison ${matchday.season.year}/${parseInt(matchday.season.year, 10) + 1}`,
       statusLabel: getStatusLabel(matchday.status),
       deadlineLabel: matchday.tippDeadline.toISOString(),
-      deadlinePassed: now > matchday.tippDeadline,
+      deadlinePassed,
       prevMatchdayNumber,
       nextMatchdayNumber,
-      showTipCta: now <= matchday.tippDeadline && matchday.status === 'ACTIVE',
+      showTipCta: !deadlinePassed && matchday.status === 'ACTIVE',
     },
     summary: {
       myPoints: myEntry?.matchdayPoints ?? 0,
-      myRank: myRankIndex + 1,
+      myRank: hasMatchdayEvaluation && currentUserRankIndex >= 0
+        ? currentUserRankIndex + 1
+        : null,
       totalPlayers: ranking.length,
-      insight: getInsight({ ranking, currentUserId }),
+      insight: getInsight({ ranking, currentUserId, hasEvaluation: hasMatchdayEvaluation }),
     },
     ranking,
     matches,

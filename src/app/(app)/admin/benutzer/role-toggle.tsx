@@ -10,15 +10,21 @@ export function RoleToggle({ userId, currentRole }: { userId: string; currentRol
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
-  async function toggle() {
+  function toggle() {
     const newRole = currentRole === 'ADMIN' ? 'USER' : 'ADMIN'
-    const result = await setUserRole(userId, newRole as 'ADMIN' | 'USER')
-    if (result.error) {
-      toast.error(result.error)
-    } else {
-      toast.success(`Rolle auf ${newRole} gesetzt`)
-      startTransition(() => router.refresh())
-    }
+    startTransition(async () => {
+      try {
+        const result = await setUserRole(userId, newRole as 'ADMIN' | 'USER')
+        if (result.error) {
+          toast.error(result.error)
+          return
+        }
+        toast.success(`Rolle auf ${newRole} gesetzt`)
+        router.refresh()
+      } catch {
+        toast.error('Die Rolle konnte nicht geändert werden. Bitte versuche es erneut.')
+      }
+    })
   }
 
   return (

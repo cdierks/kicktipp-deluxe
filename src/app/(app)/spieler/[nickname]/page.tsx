@@ -11,27 +11,29 @@ import {
   IconMedal,
   IconChartBar,
   IconFlame,
-  IconTarget,
-  IconBallFootball,
   IconScale,
   IconPokerChip,
   IconUser,
 } from '@/components/app-icons'
 import { PlayerCharts } from './player-charts'
 import type { LinePoint, QualitySlice } from './player-charts'
+import { PageFrame } from '@/components/page-frame'
+import { PageHeader } from '@/components/page-header'
+import { Button } from '@/components/ui/button'
+import { getEvaluatedSeasonMatchdays } from '@/lib/matchday'
 
 const HIT_COLORS = {
-  exact: '#1d4ed8',
-  diff: '#3b82f6',
-  outcome: '#93c5fd',
-  miss: '#9ca3af',
+  exact: 'var(--color-primary-800)',
+  diff: 'var(--color-primary-600)',
+  outcome: 'var(--color-primary-300)',
+  miss: 'var(--color-neutral-400)',
 }
 
 const JOKER_COLORS = {
-  exact: '#f59e0b',
-  diff: '#fbbf24',
-  outcome: '#fde68a',
-  miss: '#9ca3af',
+  exact: 'var(--color-warning-700)',
+  diff: 'var(--color-warning-500)',
+  outcome: 'var(--color-warning-300)',
+  miss: 'var(--color-neutral-400)',
 }
 
 function normalizeHexColor(color: string | null | undefined) {
@@ -66,7 +68,7 @@ export default async function SpielerPage({
 
   const isMe = session.user.id === user.id
   const club = user.favoriteTeam ? getClubByName(user.favoriteTeam) : undefined
-  const playerColor = normalizeHexColor(user.color) ?? '#1d4ed8'
+  const playerColor = normalizeHexColor(user.color) ?? 'var(--color-primary-600)'
 
   const activeSeason = await prisma.season.findFirst({
     where: { active: true },
@@ -87,11 +89,16 @@ export default async function SpielerPage({
   let jokerSummary = { used: 0, bonus: 0, exact: 0, diff: 0, outcome: 0, miss: 0 }
 
   if (activeSeason) {
-    const [seasonPointsAll, allSeasonTips, allCompletedMatchdays] = await Promise.all([
+    const now = new Date()
+    const evaluatedMatchdays = await getEvaluatedSeasonMatchdays(activeSeason.id, now)
+    const evaluatedMatchdayIds = evaluatedMatchdays.map((matchday) => matchday.id)
+    const [seasonPointsAll, allSeasonTips, allEvaluatedMatchdays] = await Promise.all([
       prisma.tip.groupBy({
         by: ['userId'],
         where: {
-          match: { matchday: { seasonId: activeSeason.id } },
+          match: {
+            matchdayId: { in: evaluatedMatchdayIds },
+          },
           points: { not: null },
         },
         _sum: { points: true },
@@ -100,7 +107,8 @@ export default async function SpielerPage({
       prisma.tip.findMany({
         where: {
           userId: user.id,
-          match: { matchday: { seasonId: activeSeason.id } },
+          // Public profiles use the same effective deadline as the dashboard.
+          match: { matchdayId: { in: evaluatedMatchdayIds } },
           points: { not: null },
         },
         select: {
@@ -112,7 +120,9 @@ export default async function SpielerPage({
         },
       }),
       prisma.matchday.findMany({
-        where: { seasonId: activeSeason.id, status: 'COMPLETED' },
+        where: {
+          id: { in: evaluatedMatchdayIds },
+        },
         orderBy: { matchdayNumber: 'asc' },
         select: { id: true, matchdayNumber: true },
       }),
@@ -121,7 +131,9 @@ export default async function SpielerPage({
     const myEntry = seasonPointsAll.find((e) => e.userId === user.id)
     seasonTotal = myEntry?._sum.points ?? 0
     const rankIdx = seasonPointsAll.findIndex((e) => e.userId === user.id)
-    rank = rankIdx >= 0 ? rankIdx + 1 : seasonPointsAll.length + 1
+    if (evaluatedMatchdayIds.length > 0) {
+      rank = rankIdx >= 0 ? rankIdx + 1 : seasonPointsAll.length + 1
+    }
 
     let exact = 0
     let diff = 0
@@ -152,9 +164,10 @@ export default async function SpielerPage({
         }
       }
 
-      if (points === 4 || points === 8) exact += 1
-      else if (points === 3 || points === 6) diff += 1
-      else if (points === 2) outcome += 1
+      const basePoints = t.isJoker && points > 0 ? points / 2 : points
+      if (basePoints === 4) exact += 1
+      else if (basePoints === 3) diff += 1
+      else if (basePoints === 2) outcome += 1
       else miss += 1
 
       const scoreDelta = t.homeScore - t.awayScore
@@ -189,7 +202,7 @@ export default async function SpielerPage({
       }
     }
 
-    for (const md of allCompletedMatchdays) {
+    for (const md of allEvaluatedMatchdays) {
       const pts = pointsByMatchdayId[md.id] ?? 0
       if (!record || pts > record.points) {
         record = { points: pts, matchdayNumber: md.matchdayNumber }
@@ -197,12 +210,12 @@ export default async function SpielerPage({
     }
 
     avgPerMatchday =
-      allCompletedMatchdays.length > 0
-        ? Math.round((seasonTotal / allCompletedMatchdays.length) * 10) / 10
+      allEvaluatedMatchdays.length > 0
+        ? Math.round((seasonTotal / allEvaluatedMatchdays.length) * 10) / 10
         : 0
 
     let cumulative = 0
-    lineData = allCompletedMatchdays.map((md) => {
+    lineData = allEvaluatedMatchdays.map((md) => {
       cumulative += pointsByMatchdayId[md.id] ?? 0
       return { st: `ST ${md.matchdayNumber}`, cumulative }
     })
@@ -219,72 +232,55 @@ export default async function SpielerPage({
   ]
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
-      <section className="surface overflow-hidden rounded-[1.85rem] p-6 sm:p-7">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-          <div className="min-w-0">
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div
-                className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[1.55rem] text-white shadow-lg ring-4 ring-white/20"
-                style={{ backgroundColor: playerColor }}
-              >
-                {club?.iconUrl ? (
-                  <ClubIcon src={club.iconUrl} fallbackSrc={club.iconSourceUrl} label={club.name} className="h-11 w-11 object-contain" />
-                ) : (
-                  <IconUser className="h-9 w-9 text-white" />
-                )}
-              </div>
-              {isMe && (
-                <Link
-                  href="/profil"
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-border/70 bg-background/75 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <IconPencil className="h-3.5 w-3.5" />
-                  Bearbeiten
-                </Link>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-                Spielerprofil
-              </p>
-              <h1 className="text-4xl leading-none text-foreground sm:text-5xl">
-                {user.nickname}
-              </h1>
-              <p className="text-sm text-muted-foreground">{user.name}</p>
-            </div>
-
-            {club ? (
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-                <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-1.5">
-                  <ClubIcon src={club.iconUrl} fallbackSrc={club.iconSourceUrl} label={club.name} className="h-4.5 w-4.5 object-contain shrink-0" />
-                  <span className="font-medium text-foreground">{club.name}</span>
-                  <span className="text-xs text-muted-foreground">BL{club.league}</span>
-                </span>
-              </div>
-            ) : user.favoriteTeam ? (
-              <p className="mt-4 text-sm text-foreground">{user.favoriteTeam}</p>
-            ) : null}
+    <PageFrame>
+      <PageHeader
+        eyebrow="Spielerprofil"
+        title={user.nickname}
+        leading={
+          <div
+            className="flex h-16 w-16 items-center justify-center rounded-xl text-neutral-50 ring-1 ring-neutral-50/25"
+            style={{ backgroundColor: playerColor }}
+          >
+            {club?.iconUrl ? (
+              <ClubIcon src={club.iconUrl} fallbackSrc={club.iconSourceUrl} label={club.name} className="h-11 w-11 object-contain" />
+            ) : (
+              <IconUser className="h-9 w-9 text-neutral-50" />
+            )}
           </div>
-        </div>
-      </section>
+        }
+        description={
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span>{user.name}</span>
+            {club ? (
+              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-2.5 py-1">
+                <ClubIcon src={club.iconUrl} fallbackSrc={club.iconSourceUrl} label={club.name} className="h-4 w-4 shrink-0 object-contain" />
+                <span className="font-medium text-foreground">{club.name}</span>
+                <span className="text-xs text-muted-foreground">BL{club.league}</span>
+              </span>
+            ) : user.favoriteTeam ? (
+              <span className="text-foreground">{user.favoriteTeam}</span>
+            ) : null}
+          </span>
+        }
+        aside={isMe ? (
+          <Button asChild variant="outline" size="sm">
+            <Link href="/profil">
+              <IconPencil className="h-3.5 w-3.5" />
+              Bearbeiten
+            </Link>
+          </Button>
+        ) : undefined}
+      />
 
       {activeSeason ? (
         <>
           <div className="flex items-center gap-2 px-1">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <span className="text-sm font-medium text-muted-foreground">
               Saison {activeSeason.year}/{parseInt(activeSeason.year) + 1}
             </span>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            <SummaryChip label="Trefferquote" value={total > 0 ? `${hitRate}%` : '–'} tone="blue" />
-            <SummaryChip label="Joker-Bonus" value={jokerTotal > 0 ? `+${jokerSummary.bonus}` : '–'} tone="amber" />
-            <SummaryChip label="Fehlquote" value={total > 0 ? `${missPct}%` : '–'} tone="gray" />
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+          <div className="surface-raised grid overflow-hidden rounded-xl sm:grid-cols-2 xl:grid-cols-4 [&>*]:border-b [&>*]:border-border sm:[&>*]:border-r xl:[&>*]:border-b-0">
             <KpiCard icon={<IconTrophy className="h-3.5 w-3.5" />} label="Saisonpunkte" value={seasonTotal} highlight />
             <KpiCard icon={<IconMedal className="h-3.5 w-3.5" />} label="Rang" value={rank > 0 ? `${rank}.` : '–'} />
             <KpiCard icon={<IconChartBar className="h-3.5 w-3.5" />} label="Ø / Spieltag" value={avgPerMatchday} />
@@ -294,27 +290,26 @@ export default async function SpielerPage({
               value={record ? `${record.points}P` : '–'}
               sub={record ? `ST ${record.matchdayNumber}` : undefined}
             />
-            <KpiCard icon={<IconTarget className="h-3.5 w-3.5" />} label="Exakt" value={total > 0 ? `${exactPct}%` : '–'} />
-            <KpiCard icon={<IconBallFootball className="h-3.5 w-3.5" />} label="Getippt" value={total} />
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.95fr)]">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.95fr)] 2xl:gap-8">
             <PlayerCharts lineData={lineData} qualityData={qualityData} lineColor={playerColor} />
 
-            <div className="grid gap-4">
-              <section className="surface overflow-hidden rounded-[1.35rem] border border-border/70 px-4 py-4">
+            <div className="grid gap-6 2xl:gap-8">
+              <section className="surface-raised overflow-hidden rounded-xl px-4 py-4">
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-background/80 text-muted-foreground">
+                  <span className="flex size-5 shrink-0 items-center justify-center text-muted-foreground">
                     <IconScale className="h-3.5 w-3.5" />
                   </span>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  <p className="text-sm font-semibold text-foreground">
                     Tipp-Profil
                   </p>
                 </div>
                 <div className="grid gap-3">
-                  <MetricRow label="Trefferquote" value={total > 0 ? `${hitRate}%` : '–'} tone="text-primary" />
+                  <MetricRow label="Trefferquote" value={total > 0 ? `${hitRate}%` : '–'} tone="text-primary-readable" />
                   <MetricRow label="Fehlquote" value={total > 0 ? `${missPct}%` : '–'} tone="text-muted-foreground" />
-                  <MetricRow label="Exaktquote" value={total > 0 ? `${exactPct}%` : '–'} tone="text-blue-300" />
+                  <MetricRow label="Exaktquote" value={total > 0 ? `${exactPct}%` : '–'} tone="text-primary-600 dark:text-primary-300" />
+                  <MetricRow label="Getippte Spiele" value={`${total}`} tone="text-foreground" />
                 </div>
                 <div className="mt-4 grid gap-2">
                   <RiskBar label="Heim" value={risk.home} tone="primary" />
@@ -323,12 +318,12 @@ export default async function SpielerPage({
                 </div>
               </section>
 
-              <section className="surface overflow-hidden rounded-[1.35rem] border border-border/70 px-4 py-4">
+              <section className="surface-raised overflow-hidden rounded-xl px-4 py-4">
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-400/10 text-amber-500">
+                  <span className="flex size-5 shrink-0 items-center justify-center text-warning-700 dark:text-warning-300">
                     <IconPokerChip className="h-3.5 w-3.5" />
                   </span>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  <p className="text-sm font-semibold text-foreground">
                     Joker-Fokus
                   </p>
                 </div>
@@ -365,7 +360,7 @@ export default async function SpielerPage({
                     </div>
                   </>
                 ) : (
-                  <div className="rounded-xl border border-border/60 bg-background/65 px-4 py-5 text-sm text-muted-foreground">
+                  <div className="rounded-lg bg-muted px-4 py-5 text-sm text-muted-foreground">
                     In dieser Saison wurde noch kein Joker gesetzt.
                   </div>
                 )}
@@ -374,11 +369,11 @@ export default async function SpielerPage({
           </div>
         </>
       ) : (
-        <section className="surface-muted rounded-[1.35rem] border border-border/70 px-6 py-10 text-center text-sm text-muted-foreground">
+        <section className="surface-muted rounded-xl border border-border px-6 py-10 text-center text-sm text-muted-foreground">
           Keine aktive Saison gefunden.
         </section>
       )}
-    </div>
+    </PageFrame>
   )
 }
 
@@ -396,23 +391,19 @@ function KpiCard({
   highlight?: boolean
 }) {
   return (
-    <div className="surface flex min-h-[7.75rem] flex-col overflow-hidden rounded-[1.35rem] border border-border/70 px-4 py-3">
-      <div className="mb-3 flex items-center gap-2">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-background/80 text-muted-foreground">
+    <div className="flex min-h-[6.5rem] flex-col px-4 py-3">
+      <div className="mb-2 flex items-center gap-2 text-muted-foreground">
+        <span className="flex size-5 shrink-0 items-center justify-center">
           {icon}
         </span>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        <p className="text-xs font-medium">
           {label}
         </p>
       </div>
-      <p className={cn('text-3xl leading-none tabular-nums text-foreground', highlight && 'text-primary')}>
+      <p className={cn('text-3xl leading-none tabular-nums text-foreground', highlight && 'text-primary-readable')}>
         {value}
       </p>
-      <div className="mt-auto pt-3">
-        <div className="rounded-xl border border-border/60 bg-background/65 px-3 py-2 text-xs text-muted-foreground">
-          {sub ?? 'Saisonanalyse'}
-        </div>
-      </div>
+      {sub && <p className="mt-auto pt-2 text-xs text-muted-foreground">{sub}</p>}
     </div>
   )
 }
@@ -429,14 +420,14 @@ function SummaryChip({
   compact?: boolean
 }) {
   const toneClass = {
-    blue: 'border-primary/15 bg-background text-primary',
-    amber: 'border-amber-400/15 bg-background text-amber-500',
-    gray: 'border-border/70 bg-background text-muted-foreground',
+    blue: 'bg-primary-50 text-primary-800 dark:bg-primary-950 dark:text-primary-200',
+    amber: 'bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-200',
+    gray: 'bg-muted text-neutral-600 dark:text-neutral-300',
   }[tone]
 
   return (
-    <div className={cn('surface rounded-[1.35rem] border px-3 py-3', toneClass, compact && 'rounded-xl px-2.5 py-2.5')}>
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] opacity-80">{label}</p>
+    <div className={cn('rounded-lg px-3 py-3', toneClass, compact && 'px-2.5 py-2.5')}>
+      <p className="text-xs font-medium opacity-80">{label}</p>
       <p className={cn('mt-1 tabular-nums text-2xl leading-none', compact && 'text-xl')}>{value}</p>
     </div>
   )
@@ -452,7 +443,7 @@ function MetricRow({
   tone: string
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/65 px-3 py-2 text-sm">
+    <div className="flex items-center justify-between gap-3 rounded-lg bg-muted px-3 py-2 text-sm">
       <span className="text-muted-foreground">{label}</span>
       <span className={cn('font-semibold tabular-nums', tone)}>{value}</span>
     </div>
@@ -469,16 +460,16 @@ function RiskBar({
   tone: 'primary' | 'accent' | 'muted'
 }) {
   const labelClass = tone === 'primary'
-    ? 'text-primary'
+    ? 'text-primary-readable'
     : tone === 'accent'
-      ? 'text-accent'
+      ? 'text-secondary-700 dark:text-secondary-300'
       : 'text-muted-foreground'
 
   const trackClass = tone === 'primary'
-    ? 'bg-primary/10'
+    ? 'bg-primary-100 dark:bg-primary-900'
     : tone === 'accent'
-      ? 'bg-accent/10'
-      : 'bg-muted'
+      ? 'bg-secondary-100 dark:bg-secondary-900'
+      : 'bg-neutral-200 dark:bg-neutral-700'
 
   const fillClass = tone === 'primary'
     ? 'bg-primary'
@@ -487,7 +478,7 @@ function RiskBar({
       : 'bg-muted-foreground/70'
 
   return (
-    <div className="rounded-xl border border-border/60 bg-background/65 px-3 py-2">
+    <div className="rounded-lg bg-muted px-3 py-2">
       <div className="mb-1 flex items-center justify-between gap-3 text-xs">
         <span className={cn('font-medium', labelClass)}>{label}</span>
         <span className={cn('font-semibold tabular-nums', labelClass)}>{value}%</span>

@@ -32,6 +32,7 @@ fi
 while (($# > 0)); do
   case "$1" in
     --release)
+      require_option_value "$1" "$#" "${2:-}"
       release_path="$2"
       shift 2
       ;;
@@ -57,6 +58,10 @@ test -L '${APP_DIR}' || {
 }
 expected_release=\$(readlink -f \"\${rel}\")
 active_release=\$(readlink -f '${APP_DIR}')
+test -f \"\${rel}/RELEASE_METADATA\" || {
+  echo 'Release metadata missing' >&2
+  exit 1
+}
 local_status=\$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 'http://127.0.0.1:${LOCAL_PORT}/login')
 public_login_status=\$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 '${DOMAIN}/login')
 signin_status=\$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 '${DOMAIN}/api/auth/signin')
@@ -65,6 +70,7 @@ service_status=\$(supervisorctl status '${SERVICE_NAME}')
 
 printf 'Active release: %s\n' \"\${active_release}\"
 printf 'Expected release: %s\n' \"\${expected_release}\"
+cat \"\${rel}/RELEASE_METADATA\"
 printf 'Local /login: %s\n' \"\${local_status}\"
 printf 'Public /login: %s\n' \"\${public_login_status}\"
 printf 'Public /api/auth/signin: %s\n' \"\${signin_status}\"

@@ -4,26 +4,42 @@ import { prisma } from '@/lib/prisma'
 import { DashboardContent } from '../dashboard-content'
 import type { SeasonMatchdayStat } from '../stats-tab'
 import { buildMatchdayPageViewModel } from '../matchday-view-model'
+import { parseDashboardView } from '@/lib/dashboard-view'
+import { StandingsTable } from '../standings-table'
+import { getEffectiveTipDeadline, getEvaluatedSeasonMatchdays, isDeadlinePassed } from '@/lib/matchday'
 
 interface Props {
   params: Promise<{ spieltag: string }>
+  searchParams: Promise<{ ansicht?: string | string[] }>
 }
 
-export default async function SpieltagPage({ params }: Props) {
+export default async function SpieltagPage({ params, searchParams }: Props) {
   const session = await getSession()
   if (!session) redirect('/login')
 
   const { spieltag } = await params
-  const matchdayNumber = parseInt(spieltag)
-  if (isNaN(matchdayNumber)) notFound()
+  const query = await searchParams
+  const requestedView = parseDashboardView(
+    typeof query.ansicht === 'string' ? query.ansicht : null,
+  )
+  if (!/^([1-9]|[12]\d|3[0-4])$/.test(spieltag)) notFound()
+  const matchdayNumber = Number(spieltag)
 
-  const activeSeason = await prisma.season.findFirst({ where: { active: true } })
-  if (!activeSeason) notFound()
+  // Historical URLs follow the season of the active matchday. If no matchday
+  // is active, the explicitly active season remains the navigation fallback.
+  const activeMatchdayContext = await prisma.matchday.findFirst({
+    where: { status: 'ACTIVE' },
+    select: { seasonId: true },
+  })
+  const navigationSeason = activeMatchdayContext
+    ? await prisma.season.findUnique({ where: { id: activeMatchdayContext.seasonId } })
+    : await prisma.season.findFirst({ where: { active: true } })
+  if (!navigationSeason) notFound()
 
   const matchday = await prisma.matchday.findUnique({
     where: {
       seasonId_matchdayNumber: {
-        seasonId: activeSeason.id,
+        seasonId: navigationSeason.id,
         matchdayNumber,
       },
     },
@@ -35,47 +51,73 @@ export default async function SpieltagPage({ params }: Props) {
 
   if (!matchday) notFound()
 
-  const [users, allTips, allMatchdays] = await Promise.all([
+  const now = new Date()
+  const effectiveDeadline = getEffectiveTipDeadline(
+    matchday.tippDeadline,
+    matchday.matches.map((match) => match.matchDate),
+  )
+  const comparisonsUnlocked = isDeadlinePassed(effectiveDeadline, now)
+  const evaluatedSeasonMatchdays = await getEvaluatedSeasonMatchdays(navigationSeason.id, now)
+  const evaluatedMatchdayIds = evaluatedSeasonMatchdays.map((entry) => entry.id)
+  const [users, visibleTips, allMatchdays] = await Promise.all([
     prisma.user.findMany({
-      select: { id: true, nickname: true, name: true, favoriteTeam: true, color: true },
+      select: { id: true, nickname: true, favoriteTeam: true, color: true },
       orderBy: { nickname: 'asc' },
     }),
     prisma.tip.findMany({
-      where: { match: { matchdayId: matchday.id } },
-      include: { match: true },
+      where: {
+        match: { matchdayId: matchday.id },
+        // Do not rely on client-side masking: before the deadline only the
+        // signed-in user's prediction may cross the server/client boundary.
+        ...(comparisonsUnlocked ? {} : { userId: session.user.id }),
+      },
+      select: {
+        userId: true,
+        matchId: true,
+        homeScore: true,
+        awayScore: true,
+        points: true,
+        isJoker: true,
+      },
     }),
     prisma.matchday.findMany({
-      where: { seasonId: activeSeason.id },
+      where: { seasonId: navigationSeason.id },
       orderBy: { matchdayNumber: 'asc' },
     }),
   ])
 
-  const [seasonPoints, completedMatchdaysRaw] = await Promise.all([
+  const [seasonPoints, evaluatedMatchdaysRaw] = await Promise.all([
     prisma.tip.groupBy({
       by: ['userId'],
       where: {
-        match: { matchday: { seasonId: activeSeason.id } },
+        match: {
+          matchdayId: { in: evaluatedMatchdayIds },
+        },
         points: { not: null },
       },
       _sum: { points: true },
     }),
-    prisma.matchday.findMany({
-      where: { seasonId: activeSeason.id, status: 'COMPLETED' },
-      orderBy: { matchdayNumber: 'asc' },
-      select: {
-        matchdayNumber: true,
-        matches: {
+    requestedView === 'statistiken'
+      ? prisma.matchday.findMany({
+          where: {
+            id: { in: evaluatedMatchdayIds },
+          },
+          orderBy: { matchdayNumber: 'asc' },
           select: {
-            tips: {
-              select: { userId: true, homeScore: true, awayScore: true, points: true, isJoker: true },
+            matchdayNumber: true,
+            matches: {
+              select: {
+                tips: {
+                  select: { userId: true, homeScore: true, awayScore: true, points: true, isJoker: true },
+                },
+              },
             },
           },
-        },
-      },
-    }),
+        })
+      : Promise.resolve([]),
   ])
 
-  const seasonStats: SeasonMatchdayStat[] = completedMatchdaysRaw.map((md) => {
+  const seasonStats: SeasonMatchdayStat[] = evaluatedMatchdaysRaw.map((md) => {
     const allTips = md.matches.flatMap((m) => m.tips)
     const pointsPerUser: Record<string, number> = {}
     for (const tip of allTips) {
@@ -90,14 +132,14 @@ export default async function SpieltagPage({ params }: Props) {
   )
 
   const matchdayPointsMap: Record<string, number> = {}
-  for (const tip of allTips) {
+  for (const tip of visibleTips) {
     if (tip.points !== null) {
       matchdayPointsMap[tip.userId] = (matchdayPointsMap[tip.userId] ?? 0) + tip.points
     }
   }
 
   const tipIndex: Record<string, Record<string, { homeScore: number; awayScore: number; points: number | null; isJoker: boolean }>> = {}
-  for (const tip of allTips) {
+  for (const tip of visibleTips) {
     if (!tipIndex[tip.matchId]) tipIndex[tip.matchId] = {}
     tipIndex[tip.matchId][tip.userId] = {
       homeScore: tip.homeScore,
@@ -107,19 +149,21 @@ export default async function SpieltagPage({ params }: Props) {
     }
   }
 
+  const visibleMatchday = { ...matchday, tippDeadline: effectiveDeadline }
   const matchdayPageModel = buildMatchdayPageViewModel({
-    matchday,
+    matchday: visibleMatchday,
     users,
     tipIndex,
     matchdayPointsMap,
     seasonPointsMap,
     currentUserId: session.user.id,
     matchdayList: allMatchdays,
+    now,
   })
 
   return (
     <DashboardContent
-      matchday={matchday}
+      matchday={visibleMatchday}
       users={users}
       tipIndex={tipIndex}
       matchdayPointsMap={matchdayPointsMap}
@@ -127,6 +171,7 @@ export default async function SpieltagPage({ params }: Props) {
       seasonStats={seasonStats}
       currentUserId={session.user.id}
       matchdayPageModel={matchdayPageModel}
+      standings={requestedView === 'bundesliga' ? <StandingsTable year={matchday.season.year} /> : null}
     />
   )
 }
