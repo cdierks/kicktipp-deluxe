@@ -38,9 +38,10 @@ Abschlussmarker wird abgewiesen. Die Befehle aus
 ### Service-Datei weicht ab
 
 Die produktive Definition muss den Standalone-Entrypoint mit `/usr/bin/node`,
-Port `3000`, Loopback-Hostname und `TZ=Europe/Berlin` exakt abbilden. Die
-versionierte [scripts/kicktipp.ini](../../scripts/kicktipp.ini) installieren,
-Supervisor neu laden und den Preflight wiederholen.
+Port `3000` und `TZ=Europe/Berlin` exakt abbilden. Für das Uberspace-Backend
+darf kein `HOSTNAME` gesetzt sein, da dies sonst einen öffentlichen `502`
+verursacht. Die versionierte [scripts/kicktipp.ini](../../scripts/kicktipp.ini)
+installieren, Supervisor neu laden und den Preflight wiederholen.
 
 ## Remote-Deploy-Lock ist belegt
 

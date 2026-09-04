@@ -179,9 +179,9 @@ grep -Fqx "command=/usr/bin/node ${APP_DIR}/server.js" "${service_file}" || {
   echo 'Remote service definition does not use the configured standalone server.js' >&2
   exit 1
 }
-expected_environment="environment=NODE_ENV=\"production\",PORT=\"${LOCAL_PORT}\",HOSTNAME=\"127.0.0.1\",TZ=\"Europe/Berlin\""
+expected_environment="environment=NODE_ENV=\"production\",PORT=\"${LOCAL_PORT}\",TZ=\"Europe/Berlin\""
 grep -Fqx "${expected_environment}" "${service_file}" || {
-  echo 'Remote service environment does not match port, loopback binding and timezone' >&2
+  echo 'Remote service environment does not match port and timezone' >&2
   exit 1
 }
 

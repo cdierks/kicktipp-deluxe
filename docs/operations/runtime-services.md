@@ -17,7 +17,7 @@ autorestart=yes
 startsecs=15
 stderr_logfile=/home/kicktipp/logs/supervisord/kicktipp.err
 stdout_logfile=/home/kicktipp/logs/supervisord/kicktipp.log
-environment=NODE_ENV="production",PORT="3000",HOSTNAME="127.0.0.1",TZ="Europe/Berlin"
+environment=NODE_ENV="production",PORT="3000",TZ="Europe/Berlin"
 ```
 
 Quelle: [scripts/kicktipp.ini](../../scripts/kicktipp.ini)
@@ -29,8 +29,8 @@ Im Normalbetrieb gilt:
 - `supervisorctl status kicktipp` zeigt `RUNNING`
 - die App antwortet lokal auf `http://127.0.0.1:3000`
 - die Domain ist auf dieses Backend gemappt
-- der Prozess bindet ausschließlich an Loopback und nutzt `Europe/Berlin` als
-  deterministische Server-Zeitzone
+- der Prozess verwendet den vom Uberspace-Backend erwarteten Standard-Listener
+  und nutzt `Europe/Berlin` als deterministische Server-Zeitzone
 
 ## Relevante Pfade auf dem Host
 
@@ -81,7 +81,7 @@ supervisorctl start kicktipp
 - fehlendes `server.js` oder fehlende `.next/static` im aktiven Release
 - fehlende oder widersprüchliche `RELEASE_METADATA`
 - eine `.env` mit anderem Modus als `600`
-- eine Service-Datei ohne Loopback-Bindung oder festgelegte Zeitzone
+- eine Service-Datei ohne festgelegte Zeitzone
 - `500` auf `/api/auth/signin`
 - `500` auf Server-Routen nach ansonsten erfolgreichem Start
 - App startet, aber geschützte Seiten oder Auth-Endpunkte brechen weg

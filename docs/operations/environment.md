@@ -79,15 +79,14 @@ Die versionierte Service-Datei setzt:
 ```text
 NODE_ENV=production
 PORT=3000
-HOSTNAME=127.0.0.1
 TZ=Europe/Berlin
 ```
 
-`HOSTNAME` bindet den Standalone-Server ausschließlich an Loopback; der
-öffentliche Zugriff läuft über das konfigurierte Uberspace-Backend. `TZ` macht
-serverseitige Bundesliga-Datumsgrenzen deterministisch. Fachliche Formatter
-sollen die Zeitzone dennoch explizit angeben, wenn Daten außerhalb dieses
-Prozesses verarbeitet werden.
+`HOSTNAME` wird bewusst nicht gesetzt: Das konfigurierte Uberspace-Backend
+erwartet den Standard-Listener des Standalone-Servers und liefert sonst einen
+öffentlichen `502`-Fehler. `TZ` macht serverseitige Bundesliga-Datumsgrenzen
+deterministisch. Fachliche Formatter sollen die Zeitzone dennoch explizit
+angeben, wenn Daten außerhalb dieses Prozesses verarbeitet werden.
 
 `check.sh` vergleicht die produktive Service-Datei exakt mit der versionierten
 Konfiguration und verweigert einen Deploy bei Abweichungen.
