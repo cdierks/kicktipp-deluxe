@@ -5,3 +5,9 @@ export async function getRegistrationEnabled(): Promise<boolean> {
   // Missing or malformed configuration must keep a private installation closed.
   return row?.value === 'true'
 }
+
+export async function getLateTipEditingEnabled(): Promise<boolean> {
+  const row = await prisma.appSetting.findUnique({ where: { key: 'lateTipEditingEnabled' } })
+  // Reopening tips after their deadline is an explicit exception and stays off by default.
+  return row?.value === 'true'
+}

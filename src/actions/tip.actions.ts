@@ -54,7 +54,11 @@ export async function submitAllTips(snapshot: z.infer<typeof SubmitAllTipsSchema
         matchday.tippDeadline,
         matchday.matches.map((match) => match.matchDate),
       )
-      if (isDeadlinePassed(effectiveDeadline)) {
+      const lateTipEditing = await tx.appSetting.findUnique({
+        where: { key: 'lateTipEditingEnabled' },
+        select: { value: true },
+      })
+      if (isDeadlinePassed(effectiveDeadline) && lateTipEditing?.value !== 'true') {
         throw new TipSubmissionError('Tipp-Deadline ist abgelaufen')
       }
 

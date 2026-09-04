@@ -251,6 +251,26 @@ export async function setRegistrationEnabled(
   }
 }
 
+export async function setLateTipEditingEnabled(
+  enabled: boolean,
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin()
+    const parsedEnabled = z.boolean().safeParse(enabled)
+    if (!parsedEnabled.success) return { error: 'Ungültiger Freigabestatus' }
+    await prisma.appSetting.upsert({
+      where: { key: 'lateTipEditingEnabled' },
+      update: { value: String(parsedEnabled.data) },
+      create: { key: 'lateTipEditingEnabled', value: String(parsedEnabled.data) },
+    })
+    revalidatePath('/admin')
+    revalidatePath('/tippen')
+    return { success: true }
+  } catch {
+    return { error: 'Freigabe für nachträgliche Tipps konnte nicht geändert werden' }
+  }
+}
+
 export async function exportAppBackup(currentPassword: string): Promise<
   | { error: string }
   | {

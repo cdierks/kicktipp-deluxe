@@ -3,10 +3,11 @@ import Link from 'next/link'
 import { getVerifiedUser } from '@/lib/auth-guards'
 import { prisma } from '@/lib/prisma'
 import { CLUBS } from '@/lib/clubs'
-import { getRegistrationEnabled } from '@/lib/settings'
+import { getLateTipEditingEnabled, getRegistrationEnabled } from '@/lib/settings'
 import { Button } from '@/components/ui/button'
-import { IconUsers, IconCalendarEvent, IconBallFootball, IconShirt, IconPalette, IconUserPlus, IconUserOff, IconChevronRight } from '@/components/app-icons'
+import { IconUsers, IconCalendarEvent, IconBallFootball, IconShirt, IconPalette, IconUserPlus, IconUserOff, IconChevronRight, IconLock, IconPencil } from '@/components/app-icons'
 import { RegistrationToggle } from './registration-toggle'
+import { LateTipToggle } from './late-tip-toggle'
 import { BackupPanel } from './backup-panel'
 import { PageHeader } from '@/components/page-header'
 import { PageFrame } from '@/components/page-frame'
@@ -15,12 +16,13 @@ export default async function AdminPage() {
   const user = await getVerifiedUser()
   if (user?.role !== 'ADMIN') redirect('/dashboard')
 
-  const [userCount, matchdayCount, activeMatchday, colorCount, registrationEnabled] = await Promise.all([
+  const [userCount, matchdayCount, activeMatchday, colorCount, registrationEnabled, lateTipEditingEnabled] = await Promise.all([
     prisma.user.count(),
     prisma.matchday.count(),
     prisma.matchday.findFirst({ where: { status: 'ACTIVE' }, include: { season: true } }),
     prisma.colorPalette.count(),
     getRegistrationEnabled(),
+    getLateTipEditingEnabled(),
   ])
 
   return (
@@ -59,7 +61,7 @@ export default async function AdminPage() {
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-3 2xl:gap-8">
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4 2xl:gap-8">
         <section className="surface rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-100">
@@ -91,6 +93,24 @@ export default async function AdminPage() {
             </div>
           </div>
           <RegistrationToggle enabled={registrationEnabled} />
+        </section>
+
+        <section className="surface rounded-xl p-4">
+          <div className="mb-4 flex items-center gap-2">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-100">
+              {lateTipEditingEnabled
+                ? <IconPencil className="h-4 w-4 text-primary-readable" strokeWidth={1.5} />
+                : <IconLock className="h-4 w-4 text-primary-readable" strokeWidth={1.5} />}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground">Nachträgliche Tipps</p>
+              <p className="text-xs text-muted-foreground">Tippabgabe nach Ablauf freigeben</p>
+            </div>
+          </div>
+          <LateTipToggle enabled={lateTipEditingEnabled} />
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">
+            Die Freigabe gilt für den aktiven Spieltag, bis sie wieder deaktiviert wird.
+          </p>
         </section>
 
         <BackupPanel />

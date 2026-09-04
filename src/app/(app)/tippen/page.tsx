@@ -12,6 +12,7 @@ import { MatchdayContext } from '@/components/matchday-context'
 import { getEffectiveTipDeadline, isDeadlinePassed } from '@/lib/matchday'
 import { createTipRevision } from '@/lib/tip-revision'
 import { formatAppDate } from '@/lib/date-format'
+import { getLateTipEditingEnabled } from '@/lib/settings'
 
 export default async function TippenPage() {
   const session = await getSession()
@@ -34,10 +35,13 @@ export default async function TippenPage() {
     )
   }
 
-  const existingTips = await prisma.tip.findMany({
-    where: { userId: session.user.id, match: { matchdayId: matchday.id } },
-    select: { matchId: true, homeScore: true, awayScore: true, isJoker: true },
-  })
+  const [existingTips, lateTipEditingEnabled] = await Promise.all([
+    prisma.tip.findMany({
+      where: { userId: session.user.id, match: { matchdayId: matchday.id } },
+      select: { matchId: true, homeScore: true, awayScore: true, isJoker: true },
+    }),
+    getLateTipEditingEnabled(),
+  ])
 
   const tipMap = Object.fromEntries(existingTips.map((t) => [t.matchId, t]))
   const tipRevision = createTipRevision(existingTips)
@@ -46,6 +50,7 @@ export default async function TippenPage() {
     matchday.matches.map((match) => match.matchDate),
   )
   const deadlinePassed = isDeadlinePassed(effectiveDeadline)
+  const tipsEditable = !deadlinePassed || lateTipEditingEnabled
 
   return (
     <PageFrame>
@@ -62,15 +67,15 @@ export default async function TippenPage() {
         aside={
           <div
             className={
-              deadlinePassed
+              deadlinePassed && !lateTipEditingEnabled
                 ? 'rounded-lg border border-error-300 bg-error-100 px-4 py-3 text-error-900 dark:border-error-700 dark:bg-error-900 dark:text-error-100'
                 : 'rounded-lg border border-primary-300 bg-primary-100 px-4 py-3 text-primary-900 dark:border-primary-700 dark:bg-primary-900 dark:text-primary-100'
             }
           >
             <p className="text-xs font-medium text-muted-foreground">
-              {deadlinePassed ? 'Deadline abgelaufen' : 'Tipp-Deadline'}
+              {deadlinePassed && lateTipEditingEnabled ? 'Nachträglich geöffnet' : deadlinePassed ? 'Deadline abgelaufen' : 'Tipp-Deadline'}
             </p>
-            <p className={deadlinePassed ? 'mt-2 text-lg font-bold' : 'mt-2 text-lg font-bold text-foreground'} suppressHydrationWarning>
+            <p className={deadlinePassed && !lateTipEditingEnabled ? 'mt-2 text-lg font-bold' : 'mt-2 text-lg font-bold text-foreground'} suppressHydrationWarning>
               {formatAppDate(effectiveDeadline, {
                 weekday: 'short',
                 day: 'numeric',
@@ -81,7 +86,9 @@ export default async function TippenPage() {
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               {deadlinePassed
-                ? 'Dieser Spieltag ist bereits gesperrt.'
+                ? lateTipEditingEnabled
+                  ? 'Der Admin erlaubt nachträgliche Eingaben.'
+                  : 'Dieser Spieltag ist bereits gesperrt.'
                 : 'Danach werden alle Eingaben geschlossen.'}
             </p>
           </div>
@@ -95,7 +102,7 @@ export default async function TippenPage() {
             Für diesen Spieltag wurden noch keine Begegnungen synchronisiert.
           </AlertDescription>
         </Alert>
-      ) : deadlinePassed ? (
+      ) : !tipsEditable ? (
         <Alert variant="destructive">
           <AlertTitle>Tipps geschlossen</AlertTitle>
           <AlertDescription>
