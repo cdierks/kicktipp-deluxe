@@ -23,17 +23,17 @@ import { Button } from '@/components/ui/button'
 import { getEvaluatedSeasonMatchdays } from '@/lib/matchday'
 
 const HIT_COLORS = {
-  exact: 'var(--color-primary-800)',
-  diff: 'var(--color-primary-600)',
-  outcome: 'var(--color-primary-300)',
-  miss: 'var(--color-neutral-400)',
+  exact: 'var(--chart-hit-exact)',
+  diff: 'var(--chart-hit-diff)',
+  outcome: 'var(--chart-hit-outcome)',
+  miss: 'var(--chart-miss)',
 }
 
 const JOKER_COLORS = {
-  exact: 'var(--color-warning-700)',
-  diff: 'var(--color-warning-500)',
-  outcome: 'var(--color-warning-300)',
-  miss: 'var(--color-neutral-400)',
+  exact: 'var(--chart-joker-exact)',
+  diff: 'var(--chart-joker-diff)',
+  outcome: 'var(--chart-joker-outcome)',
+  miss: 'var(--chart-miss)',
 }
 
 function normalizeHexColor(color: string | null | undefined) {
@@ -68,7 +68,7 @@ export default async function SpielerPage({
 
   const isMe = session.user.id === user.id
   const club = user.favoriteTeam ? getClubByName(user.favoriteTeam) : undefined
-  const playerColor = normalizeHexColor(user.color) ?? 'var(--color-primary-600)'
+  const playerColor = normalizeHexColor(user.color) ?? 'var(--chart-1)'
 
   const activeSeason = await prisma.season.findFirst({
     where: { active: true },

@@ -97,28 +97,28 @@ interface Props {
 
 // Fallback palette used when a user has no chosen color.
 const CHART_COLORS = [
-  'var(--color-primary-600)',
-  'var(--color-secondary-600)',
-  'var(--color-success-700)',
-  'var(--color-warning-600)',
-  'var(--color-error-600)',
-  'var(--color-primary-400)',
-  'var(--color-secondary-400)',
-  'var(--color-neutral-600)',
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+  'var(--chart-6)',
+  'var(--chart-7)',
+  'var(--chart-8)',
 ]
 
 const HIT_COLORS = {
-  exact:   'var(--color-primary-800)',
-  diff:    'var(--color-primary-600)',
-  outcome: 'var(--color-primary-300)',
-  miss:    'var(--color-neutral-400)',
+  exact:   'var(--chart-hit-exact)',
+  diff:    'var(--chart-hit-diff)',
+  outcome: 'var(--chart-hit-outcome)',
+  miss:    'var(--chart-miss)',
 }
 
 const JOKER_COLORS = {
-  fail: 'var(--color-neutral-400)',
-  outcome: 'var(--color-warning-300)',
-  diff: 'var(--color-warning-500)',
-  exact: 'var(--color-warning-700)',
+  fail: 'var(--chart-miss)',
+  outcome: 'var(--chart-joker-outcome)',
+  diff: 'var(--chart-joker-diff)',
+  exact: 'var(--chart-joker-exact)',
 }
 
 const LINE_PATTERNS = [undefined, '7 3', '2 3', '9 3 2 3', '5 2 1 2'] as const

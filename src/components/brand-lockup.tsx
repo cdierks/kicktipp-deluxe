@@ -16,7 +16,7 @@ export function BrandLockup({
     <>
       <span
         className={cn(
-          'brand-mark relative flex shrink-0 items-center justify-center border border-primary-300 bg-primary-600 text-neutral-50 dark:border-primary-700 dark:bg-primary-500 dark:text-neutral-50',
+          'brand-mark relative flex shrink-0 items-center justify-center bg-brand-orange text-brand-orange-foreground',
           compact ? 'size-10 rounded-xl' : 'size-11 rounded-xl',
         )}
       >
@@ -37,7 +37,7 @@ export function BrandLockup({
             compact ? 'text-lg leading-5 tracking-[-0.02em]' : 'text-3xl leading-none',
           )}
         >
-          Kicktipp<span className="text-primary-readable">.</span>Deluxe
+          Kicktipp<span className="text-brand-orange-readable">.</span>Deluxe
         </span>
         <span
           className={cn(

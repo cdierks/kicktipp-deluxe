@@ -30,7 +30,7 @@ export function MobileBottomNavigation() {
               className={cn(
                 'mobile-bottom-tab relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-[18px] px-1 text-neutral-700 outline-none dark:text-neutral-200',
                 'focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-1 focus-visible:ring-offset-neutral-50 dark:focus-visible:ring-primary-400 dark:focus-visible:ring-offset-neutral-900',
-                item.active && 'font-semibold text-primary-800 dark:text-primary-100',
+                item.active && 'font-semibold text-primary-600 dark:text-neutral-50',
               )}
             >
               {item.active && (

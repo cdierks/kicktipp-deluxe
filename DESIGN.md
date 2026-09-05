@@ -3,77 +3,77 @@ name: Kicktipp Deluxe
 description: A compact Bundesliga match center for private prediction leagues.
 colorRamps:
   primary:
-    50: "oklch(97.18% 0.01 258.36)"
-    100: "oklch(93.24% 0.02 263.20)"
-    200: "oklch(88.21% 0.04 261.52)"
-    300: "oklch(80.26% 0.07 259.63)"
-    400: "oklch(70.34% 0.10 260.52)"
-    500: "oklch(61.26% 0.14 265.06)"
-    600: "oklch(53.74% 0.16 268.13)"
-    700: "oklch(46.18% 0.15 269.98)"
-    800: "oklch(42.74% 0.13 271.73)"
-    900: "oklch(38.13% 0.10 271.51)"
-    950: "oklch(28.64% 0.06 274.29)"
+    50: "oklch(96.688% 0.00989 267.359)"
+    100: "oklch(93.601% 0.01746 264.484)"
+    200: "oklch(88.687% 0.02958 264.413)"
+    300: "oklch(85.261% 0.04048 269.932)"
+    400: "oklch(80.550% 0.05196 268.036)"
+    500: "oklch(54.342% 0.09676 261.914)"
+    600: "oklch(33.722% 0.11002 262.626)"
+    700: "oklch(30.158% 0.09487 262.296)"
+    800: "oklch(27.676% 0.08054 261.518)"
+    900: "oklch(24.978% 0.06870 261.761)"
+    950: "oklch(20.703% 0.04721 261.566)"
   secondary:
-    50: "oklch(98.14% 0.01 196.80)"
-    100: "oklch(94.89% 0.03 199.04)"
-    200: "oklch(90.10% 0.06 200.44)"
-    300: "oklch(83.22% 0.09 201.27)"
-    400: "oklch(74.48% 0.11 202.86)"
-    500: "oklch(66.30% 0.10 204.92)"
-    600: "oklch(56.96% 0.09 210.37)"
-    700: "oklch(49.32% 0.07 212.00)"
-    800: "oklch(43.40% 0.06 213.91)"
-    900: "oklch(38.60% 0.05 218.94)"
-    950: "oklch(29.12% 0.04 220.82)"
+    50: "oklch(96.838% 0.01079 256.695)"
+    100: "oklch(94.211% 0.01945 252.881)"
+    200: "oklch(89.293% 0.03542 250.877)"
+    300: "oklch(81.899% 0.05804 251.744)"
+    400: "oklch(73.622% 0.07941 252.958)"
+    500: "oklch(65.517% 0.09237 252.730)"
+    600: "oklch(50.735% 0.10287 251.304)"
+    700: "oklch(43.340% 0.08752 250.993)"
+    800: "oklch(38.594% 0.07204 250.809)"
+    900: "oklch(34.486% 0.05950 250.717)"
+    950: "oklch(27.173% 0.04445 252.093)"
   neutral:
-    50: "oklch(97.59% 0.00 264.70)"
-    100: "oklch(94.87% 0.01 264.61)"
-    200: "oklch(88.69% 0.01 259.84)"
-    300: "oklch(78.62% 0.02 259.20)"
-    400: "oklch(66.51% 0.04 256.79)"
-    500: "oklch(55.44% 0.04 257.42)"
-    600: "oklch(48.62% 0.04 260.28)"
-    700: "oklch(42.19% 0.03 261.30)"
-    800: "oklch(38.08% 0.03 260.61)"
-    900: "oklch(34.77% 0.02 264.23)"
-    950: "oklch(27.17% 0.01 261.69)"
+    50: "oklch(98.427% 0.00395 106.472)"
+    100: "oklch(95.375% 0.00664 106.525)"
+    200: "oklch(92.735% 0.00678 97.357)"
+    300: "oklch(83.024% 0.01234 106.665)"
+    400: "oklch(69.279% 0.01573 106.803)"
+    500: "oklch(53.197% 0.01374 106.858)"
+    600: "oklch(49.393% 0.01090 106.792)"
+    700: "oklch(40.340% 0.00982 106.832)"
+    800: "oklch(30.775% 0.00701 106.804)"
+    900: "oklch(26.336% 0.00547 106.769)"
+    950: "oklch(22.567% 0.00379 106.700)"
   success:
-    50: "oklch(98.47% 0.04 125.15)"
-    100: "oklch(96.68% 0.08 127.45)"
-    200: "oklch(94.08% 0.15 129.36)"
-    300: "oklch(91.47% 0.22 131.78)"
-    400: "oklch(87.85% 0.26 135.62)"
-    500: "oklch(80.94% 0.24 136.18)"
-    600: "oklch(68.39% 0.21 136.57)"
-    700: "oklch(56.01% 0.17 136.51)"
-    800: "oklch(47.15% 0.14 135.90)"
-    900: "oklch(41.92% 0.12 135.79)"
-    950: "oklch(28.58% 0.09 136.04)"
+    50: "oklch(97.173% 0.01071 158.849)"
+    100: "oklch(94.045% 0.02153 158.581)"
+    200: "oklch(87.983% 0.04423 160.899)"
+    300: "oklch(80.457% 0.07112 161.696)"
+    400: "oklch(73.126% 0.09014 161.300)"
+    500: "oklch(61.685% 0.09963 164.002)"
+    600: "oklch(52.329% 0.09738 161.703)"
+    700: "oklch(44.961% 0.08141 161.936)"
+    800: "oklch(39.268% 0.06796 162.892)"
+    900: "oklch(34.719% 0.05705 162.774)"
+    950: "oklch(26.761% 0.04042 162.720)"
   warning:
-    50: "oklch(98.10% 0.01 80.68)"
-    100: "oklch(95.89% 0.04 83.76)"
-    200: "oklch(90.76% 0.07 78.61)"
-    300: "oklch(84.65% 0.11 75.25)"
-    400: "oklch(76.94% 0.14 65.62)"
-    500: "oklch(71.52% 0.16 57.45)"
-    600: "oklch(65.30% 0.17 49.43)"
-    700: "oklch(56.04% 0.15 45.69)"
-    800: "oklch(47.56% 0.12 43.57)"
-    900: "oklch(41.47% 0.10 44.61)"
-    950: "oklch(27.10% 0.06 42.10)"
+    50: "oklch(97.922% 0.01512 90.233)"
+    100: "oklch(95.043% 0.03459 88.776)"
+    200: "oklch(89.330% 0.07004 88.250)"
+    300: "oklch(83.810% 0.10430 85.161)"
+    400: "oklch(79.274% 0.12824 84.163)"
+    500: "oklch(75.041% 0.13648 78.023)"
+    600: "oklch(64.421% 0.12544 75.449)"
+    700: "oklch(53.595% 0.10375 73.810)"
+    800: "oklch(46.154% 0.08445 72.608)"
+    900: "oklch(40.668% 0.06818 72.401)"
+    950: "oklch(28.985% 0.04425 75.542)"
   error:
-    50: "oklch(97.05% 0.01 17.51)"
-    100: "oklch(94.21% 0.03 17.71)"
-    200: "oklch(89.37% 0.05 15.17)"
-    300: "oklch(81.12% 0.10 16.17)"
-    400: "oklch(71.81% 0.15 17.70)"
-    500: "oklch(63.71% 0.20 19.85)"
-    600: "oklch(57.36% 0.21 20.41)"
-    700: "oklch(50.04% 0.19 19.51)"
-    800: "oklch(44.38% 0.16 16.96)"
-    900: "oklch(40.17% 0.14 13.73)"
-    950: "oklch(26.53% 0.09 15.24)"
+    50: "oklch(96.729% 0.01211 4.745)"
+    100: "oklch(93.497% 0.02492 2.092)"
+    200: "oklch(87.364% 0.04774 3.348)"
+    300: "oklch(78.640% 0.08776 3.794)"
+    400: "oklch(69.768% 0.12701 6.360)"
+    500: "oklch(60.139% 0.16670 8.751)"
+    600: "oklch(51.911% 0.17223 10.828)"
+    700: "oklch(45.502% 0.15252 11.122)"
+    800: "oklch(40.385% 0.12747 9.782)"
+    900: "oklch(36.188% 0.10628 7.817)"
+    950: "oklch(26.068% 0.07385 6.912)"
 typography:
   display:
     fontFamily: "Inter, sans-serif"
@@ -172,21 +172,29 @@ Die Primary-Rampe führt Aktionen und Auswahl, Secondary liefert Orientierung, u
 
 ### Primary
 
-- **Match Indigo:** Primäre Aktionen, aktuelle Navigation, Fokus-Ring und ausgewählte Zustände.
+- **Marineblau (#16336F):** Primäre Aktionen, aktuelle Navigation, Fokus-Ring und ausgewählte Zustände.
 
 ### Secondary
 
-- **Pitch Cyan:** Sekundäre Aktionen, Informationszustände und dezente Akzentflächen mit dunkler Schrift.
+- **Abgestuftes Blau:** Sekundäre Aktionen, Informationszustände und dezente Akzentflächen mit dunkler Schrift.
 
 ### Tertiary
 
-- **Success:** Abgeschlossene oder erfolgreiche Zustände mit Neutral-950 als Vordergrund.
-- **Warning:** Fristen, Aufmerksamkeit und riskante Zustände mit Neutral-950 als Vordergrund.
-- **Error:** Fehler und destruktive Aktionen; Light nutzt Error-600 mit Neutral-50, Dark Error-400 mit Neutral-950.
+- **Success (ruhiges Smaragdgrün):** Abgeschlossene oder erfolgreiche Zustände mit Neutral-950 als Vordergrund.
+- **Warning (Amber):** Fristen, Aufmerksamkeit und riskante Zustände mit Neutral-950 als Vordergrund.
+- **Error (kühles Rot):** Fehler und destruktive Aktionen; Light nutzt Error-600 mit Neutral-50, Dark Error-400 mit Neutral-950.
 
 ### Neutral
 
 - **Neutral 50–950:** Vollständige Grundlage für Text, Hintergründe, Borders, Muted-Flächen, Sidebar und Dark-Mode-Abstufungen.
+
+### Corporate-Akzent
+
+Rotorange (#FE492A) ist ausschließlich der Marke vorbehalten: Hintergrund des KD-Zeichens und Punkt in „Kicktipp.Deluxe“. Die Beschriftung des Zeichens nutzt Neutral-950. Der Punkt verwendet im Hellmodus das kontrastreichere #BF351F; im Dunkelmodus nutzen beide Akzente das weichere #F77960. Buttons und Links bleiben blau. Aktive Navigationsflächen verwenden warmes Steingrau mit marineblauer Schrift im Hellmodus sowie helleres Graphit mit warmweißer Schrift im Dunkelmodus. Die Tokens `brand-orange`, `brand-orange-foreground` und `brand-orange-readable` trennen Marke und Fehlerstatus.
+
+### Warmer Graphit
+
+Die Neutral-Rampe nimmt die Temperatur des Creme-Ankers #F0EEDF auf, ohne eine beigefarbene Arbeitsfläche zu erzeugen. Hell: äußerer Rahmen #E8E7E2, Inhaltsfläche #FAFAF7, Sidebar und abgesetzte Flächen #F0F0EB. Dunkel: Hintergrund #1C1C1A, Inhaltsfläche #252522, erhöhte Flächen #30302C. Hellblau #B1BFE2 trägt primäre Aktionen im Dunkelmodus; Fließtext bleibt warmes Fastweiß.
 
 ### Named Rules
 
@@ -194,7 +202,9 @@ Die Primary-Rampe führt Aktionen und Auswahl, Secondary liefert Orientierung, u
 
 **The Domain Color Rule.** Gespeicherte Spielerfarben und originale Vereinslogos bleiben unangetastet. Tabellenzonen und fachliche Diagrammkategorien verwenden ausschließlich die dokumentierten Rampen.
 
-**The Closed Palette Rule.** Alle UI-, Status-, Tabellen- und Diagrammfarben stammen aus den sechs dokumentierten OKLCH-Rampen. Nur gespeicherte Spielerfarben und originale Vereinslogos sind fachliche Ausnahmen; `transparent`, `currentColor` und funktionale Alpha-Zustände gelten nicht als zusätzliche Farbfamilien.
+**The Closed Palette Rule.** Alle UI-, Status-, Tabellen- und Diagrammfarben stammen aus den sechs dokumentierten OKLCH-Rampen und den drei Corporate-Akzent-Tokens. Nur gespeicherte Spielerfarben und originale Vereinslogos sind fachliche Ausnahmen; `transparent`, `currentColor` und funktionale Alpha-Zustände gelten nicht als zusätzliche Farbfamilien.
+
+Diagramme verwenden themeabhängige `chart-1` bis `chart-8` sowie gemeinsame `chart-hit-*`, `chart-joker-*` und `chart-miss`-Tokens. Dadurch bleiben Treffer- und Jokerkategorien in Statistik und Spielerprofil auch auf Graphit erkennbar. Gespeicherte Spielerfarben haben weiterhin Vorrang.
 
 ### Semantic Readability Tokens
 
@@ -269,6 +279,7 @@ Die App verwendet eine klar begrenzte Ebenenhierarchie. Die Sidebar und die geme
 ## Application frame
 
 - **Maximale Inhaltsbreite:** 100rem für jede authentifizierte Route.
+- **Desktop-Außenrahmen:** Ab 64rem jeweils 16px Außenrand und sichtbarer Abstand zwischen Sidebar und Content-Plane; ab 90rem jeweils 24px. Die nutzbare Sidebar-Breite bleibt erhalten. Container, Platzhalter und Content-Mindesthöhe berücksichtigen denselben `app-frame-gap`, auch bei eingeklappter Sidebar.
 - **Responsive Gutter:** mobil 12px horizontal und 16px vertikal, ab `sm` 16px, ab `lg` 24px und ab `2xl` 32px.
 - **Seitenrhythmus:** 24px zwischen Hauptgruppen, ab `2xl` 32px; interne Gruppen verwenden 8, 12 oder 16px.
 - **Mobile:** Die Content-Plane bleibt vollflächig und ohne äußeren Schatten. Raised Panels verwenden nur ihre kurze lokale Tiefe.
@@ -280,7 +291,7 @@ Die App verwendet eine klar begrenzte Ebenenhierarchie. Die Sidebar und die geme
 
 - **Shape:** kompakt und leicht gerundet (10px).
 - **Primary:** Light nutzt Primary-600 mit Neutral-50, Dark Primary-400 mit Neutral-950; 40px Höhe und 16px horizontaler Innenabstand.
-- **Hover / Focus:** leichte Tonverschiebung, klarer Indigo-Ring und funktionale 150–200-ms-Übergänge.
+- **Hover / Focus:** leichte Tonverschiebung, klarer blauer Ring und funktionale 150–200-ms-Übergänge.
 - **Secondary / Ghost:** Secondary-Rampe oder eine feste Neutral-Fläche; inaktive Zustände tragen keine gesättigte Farbe.
 
 ### Chips
@@ -304,9 +315,9 @@ Die App verwendet eine klar begrenzte Ebenenhierarchie. Die Sidebar und die geme
 
 ### Navigation
 
-Ab 64rem ist die Sidebar eine eigenständige Layered-Material-Ebene: 17.5rem breit und auf 4rem einklappbar. Spieltag, Tippen, Bundesliga und Statistiken bilden die fachliche Navigation; Profilzugriffe liegen ausschließlich im Kontomenü und Admin erscheint als getrennte Berechtigungsgruppe. Aktive Ziele nutzen eine eingelassene Primary-Fläche, Hover-Zustände eine kurz angehobene Neutral-Fläche. Tooltips sichern die Erkennbarkeit im eingeklappten Zustand.
+Ab 64rem ist die Sidebar eine eigenständige Layered-Material-Ebene: mit 16.5rem nutzbarer Breite und auf 4rem einklappbar; hinzu kommt der responsive Außenabstand. Spieltag, Tippen, Bundesliga und Statistiken bilden die fachliche Navigation; Profilzugriffe liegen ausschließlich im Kontomenü und Admin erscheint als getrennte Berechtigungsgruppe. Aktive Ziele nutzen eine eingelassene Neutral-200-Fläche mit Primary-600-Schrift (Dark: Neutral-700 mit Neutral-50-Schrift), Hover-Zustände eine kurz angehobene Neutral-Fläche. Tooltips sichern die Erkennbarkeit im eingeklappten Zustand.
 
-Unter 64rem bleiben dieselben vier Ziele als permanente Bottom-Tabs sichtbar. Eine einzige schwebende Regular-Liquid-Glass-Fläche nutzt direkte Alpha-Abstufungen aus Neutral, `backdrop-filter: blur(20px) saturate(135%)` und einen kurzen Schatten. Nur der aktive Tab erhält einen gemeinsamen beweglichen Primary-Lens; die Tabs selbst erzeugen keine weiteren Glasflächen. Ohne Filterunterstützung oder bei reduzierter Transparenz wird die Fläche opaker. Konto, Theme und Admin liegen im Avatar-Sheet der Primary-Kopfzeile.
+Unter 64rem bleiben dieselben vier Ziele als permanente Bottom-Tabs sichtbar. Eine einzige schwebende Regular-Liquid-Glass-Fläche nutzt direkte Alpha-Abstufungen aus Neutral, `backdrop-filter: blur(28px) saturate(135%)` bei 64% Deckkraft. Warmes Milchglas im Hellmodus und warmes Rauchglas im Dunkelmodus erhalten eine obere Lichtkante, einen kurzen Kontaktschatten und einen weichen Schatten (`0 8px 24px -4px`). Nur der aktive Tab erhält eine gemeinsame bewegliche Auswahlfläche aus warmem Steingrau (Neutral-200 bei 85% Deckkraft; Dark: Neutral-700 bei 88% Deckkraft); die Tabs selbst erzeugen keine weiteren Glasflächen. Ohne Filterunterstützung ist die Fläche deckend; reduzierte Transparenz nutzt 96% Deckkraft mit 8px Blur. Erhöhter Kontrast verwendet eine deckende Fläche ohne Blur. Beschriftungen sind immer deckend. Konto, Theme und Admin liegen im Avatar-Sheet der Primary-Kopfzeile.
 
 Die mobile Spieltagsnavigation reserviert die vorherige Position immer für einen 44-px-Pfeilbutton. Am ersten verfügbaren Spieltag bleibt er sichtbar, trägt einen verständlichen Accessible Name und verwendet den nativen Disabled-State; Desktop behält an dieser Stelle seine bestehende Leerstelle.
 
