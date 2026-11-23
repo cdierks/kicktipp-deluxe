@@ -7,6 +7,7 @@ import { listStagger, panelEnter, statusPulse } from '@/lib/motion'
 import { toast } from 'sonner'
 import { submitAllTips } from '@/actions/tip.actions'
 import { ClubIcon } from '@/components/club-icon'
+import { ScoreInput, JokerButton, HeroPanel, JokerMark } from '@/components/design-primitives'
 import { cn } from '@/lib/utils'
 import { getClubByName } from '@/lib/clubs'
 import { IconCheck, IconCircleCheckFilled, IconLoader2, IconPokerChip, IconAlertTriangle } from '@/components/app-icons'
@@ -31,6 +32,7 @@ interface TipEntry {
 interface Props {
   matches: Match[]
   existingTips: Record<string, TipEntry>
+  onFocusedMatchChange?: (teams: [string, string] | null) => void
 }
 
 const AUTOSAVE_DELAY_MS = 700
@@ -39,7 +41,7 @@ const MAX_AUTOSAVE_RETRIES = 2
 
 type SaveState = 'idle' | 'dirty' | 'saving' | 'saved' | 'error'
 
-export function TipForm({ matches, existingTips }: Props) {
+export function TipForm({ matches, existingTips, onFocusedMatchChange }: Props) {
   const router = useRouter()
   const prefersReducedMotion = useReducedMotion()
   const [tips, setTips] = useState<Record<string, { home: string; away: string }>>(
@@ -56,6 +58,8 @@ export function TipForm({ matches, existingTips }: Props) {
   const [jokerMatchId, setJokerMatchId] = useState<string | null>(
     matches.find((m) => existingTips[m.id]?.isJoker === true)?.id ?? null,
   )
+  const [jokerPicking, setJokerPicking] = useState(false)
+  const scoreRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const [activeField, setActiveField] = useState<{ matchId: string; field: 'home' | 'away' } | null>(null)
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [statusMessage, setStatusMessage] = useState('Alle Änderungen gespeichert')
@@ -108,6 +112,11 @@ export function TipForm({ matches, existingTips }: Props) {
       setJokerMatchId(null)
     }
     setTips((prev) => ({ ...prev, [matchId]: { ...prev[matchId], [field]: num } }))
+    if (num.length === 1) {
+      const current = matches.findIndex(match => match.id === matchId)
+      const nextKey = field === 'home' ? `${matchId}:away` : current < matches.length - 1 ? `${matches[current + 1].id}:home` : null
+      if (nextKey) requestAnimationFrame(() => scoreRefs.current[nextKey]?.focus())
+    }
   }
 
   function toggleJoker(matchId: string) {
@@ -119,6 +128,7 @@ export function TipForm({ matches, existingTips }: Props) {
     setHasInteracted(true)
     setSaveState('dirty')
     setJokerMatchId((prev) => (prev === matchId ? null : matchId))
+    setJokerPicking(false)
   }
 
   function queueSave(
@@ -195,7 +205,7 @@ export function TipForm({ matches, existingTips }: Props) {
       setStatusMessage(
         containsPartialTips
           ? 'Gespeichert. Unvollständige Eingaben gelten noch nicht als Tipp.'
-          : 'Alle Änderungen gespeichert',
+          : 'Alle Tipps gespeichert · gerade eben',
       )
     }).catch(() => handleLatestFailure('Tipps konnten nicht gespeichert werden', true))
   }
@@ -267,303 +277,36 @@ export function TipForm({ matches, existingTips }: Props) {
     saveState === 'error' && 'text-error-readable',
   )
 
-  return (
-    <motion.div
-      variants={prefersReducedMotion ? undefined : panelEnter}
-      initial={prefersReducedMotion ? false : 'hidden'}
-      animate="show"
-    >
-      <div className="space-y-4">
-        {!jokerMatchId && (
-          <div className="rounded-lg border border-warning-300 bg-warning-100 px-4 py-3 dark:border-warning-700 dark:bg-warning-900">
-            <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-warning-200 text-warning-800 dark:bg-warning-800 dark:text-warning-200">
-                <IconAlertTriangle className="h-4.5 w-4.5" strokeWidth={1.7} />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Joker noch nicht gesetzt
-                </p>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  Wähle ein vollständig getipptes Spiel aus und aktiviere den Joker, damit dessen Punkte doppelt zählen.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+  const completeCount = payload.length
+  const jokerMatch = matches.find(match => match.id === jokerMatchId)
+  const nextOpen = matches.find(match => tips[match.id].home === '' || tips[match.id].away === '')
+  const dateFormatter = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', timeZone: 'Europe/Berlin' })
+  let previousDay = ''
 
-        <div className="surface-raised overflow-hidden rounded-xl">
-          <motion.ul
-            variants={prefersReducedMotion ? undefined : listStagger}
-            initial={prefersReducedMotion ? false : 'hidden'}
-            animate="show"
-            className="list-none divide-y divide-border"
-          >
-            {matches.map((match) => {
-              const tip = tips[match.id]
-              const hasTip = tip.home !== '' && tip.away !== ''
-              const isActiveJoker = jokerMatchId === match.id
-              const isComplete = tip.home !== '' && tip.away !== ''
-              const matchDate = new Date(match.matchDate)
-              const homeClub = getClubByName(match.homeTeam)
-              const awayClub = getClubByName(match.awayTeam)
-
-              return (
-                <motion.li
-                  key={match.id}
-                  variants={prefersReducedMotion ? undefined : panelEnter}
-                  className={cn(
-                    'bg-card px-4 py-4 transition-colors',
-                    isActiveJoker
-                      ? 'bg-warning-100 dark:bg-warning-900'
-                      : isComplete
-                        ? 'bg-primary-50 dark:bg-primary-950'
-                        : '',
-                  )}
-                >
-                  <div className="sm:hidden">
-                    <div className="mb-3 flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          {homeClub
-                            ? <ClubIcon src={homeClub.iconUrl} fallbackSrc={homeClub.iconSourceUrl} label={match.homeTeam} className="h-5 w-5 shrink-0 object-contain" />
-                            : <span className="h-5 w-5 shrink-0" />}
-                          <span className="min-w-0 text-sm font-semibold text-foreground break-words">
-                            {match.homeTeam}
-                          </span>
-                        </div>
-                        <div className="mt-1 flex items-center gap-2">
-                          {awayClub
-                            ? <ClubIcon src={awayClub.iconUrl} fallbackSrc={awayClub.iconSourceUrl} label={match.awayTeam} className="h-5 w-5 shrink-0 object-contain" />
-                            : <span className="h-5 w-5 shrink-0" />}
-                          <span className="min-w-0 text-sm font-semibold text-foreground break-words">
-                            {match.awayTeam}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="shrink-0 text-right">
-                        {isComplete && (
-                          <div className="mb-2 flex justify-end">
-                            <span className="inline-flex items-center gap-1 rounded-full border border-success-400 bg-success-100 px-2 py-1 text-xs font-semibold text-success-900 dark:border-success-700 dark:bg-success-900 dark:text-success-100">
-                              <IconCircleCheckFilled className="h-3.5 w-3.5" />
-                              Getippt
-                            </span>
-                          </div>
-                        )}
-                        <p className="text-xs font-medium text-muted-foreground" suppressHydrationWarning>
-                          {formatAppDate(matchDate, { weekday: 'short', day: 'numeric', month: 'numeric' })}
-                        </p>
-                        <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-                          {formatAppDate(matchDate, { hour: '2-digit', minute: '2-digit' })} Uhr
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-center gap-2">
-                      <Input
-                        type="text"
-                        inputMode="numeric"
-                        aria-label={`Tipp für ${match.homeTeam} gegen ${match.awayTeam}`}
-                        value={tip.home}
-                        onChange={(e) => setScore(match.id, 'home', e.target.value)}
-                        onFocus={(e) => {
-                          setActiveField({ matchId: match.id, field: 'home' })
-                          e.currentTarget.select()
-                        }}
-                        onBlur={() => {
-                          setActiveField(null)
-                          queueSave(payload, hasPartialTips)
-                        }}
-                        className={cn(
-                          'h-12 w-12 rounded-xl text-center text-2xl font-bold tabular-nums',
-                          activeField?.matchId === match.id && activeField?.field === 'home'
-                            ? 'border-primary ring-1 ring-primary/30'
-                            : 'border-border focus:border-primary',
-                        )}
-                        placeholder={activeField?.matchId === match.id && activeField?.field === 'home' ? '' : '–'}
-                      />
-                      <span className="text-xl font-bold text-muted-foreground">:</span>
-                      <Input
-                        type="text"
-                        inputMode="numeric"
-                        aria-label={`Tipp für ${match.awayTeam} gegen ${match.homeTeam}`}
-                        value={tip.away}
-                        onChange={(e) => setScore(match.id, 'away', e.target.value)}
-                        onFocus={(e) => {
-                          setActiveField({ matchId: match.id, field: 'away' })
-                          e.currentTarget.select()
-                        }}
-                        onBlur={() => {
-                          setActiveField(null)
-                          queueSave(payload, hasPartialTips)
-                        }}
-                        className={cn(
-                          'h-12 w-12 rounded-xl text-center text-2xl font-bold tabular-nums',
-                          activeField?.matchId === match.id && activeField?.field === 'away'
-                            ? 'border-primary ring-1 ring-primary/30'
-                            : 'border-border focus:border-primary',
-                        )}
-                        placeholder={activeField?.matchId === match.id && activeField?.field === 'away' ? '' : '–'}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon-lg"
-                        onClick={() => toggleJoker(match.id)}
-                        onBlur={() => queueSave(payload, hasPartialTips)}
-                        disabled={!hasTip}
-                        className={cn(
-                          'ml-1 h-12 w-12 shrink-0 rounded-xl',
-                          isActiveJoker
-                            ? 'border-warning-400 bg-warning-100 text-warning-800 shadow-sm dark:bg-warning-900 dark:text-warning-200'
-                            : hasTip
-                              ? 'border-border text-muted-foreground hover:border-warning-400 hover:text-warning-700 dark:hover:text-warning-300'
-                              : 'border-border/30 text-muted-foreground/30 cursor-not-allowed',
-                        )}
-                        aria-pressed={isActiveJoker}
-                        aria-label={`Joker für ${match.homeTeam} gegen ${match.awayTeam}`}
-                        title="Joker – verdoppelt die Punkte"
-                      >
-                        <IconPokerChip className="h-5 w-5" strokeWidth={1.5} />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="hidden items-center gap-3 sm:flex">
-                    <div className="w-20 shrink-0">
-                      <p className="text-xs font-medium text-muted-foreground" suppressHydrationWarning>
-                        {formatAppDate(matchDate, { weekday: 'short', day: 'numeric', month: 'numeric' })}
-                      </p>
-                      <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-                        {formatAppDate(matchDate, { hour: '2-digit', minute: '2-digit' })} Uhr
-                      </p>
-                    </div>
-
-                    <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
-                      <span className="truncate text-right text-sm font-semibold text-foreground">
-                        {match.homeTeam}
-                      </span>
-                      {homeClub
-                        ? <ClubIcon src={homeClub.iconUrl} fallbackSrc={homeClub.iconSourceUrl} label={match.homeTeam} className="h-6 w-6 shrink-0 object-contain" />
-                        : <span className="h-6 w-6 shrink-0" />}
-                    </div>
-
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      <Input
-                        type="text"
-                        inputMode="numeric"
-                        aria-label={`Tipp für ${match.homeTeam} gegen ${match.awayTeam}`}
-                        value={tip.home}
-                        onChange={(e) => setScore(match.id, 'home', e.target.value)}
-                        onFocus={(e) => {
-                          setActiveField({ matchId: match.id, field: 'home' })
-                          e.currentTarget.select()
-                        }}
-                        onBlur={() => {
-                          setActiveField(null)
-                          queueSave(payload, hasPartialTips)
-                        }}
-                        className={cn(
-                          'h-12 w-12 rounded-xl text-center text-2xl font-bold tabular-nums',
-                          activeField?.matchId === match.id && activeField?.field === 'home'
-                            ? 'border-primary ring-1 ring-primary/30'
-                            : 'border-border focus:border-primary',
-                        )}
-                        placeholder={activeField?.matchId === match.id && activeField?.field === 'home' ? '' : '–'}
-                      />
-                      <span className="text-xl font-bold text-muted-foreground">:</span>
-                      <Input
-                        type="text"
-                        inputMode="numeric"
-                        aria-label={`Tipp für ${match.awayTeam} gegen ${match.homeTeam}`}
-                        value={tip.away}
-                        onChange={(e) => setScore(match.id, 'away', e.target.value)}
-                        onFocus={(e) => {
-                          setActiveField({ matchId: match.id, field: 'away' })
-                          e.currentTarget.select()
-                        }}
-                        onBlur={() => {
-                          setActiveField(null)
-                          queueSave(payload, hasPartialTips)
-                        }}
-                        className={cn(
-                          'h-12 w-12 rounded-xl text-center text-2xl font-bold tabular-nums',
-                          activeField?.matchId === match.id && activeField?.field === 'away'
-                            ? 'border-primary ring-1 ring-primary/30'
-                            : 'border-border focus:border-primary',
-                        )}
-                        placeholder={activeField?.matchId === match.id && activeField?.field === 'away' ? '' : '–'}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon-lg"
-                        onClick={() => toggleJoker(match.id)}
-                        onBlur={() => queueSave(payload, hasPartialTips)}
-                        disabled={!hasTip}
-                        className={cn(
-                          'ml-1 h-12 w-12 shrink-0 rounded-xl',
-                          isActiveJoker
-                            ? 'border-warning-400 bg-warning-100 text-warning-800 shadow-sm dark:bg-warning-900 dark:text-warning-200'
-                            : hasTip
-                              ? 'border-border text-muted-foreground hover:border-warning-400 hover:text-warning-700 dark:hover:text-warning-300'
-                              : 'border-border/30 text-muted-foreground/30 cursor-not-allowed',
-                        )}
-                        aria-pressed={isActiveJoker}
-                        aria-label={`Joker für ${match.homeTeam} gegen ${match.awayTeam}`}
-                        title="Joker – verdoppelt die Punkte"
-                      >
-                        <IconPokerChip className="h-5 w-5" strokeWidth={1.5} />
-                      </Button>
-                    </div>
-
-                    <div className="flex min-w-0 flex-1 items-center gap-2">
-                      {awayClub
-                        ? <ClubIcon src={awayClub.iconUrl} fallbackSrc={awayClub.iconSourceUrl} label={match.awayTeam} className="h-6 w-6 shrink-0 object-contain" />
-                        : <span className="h-6 w-6 shrink-0" />}
-                      <span className="truncate text-sm font-semibold text-foreground">
-                        {match.awayTeam}
-                      </span>
-                    </div>
-
-                    <div className="w-16 shrink-0">
-                      {isComplete && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-success-400 bg-success-100 px-2.5 py-1 text-xs font-semibold text-success-900 dark:border-success-700 dark:bg-success-900 dark:text-success-100">
-                          <IconCheck className="h-3.5 w-3.5" strokeWidth={2} />
-                          Fertig
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </motion.li>
-              )
-            })}
-          </motion.ul>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-2 px-0.5 text-xs">
-          <p>
-            {jokerMatchId
-              ? <span className="font-semibold text-warning-700 dark:text-warning-300">Joker gesetzt – Punkte zählen doppelt.</span>
-              : <span className="text-muted-foreground">Kein Joker aktiv. Chip-Button drücken zum Aktivieren.</span>}
-          </p>
-          <div className="flex items-center gap-2">
-            <p role="status" aria-live="polite" className={cn('inline-flex items-center gap-1.5', statusToneClass)}>
-              {saveState === 'saving' && (
-                <motion.span animate={prefersReducedMotion ? undefined : statusPulse} className="inline-flex">
-                  <IconLoader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.75} />
-                </motion.span>
-              )}
-              {statusMessage}
-            </p>
-            {saveState === 'error' && hasPendingSave.current && (
-              <Button type="button" variant="outline" size="sm" onClick={() => queueSave(payload, hasPartialTips)}>
-                Erneut versuchen
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  )
+  return <div className="space-y-6">
+    <HeroPanel label="Dein Tippstand" value={`${completeCount} / ${matches.length}`} aside={<div className="space-y-3"><p className="text-lg font-wide">{matches.length - completeCount === 1 ? '1 Spiel fehlt noch' : `${matches.length - completeCount} Spiele fehlen noch`}</p><div className="flex gap-1" aria-label="Tippfortschritt">{matches.map(match => <span key={match.id} className={cn('h-5 w-5 rounded-sm border border-hero-line', tips[match.id].home !== '' && tips[match.id].away !== '' ? 'bg-lime-300' : 'bg-transparent')} />)}</div><p className="text-sm text-hero-foreground/75">{jokerMatch ? `Joker: ${jokerMatch.homeTeam} – ${jokerMatch.awayTeam}` : 'Joker noch frei'}</p></div>}>
+      <p className="mt-3 text-sm text-hero-foreground/75">Spiele getippt</p>
+      <div className="mt-5 rounded-xl border border-lime-300/60 p-3">{jokerMatch ? <><p className="font-medium">Joker gesetzt · {jokerMatch.homeTeam} – {jokerMatch.awayTeam}</p><button type="button" className="mt-2 text-sm text-lime-300 underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-300" onClick={() => toggleJoker(jokerMatch.id)}>Joker entfernen</button></> : <><p className="font-medium">Joker noch nicht gesetzt</p><p className="mt-1 text-sm text-hero-foreground/75">Ein Spiel deiner Wahl zählt doppelt, bis zu 8 statt 4 Punkte. Setzen ist freiwillig, du kannst ihn bis zur Tippfrist verschieben</p><button type="button" disabled={completeCount === 0} onClick={() => setJokerPicking(true)} className="mt-3 min-h-11 rounded-xl bg-lime-300 px-4 font-semibold text-board-surface hover:bg-lime-200 disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-300">{completeCount === 0 ? 'Tippe zuerst ein Spiel' : 'Joker setzen'}</button><span className="ml-3 text-xs text-hero-foreground/75">{completeCount} {completeCount === 1 ? 'Spiel kommt' : 'Spiele kommen'} infrage</span></>}</div>
+    </HeroPanel>
+    <div className="flex flex-wrap items-center justify-between gap-3"><div role="status" aria-live="polite" className={cn('text-sm', statusToneClass)}>{saveState === 'saving' ? 'Speichert …' : statusMessage}{saveState === 'error' && <button type="button" onClick={() => queueSave(payload, hasPartialTips)} className="ml-2 underline">Erneut versuchen</button>}</div><button type="button" disabled={!nextOpen} onClick={() => scoreRefs.current[`${nextOpen?.id}:home`]?.focus()} className="min-h-9 rounded-lg border border-input px-3 text-sm hover:bg-muted disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">Nächstes offenes Spiel</button></div>
+    {jokerPicking && <div className="flex items-center justify-between gap-3 rounded-xl border border-lime-300 bg-you-soft p-3 text-sm"><span>Wähle mit ★ das Spiel, das doppelt zählen soll</span><button type="button" onClick={() => setJokerPicking(false)} className="min-h-9 underline focus-visible:outline-2 focus-visible:outline-ring">Abbrechen</button></div>}
+    <div className="surface-raised overflow-hidden rounded-2xl">{matches.map(match => {
+      const tip = tips[match.id]
+      const complete = tip.home !== '' && tip.away !== ''
+      const activeJoker = jokerMatchId === match.id
+      const day = dateFormatter.format(new Date(match.matchDate))
+      const showDay = day !== previousDay
+      previousDay = day
+      const homeClub = getClubByName(match.homeTeam)
+      const awayClub = getClubByName(match.awayTeam)
+      return <div key={match.id}>{showDay && <h2 className="border-y border-border bg-muted px-4 py-2 text-sm font-medium text-secondary-text">{day}</h2>}<div className={cn('grid min-h-20 items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 min-[900px]:grid-cols-[90px_minmax(0,1fr)_auto_minmax(0,1fr)_44px]', activeJoker && 'bg-you-soft', jokerPicking && complete && 'ring-1 ring-inset ring-ring')}>
+        <div className="text-xs text-secondary-text min-[900px]:block"><span>{formatAppDate(new Date(match.matchDate), { hour: '2-digit', minute: '2-digit' })}</span><span className="ml-2 min-[900px]:ml-0 min-[900px]:block">{complete ? '✓ Getippt' : 'Offen'}</span></div>
+        <div className="flex min-w-0 items-center gap-2 min-[900px]:justify-end">{homeClub && <ClubIcon src={homeClub.iconUrl} fallbackSrc={homeClub.iconSourceUrl} label={homeClub.name} className="size-6 shrink-0 object-contain" />}<span className="truncate text-sm font-medium">{match.homeTeam}</span></div>
+        <div className="flex items-center gap-1"><ScoreInput inputRef={node => { scoreRefs.current[`${match.id}:home`] = node }} label={`Heimtore ${match.homeTeam} gegen ${match.awayTeam}`} value={tip.home} onChange={value => setScore(match.id, 'home', value)} onFocus={() => { setActiveField({ matchId: match.id, field: 'home' }); onFocusedMatchChange?.([match.homeTeam, match.awayTeam]) }} onBlur={() => { setActiveField(null); queueSave(payload, hasPartialTips) }} /><span className="text-secondary-text">:</span><ScoreInput inputRef={node => { scoreRefs.current[`${match.id}:away`] = node }} label={`Auswärtstore ${match.awayTeam} gegen ${match.homeTeam}`} value={tip.away} onChange={value => setScore(match.id, 'away', value)} onFocus={() => { setActiveField({ matchId: match.id, field: 'away' }); onFocusedMatchChange?.([match.homeTeam, match.awayTeam]) }} onBlur={() => { setActiveField(null); queueSave(payload, hasPartialTips) }} /></div>
+        <div className="flex min-w-0 items-center gap-2">{awayClub && <ClubIcon src={awayClub.iconUrl} fallbackSrc={awayClub.iconSourceUrl} label={awayClub.name} className="size-6 shrink-0 object-contain" />}<span className="truncate text-sm font-medium">{match.awayTeam}</span></div>
+        <JokerButton active={activeJoker} disabled={!complete} candidate={jokerPicking && complete} onClick={() => toggleJoker(match.id)} label={`Joker für ${match.homeTeam} gegen ${match.awayTeam}`} />
+      </div></div>
+    })}</div>
+    <p className="text-sm text-secondary-text">{completeCount} von {matches.length} getippt · {jokerMatchId ? 'Joker gesetzt' : 'Joker noch frei'}</p>
+  </div>
 }

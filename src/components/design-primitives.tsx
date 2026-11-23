@@ -62,8 +62,8 @@ export function HeroPanel({ label, value, aside, children }: { label: string; va
   return <section className="hero-panel" aria-label={label}><div className="min-w-0"><p className="text-sm text-hero-foreground/75">{label}</p><p className="hero-value font-wide">{value}</p>{children}</div>{aside && <div className="hero-aside">{aside}</div>}</section>
 }
 
-export function ScoreInput({ value, onChange, onBlur, inputRef, label, disabled = false }: { value: string; onChange: (value: string) => void; onBlur?: () => void; inputRef?: Ref<HTMLInputElement>; label: string; disabled?: boolean }) {
-  return <input ref={inputRef} aria-label={label} inputMode="numeric" pattern="[0-9]*" maxLength={2} value={value} onChange={event => onChange(event.target.value.replace(/\D/g, '').slice(0, 2))} onBlur={onBlur} disabled={disabled} placeholder="–" className="score-input" />
+export function ScoreInput({ value, onChange, onBlur, inputRef, onFocus, label, disabled = false }: { value: string; onChange: (value: string) => void; onBlur?: () => void; inputRef?: Ref<HTMLInputElement>; onFocus?: () => void; label: string; disabled?: boolean }) {
+  return <input ref={inputRef} aria-label={label} inputMode="numeric" pattern="[0-9]*" maxLength={2} value={value} onChange={event => onChange(event.target.value.replace(/\D/g, '').slice(0, 2))} onBlur={onBlur} onFocus={onFocus} disabled={disabled} placeholder="–" className="score-input" />
 }
 
 export function JokerButton({ active, disabled, candidate = false, onClick, label }: { active: boolean; disabled: boolean; candidate?: boolean; onClick: () => void; label: string }) {

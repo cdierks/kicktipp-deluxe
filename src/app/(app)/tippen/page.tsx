@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { getActiveMatchday } from '@/lib/matchday'
 import { prisma } from '@/lib/prisma'
-import { TipForm } from './tip-form'
-import { ReducedStandingsTable } from './reduced-standings-table'
+import { TippenContent } from './tippen-content'
+import { fetchTable } from '@/lib/openligadb'
 import { PageHeader } from '@/components/page-header'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -43,6 +43,7 @@ export default async function TippenPage() {
     getLateTipEditingEnabled(),
   ])
 
+  const table = await fetchTable(matchday.season.year, { next: { revalidate: 300 } }).catch(() => [])
   const tipMap = Object.fromEntries(existingTips.map((t) => [t.matchId, t]))
   const tipRevision = createTipRevision(existingTips)
   const effectiveDeadline = getEffectiveTipDeadline(
@@ -110,27 +111,12 @@ export default async function TippenPage() {
           </AlertDescription>
         </Alert>
       ) : (
-        <div className="grid gap-6 2xl:gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
-          <TipForm
-            key={`${matchday.id}:${tipRevision}:${matchday.matches.map((match) => match.id).join(',')}`}
-            matches={matchday.matches}
-            existingTips={tipMap}
-          />
-          <Card className="surface-raised h-fit gap-0 py-0">
-            <CardHeader className="p-4 pb-3">
-              <p className="text-xs font-medium text-muted-foreground">
-                Bundesliga
-              </p>
-              <CardTitle className="text-lg">Tabellenstand</CardTitle>
-              <CardDescription>
-                Platz, Punkte und Differenz als schnelle Orientierung für deine Tipps.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ReducedStandingsTable year={matchday.season.year} />
-            </CardContent>
-          </Card>
-        </div>
+        <TippenContent
+          formKey={`${matchday.id}:${tipRevision}:${matchday.matches.map(match => match.id).join(',')}`}
+          matches={matchday.matches}
+          existingTips={tipMap}
+          table={table}
+        />
       )}
     </PageFrame>
   )
