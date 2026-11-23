@@ -1,5 +1,7 @@
 'use client'
 
+import './matchday-summary.css'
+
 import { Fragment, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ClubIcon } from '@/components/club-icon'
