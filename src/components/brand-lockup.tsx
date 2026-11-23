@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
@@ -16,19 +17,20 @@ export function BrandLockup({
     <>
       <span
         className={cn(
-          'brand-mark relative flex shrink-0 items-center justify-center bg-brand-orange text-brand-orange-foreground',
+          'brand-mark relative flex shrink-0 items-center justify-center overflow-hidden',
           compact ? 'size-10 rounded-xl' : 'size-11 rounded-xl',
         )}
       >
-        <span
+        <Image
+          src="/ktd-logo.png"
+          alt=""
           aria-hidden="true"
-          className={cn(
-            'font-sans font-bold leading-none tracking-[-0.06em]',
-            compact ? 'text-sm' : 'text-base',
-          )}
-        >
-          KD
-        </span>
+          width={512}
+          height={512}
+          priority
+          draggable={false}
+          className="size-full object-cover"
+        />
       </span>
       <span className="flex min-w-0 flex-col justify-center">
         <span
