@@ -1,110 +1,27 @@
-import type { ComponentProps, ComponentType } from 'react'
 import {
-  ArrowClockwise,
-  ArrowsDownUp,
-  BookmarkSimple,
-  CalendarBlank,
-  CaretDown,
-  CaretLeft,
-  CaretRight,
-  ChartBar,
-  Check,
-  CheckCircle,
-  Database,
-  DownloadSimple,
-  Envelope,
-  Fire,
-  Lock,
-  Medal,
-  Monitor,
-  Moon,
-  Palette,
-  PencilSimple,
-  Plus,
-  Scales,
-  Shield,
-  SignOut,
-  Smiley,
-  SoccerBall,
-  Spinner,
-  SquaresFour,
-  Star,
-  Sun,
-  Table,
-  Target,
-  Trash,
-  Trophy,
-  TShirt,
-  UploadSimple,
-  User,
-  UserMinus,
-  UserPlus,
-  Users,
-  Warning,
-  X,
-} from '@phosphor-icons/react/ssr'
-
-type IconProps = Omit<ComponentProps<typeof Sun>, 'weight'> & { strokeWidth?: number }
-
-function withWeight(Icon: ComponentType<ComponentProps<typeof Sun>>, weight: ComponentProps<typeof Sun>['weight'] = 'regular') {
-  return function WrappedIcon({ strokeWidth, ...props }: IconProps) {
-    // Legacy Lucide call sites express visual emphasis as stroke width. Map
-    // that intent to Phosphor's native weight scale instead of discarding it.
-    const resolvedWeight = weight === 'fill'
-      ? weight
-      : strokeWidth === undefined
-        ? weight
-        : strokeWidth <= 1
-          ? 'thin'
-          : strokeWidth <= 1.5
-            ? 'light'
-            : strokeWidth <= 2
-              ? 'regular'
-              : 'bold'
-
-    return <Icon {...props} weight={resolvedWeight} />
-  }
+  ArrowDownUp, ArrowRight, Bookmark, CalendarDays,
+  ChartColumn, Check, ChevronDown, ChevronLeft, ChevronRight, CircleAlert,
+  CircleCheck, CircleDot, Database, Download, Flame, LayoutDashboard,
+  LoaderCircle, Lock, LogOut, Mail, Medal, Monitor, Moon, Palette, Pencil,
+  Plus, RefreshCw, Scale, Shield, Shirt, Smile, Star, Sun, Table, Target, Trash2,
+  Trophy, Upload, User, UserPlus, UserRoundX, Users, X,
+} from 'lucide-react'
+export {
+  Sun as IconSun, Moon as IconMoon, Monitor as IconMonitor,
+  LogOut as IconLogout, LayoutDashboard as IconLayoutDashboard,
+  Pencil as IconPencil, User as IconUser, Shield as IconShield,
+  UserRoundX as IconUserOff, ChevronLeft as IconChevronLeft,
+  ChevronRight as IconChevronRight, ChevronDown as IconChevronDown,
+  Trophy as IconTrophy, Medal as IconMedal, CircleDot as IconBallFootball,
+  Table as IconTable, ChartColumn as IconChartBar, Star as IconPokerChip,
+  Check as IconCheck, CircleCheck as IconCircleCheckFilled,
+  LoaderCircle as IconLoader2, CircleAlert as IconAlertTriangle,
+  Scale as IconScale, Smile as IconMoodSmileBeam, Flame as IconFlame,
+  Target as IconTarget, RefreshCw as IconRefresh, Trash2 as IconTrash,
+  ArrowDownUp as IconArrowsSort, Bookmark as IconBookmark,
+  Download as IconDatabaseExport, Upload as IconDatabaseImport,
+  Palette as IconPalette, Mail as IconMail, Lock as IconLock,
+  Users as IconUsers, CalendarDays as IconCalendarEvent,
+  Shirt as IconShirt, UserPlus as IconUserPlus, Plus as IconPlus,
+  X as IconX, Database as IconDatabase,
 }
-
-export const IconSun = withWeight(Sun)
-export const IconMoon = withWeight(Moon)
-export const IconMonitor = withWeight(Monitor)
-export const IconLogout = withWeight(SignOut)
-export const IconLayoutDashboard = withWeight(SquaresFour)
-export const IconPencil = withWeight(PencilSimple)
-export const IconUser = withWeight(User)
-export const IconShield = withWeight(Shield)
-export const IconUserOff = withWeight(UserMinus)
-export const IconChevronLeft = withWeight(CaretLeft)
-export const IconChevronRight = withWeight(CaretRight)
-export const IconChevronDown = withWeight(CaretDown)
-export const IconTrophy = withWeight(Trophy)
-export const IconMedal = withWeight(Medal)
-export const IconBallFootball = withWeight(SoccerBall)
-export const IconTable = withWeight(Table)
-export const IconChartBar = withWeight(ChartBar)
-export const IconPokerChip = withWeight(Star)
-export const IconCheck = withWeight(Check)
-export const IconCircleCheckFilled = withWeight(CheckCircle, 'fill')
-export const IconLoader2 = withWeight(Spinner)
-export const IconAlertTriangle = withWeight(Warning)
-export const IconScale = withWeight(Scales)
-export const IconMoodSmileBeam = withWeight(Smiley)
-export const IconFlame = withWeight(Fire)
-export const IconTarget = withWeight(Target)
-export const IconRefresh = withWeight(ArrowClockwise)
-export const IconTrash = withWeight(Trash)
-export const IconArrowsSort = withWeight(ArrowsDownUp)
-export const IconBookmark = withWeight(BookmarkSimple)
-export const IconDatabaseExport = withWeight(DownloadSimple)
-export const IconDatabaseImport = withWeight(UploadSimple)
-export const IconPalette = withWeight(Palette)
-export const IconMail = withWeight(Envelope)
-export const IconLock = withWeight(Lock)
-export const IconUsers = withWeight(Users)
-export const IconCalendarEvent = withWeight(CalendarBlank)
-export const IconShirt = withWeight(TShirt)
-export const IconUserPlus = withWeight(UserPlus)
-export const IconPlus = withWeight(Plus)
-export const IconX = withWeight(X)
-export const IconDatabase = withWeight(Database)

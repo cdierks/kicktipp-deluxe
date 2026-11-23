@@ -62,10 +62,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         Zum Inhalt springen
       </a>
       <AppSidebar isAdmin={currentUser.role === 'ADMIN'} />
-      <SidebarInset id="main-content" tabIndex={-1} className="content-shell-surface min-h-dvh overflow-clip lg:overflow-hidden">
+      <SidebarInset id="main-content" tabIndex={-1} className="content-shell-surface min-h-dvh overflow-clip min-[760px]:overflow-hidden">
         <AppHeader isAdmin={currentUser.role === 'ADMIN'} matchday={headerMatchday} />
-        <div className="app-content-body w-full flex-1 px-3 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-4 sm:px-4 lg:px-6 lg:py-6 2xl:px-8 2xl:py-8">
-          <div className="mx-auto w-full max-w-[100rem]">
+        <div className="app-content-body w-full flex-1 px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-4 min-[760px]:px-8 min-[760px]:py-6">
+          <div className="mx-auto w-full max-w-[85rem]">
             {children}
           </div>
         </div>

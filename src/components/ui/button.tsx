@@ -5,17 +5,17 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-[background-color,color,border-color,box-shadow,transform] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive active:translate-y-px",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-[background-color,color,border-color,box-shadow,transform] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive active:scale-[.98]",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-sm shadow-neutral-200 hover:bg-primary-700 dark:shadow-none dark:hover:bg-primary-300",
+        default: "bg-lime-300 text-board-surface font-semibold hover:bg-lime-200",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm shadow-neutral-200 hover:bg-error-700 focus-visible:ring-error-300 dark:shadow-none dark:hover:bg-error-300 dark:focus-visible:ring-error-600",
         outline:
           "border border-border bg-background text-foreground shadow-xs hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:bg-neutral-900 dark:hover:border-primary-700 dark:hover:bg-primary-950 dark:hover:text-primary-100",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary-600 hover:text-neutral-50 dark:hover:bg-secondary-300 dark:hover:text-secondary-foreground",
+          "bg-lime-300 text-board-surface hover:bg-lime-200",
         ghost:
           "text-muted-foreground hover:bg-secondary-100 hover:text-secondary-950 dark:hover:bg-secondary-950 dark:hover:text-secondary-100",
         link: "text-primary-readable underline-offset-4 hover:underline",

@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import { Goal } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
@@ -17,20 +17,11 @@ export function BrandLockup({
     <>
       <span
         className={cn(
-          'brand-mark relative flex shrink-0 items-center justify-center overflow-hidden',
+          'brand-mark relative flex shrink-0 items-center justify-center bg-lime-300 text-board-surface',
           compact ? 'size-10 rounded-xl' : 'size-11 rounded-xl',
         )}
       >
-        <Image
-          src="/ktd-logo.png"
-          alt=""
-          aria-hidden="true"
-          width={512}
-          height={512}
-          priority
-          draggable={false}
-          className="size-full object-cover"
-        />
+        <Goal className="size-6" strokeWidth={1.5} aria-hidden="true" />
       </span>
       <span className="flex min-w-0 flex-col justify-center">
         <span
@@ -39,14 +30,14 @@ export function BrandLockup({
             compact ? 'text-lg leading-5 tracking-[-0.02em]' : 'text-3xl leading-none',
           )}
         >
-          Kicktipp<span className="text-brand-orange-readable">.</span>Deluxe
+          Kicktipp<span className="text-lime-300">.</span>Deluxe
         </span>
         <span
           className={cn(
-            'block truncate text-muted-foreground',
+            'block truncate text-sidebar-muted',
             compact
               ? 'mt-0.5 text-xs font-medium leading-4 tracking-normal'
-              : 'mt-0.5 text-xs font-semibold uppercase tracking-[0.2em]',
+              : 'mt-0.5 text-xs font-medium',
           )}
         >
           Bundesliga Tippspiel

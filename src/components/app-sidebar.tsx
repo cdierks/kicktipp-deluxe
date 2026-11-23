@@ -8,6 +8,7 @@ import { useTheme } from 'next-themes'
 import { getAppNavigationItems } from '@/components/app-navigation'
 import { BrandLockup } from '@/components/brand-lockup'
 import { ClubIcon } from '@/components/club-icon'
+import { PlayerAvatar } from '@/components/design-primitives'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -81,7 +82,7 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
   if (isMobile) return null
 
   return (
-    <Sidebar variant="inset" collapsible="icon" className="sidebar-shell">
+    <Sidebar variant="sidebar" collapsible="icon" className="sidebar-shell">
       <SidebarHeader className="px-3 py-4 group-data-[collapsible=icon]:px-2">
         <BrandLockup
           compact
@@ -97,14 +98,14 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
       <SidebarContent>
         <SidebarGroup className="px-3 py-2 group-data-[collapsible=icon]:px-2">
           <SidebarGroupContent>
-            <SidebarMenu className="gap-1.5">
+            <SidebarMenu className="gap-0.5">
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
                     isActive={item.active}
                     tooltip={{ children: item.label, sideOffset: 10 }}
-                    className="sidebar-nav-item h-11 gap-3 rounded-xl px-3 text-sm group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-2.5!"
+                    className="sidebar-nav-item h-10 gap-3 rounded-lg px-3 text-sm group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-2.5!"
                   >
                     <Link href={item.href} aria-current={item.active ? 'page' : undefined}>
                       <item.icon strokeWidth={1.6} />
@@ -120,7 +121,7 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
         {isAdmin && (
           <SidebarGroup className="mt-2 px-3 py-2 group-data-[collapsible=icon]:px-2">
             <SidebarSeparator className="mx-0 mb-3" />
-            <SidebarGroupLabel className="h-7 px-3 text-xs font-semibold normal-case tracking-normal text-neutral-600 dark:text-neutral-300">
+            <SidebarGroupLabel className="h-7 px-3 text-xs font-semibold normal-case tracking-normal text-sidebar-muted">
               Verwaltung
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -130,7 +131,7 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
                     asChild
                     isActive={pathname === '/admin' || pathname.startsWith('/admin/')}
                     tooltip={{ children: 'Admin', sideOffset: 10 }}
-                    className="sidebar-nav-item h-11 gap-3 rounded-xl px-3 text-sm group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-2.5!"
+                    className="sidebar-nav-item h-10 gap-3 rounded-lg px-3 text-sm group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-2.5!"
                   >
                     <Link
                       href="/admin"
@@ -149,7 +150,7 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
 
       <SidebarFooter className="gap-0 px-2 pb-2 pt-0 group-data-[collapsible=icon]:px-1">
         <SidebarSeparator className="mx-1 mb-3 group-data-[collapsible=icon]:mx-2" />
-        <div className="sidebar-footer-well space-y-2 rounded-xl bg-neutral-200 p-2 dark:bg-neutral-800 group-data-[collapsible=icon]:space-y-1.5 group-data-[collapsible=icon]:p-1.5">
+        <div className="sidebar-footer-well space-y-2 rounded-xl bg-sidebar-accent p-2 group-data-[collapsible=icon]:space-y-1.5 group-data-[collapsible=icon]:p-1.5">
           <div
             role="group"
             aria-label="Darstellung"
@@ -210,26 +211,10 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
                       tooltip={{ children: 'Benutzerkonto', sideOffset: 10 }}
                       className="sidebar-account-control group/account h-14 gap-3 rounded-lg px-2.5 group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:[&>span]:hidden"
                     >
-                      <Avatar className="size-9 rounded-lg group-data-[collapsible=icon]:size-8">
-                        <AvatarFallback
-                          className="rounded-lg text-neutral-50"
-                          style={{ backgroundColor: session.user.color ?? 'var(--primary)' }}
-                        >
-                          {favoriteClub?.iconUrl ? (
-                            <ClubIcon
-                              src={favoriteClub.iconUrl}
-                              fallbackSrc={favoriteClub.iconSourceUrl}
-                              label={favoriteClub.name}
-                              className="size-5 object-contain"
-                            />
-                          ) : (
-                            <IconUser className="size-4" strokeWidth={1.6} />
-                          )}
-                        </AvatarFallback>
-                      </Avatar>
+                      <PlayerAvatar nickname={session.user.nickname} favoriteTeam={session.user.favoriteTeam ?? null} color={session.user.color ?? null} />
                       <span className="flex min-w-0 flex-1 flex-col text-left leading-tight">
                         <span className="truncate text-sm font-semibold">{session.user.nickname}</span>
-                        <span className="mt-0.5 truncate text-xs text-neutral-600 dark:text-neutral-300">
+                        <span className="mt-0.5 truncate text-xs text-sidebar-muted">
                           {isAdmin ? 'Administrator' : 'Spieler'}
                         </span>
                       </span>
