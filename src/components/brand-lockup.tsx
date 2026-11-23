@@ -1,6 +1,6 @@
-import { Goal } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { IconBallFootball } from '@/components/app-icons'
 
 type BrandLockupProps = {
   href?: string
@@ -21,7 +21,7 @@ export function BrandLockup({
           compact ? 'size-10 rounded-xl' : 'size-11 rounded-xl',
         )}
       >
-        <Goal className="size-6" strokeWidth={1.5} aria-hidden="true" />
+        <IconBallFootball className="size-6" strokeWidth={1.6} aria-hidden="true" />
       </span>
       <span className="flex min-w-0 flex-col justify-center">
         <span
