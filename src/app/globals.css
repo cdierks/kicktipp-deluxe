@@ -908,3 +908,67 @@ h1,
   .segment { min-height: 44px; }
   [data-slot="button"] { min-height: 44px; }
 }
+
+.matchday-summary {
+  display: flex;
+  min-height: 418px;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 30px 32px 28px;
+  border-radius: 22px;
+  background: var(--hero);
+  color: var(--hero-foreground);
+}
+.matchday-summary-heading { display: flex; min-height: 24px; align-items: center; justify-content: space-between; gap: 16px; font-size: 14px; color: color-mix(in oklch, var(--hero-foreground) 78%, transparent); }
+.matchday-summary-state { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 13px; }
+.matchday-summary-live { color: var(--color-neon-400); }
+.matchday-summary-open { color: var(--color-lime-300); }
+.matchday-live-dot { width: 7px; height: 7px; flex: none; border-radius: 50%; background: var(--color-neon-400); }
+.matchday-summary-main { display: grid; flex: 1; grid-template-columns: minmax(0, .94fr) minmax(0, 1.06fr); align-items: center; gap: 28px; }
+.matchday-summary-score { min-width: 0; }
+.matchday-summary-value { color: var(--color-lime-300); font-size: clamp(88px, 9vw, 120px); line-height: .86; }
+.matchday-summary-unit { margin-top: 12px; color: color-mix(in oklch, var(--hero-foreground) 76%, transparent); font-size: 15px; }
+.matchday-summary-facts { min-width: 0; }
+.matchday-summary-fact { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 16px; min-height: 66px; padding: 10px 0; border-top: 1px solid var(--hero-line); }
+.matchday-summary-label { grid-column: 1; font-size: 14px; }
+.matchday-summary-fact strong { grid-column: 2; grid-row: 1 / span 2; text-align: right; font-size: 23px; font-stretch: 125%; font-weight: 600; line-height: 1.12; }
+.matchday-summary-detail { grid-column: 1; margin-top: 2px; color: color-mix(in oklch, var(--hero-foreground) 70%, transparent); font-size: 13px; line-height: 1.35; }
+.matchday-summary-joker-mobile { display: none; }
+.matchday-summary-balance { display: grid; gap: 12px; }
+.matchday-summary-balance-title { color: color-mix(in oklch, var(--hero-foreground) 76%, transparent); font-size: 14px; }
+.matchday-summary-segments { display: flex; gap: 4px; width: 100%; }
+.matchday-summary-segment { height: 12px; min-width: 0; flex: 1 1 0; border-radius: 4px; }
+.summary-segment-exact { background: var(--color-lime-300); }
+.summary-segment-difference { background: var(--color-neon-400); }
+.summary-segment-tendency { background: color-mix(in oklch, var(--color-mint) 62%, transparent); }
+.summary-segment-missed { border: 1px solid color-mix(in oklch, var(--color-mint) 35%, transparent); background: color-mix(in oklch, var(--color-mint) 10%, transparent); }
+.summary-segment-open { border: 1px solid color-mix(in oklch, var(--color-mint) 45%, transparent); background: transparent; }
+.matchday-summary-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; color: color-mix(in oklch, var(--hero-foreground) 76%, transparent); font-size: 12px; }
+.matchday-summary-legend > span { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.matchday-summary-legend i { width: 10px; height: 10px; flex: none; border-radius: 3px; }
+.matchday-summary-legend strong { color: var(--hero-foreground); font-weight: 600; }
+@media (max-width: 759px) {
+  .matchday-summary { min-height: 0; gap: 14px; padding: 18px 18px 16px; border-radius: 20px; }
+  .matchday-summary-heading { min-height: 20px; font-size: 14px; }
+  .matchday-summary-main { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 16px; align-items: stretch; }
+  .matchday-summary-score { display: flex; flex-direction: column; justify-content: center; }
+  .matchday-summary-value { font-size: 76px; }
+  .matchday-summary-unit { margin-top: 4px; font-size: 13px; line-height: 1.25; }
+  .matchday-summary-fact { min-height: 0; padding: 2px 0 5px 14px; border-top: 0; }
+  .matchday-summary-fact + .matchday-summary-fact { padding-top: 3px; }
+  .matchday-summary-fact strong { font-size: 19px; }
+  .matchday-summary-label { font-size: 12px; color: color-mix(in oklch, var(--hero-foreground) 76%, transparent); }
+  .matchday-summary-detail { font-size: 12px; }
+  .matchday-summary-facts { display: flex; flex-direction: column; justify-content: center; gap: 5px; border-left: 1px solid var(--hero-line); }
+  .matchday-summary-joker-fact { display: none; }
+  .matchday-summary-joker-mobile { display: flex; min-height: 42px; align-items: center; gap: 9px; padding: 0 12px; border-radius: 12px; background: color-mix(in oklch, var(--color-neutral-950) 28%, transparent); font-size: 12px; }
+  .matchday-summary-joker-mobile .joker-mark { height: 24px; }
+  .matchday-summary-joker-mobile > span:nth-child(2) { min-width: 0; flex: 1; overflow: hidden; color: color-mix(in oklch, var(--hero-foreground) 75%, transparent); text-overflow: ellipsis; white-space: nowrap; }
+  .matchday-summary-joker-mobile strong { flex: none; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .matchday-summary-balance { gap: 8px; }
+  .matchday-summary-balance-title { font-size: 13px; }
+  .matchday-summary-segment { height: 10px; border-radius: 3px; }
+  .matchday-summary-legend { gap: 6px 12px; font-size: 11px; }
+  .matchday-summary-legend i { width: 9px; height: 9px; }
+}

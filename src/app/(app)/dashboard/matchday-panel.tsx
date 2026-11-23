@@ -3,7 +3,7 @@
 import { Fragment, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ClubIcon } from '@/components/club-icon'
-import { Scoreboard, PointsToken, JokerMark, CompareChip, RankingList, HeroPanel, StatusPill, PlayerAvatar } from '@/components/design-primitives'
+import { Scoreboard, PointsToken, JokerMark, CompareChip, RankingList, PlayerAvatar } from '@/components/design-primitives'
 import { MobileBottomSheet } from '@/components/mobile-bottom-sheet'
 import {
   Table,
@@ -19,7 +19,6 @@ import { MatchdayContext } from '@/components/matchday-context'
 import { cn } from '@/lib/utils'
 import { getClubByName } from '@/lib/clubs'
 import { formatAppDate } from '@/lib/date-format'
-import { plural } from '@/lib/plural'
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -145,13 +144,67 @@ export function MatchdayHeader({ model, view }: { model: MatchdayPageViewModel; 
 
 export function MatchdaySummary({ model }: { model: MatchdayPageViewModel }) {
   const beforeDeadline = !model.header.deadlinePassed
-  const days = model.header.daysUntilDeadline
+  const liveCount = model.matches.filter(match => match.status === 'LIVE').length
+  const isLive = liveCount > 0
   const tipped = model.matches.filter(match => match.myPrediction).length
   const joker = model.matches.find(match => match.usedJoker)
-  return <HeroPanel label={beforeDeadline ? 'Bis zur Tippfrist' : 'Punkte am Spieltag'} value={beforeDeadline ? days : model.summary.myPoints} aside={<div className="space-y-4 text-sm"><StatusPill status={beforeDeadline ? 'open' : model.matches.every(match => match.status === 'FINISHED') ? 'finished' : 'live'} /><p className="text-lg font-wide">{beforeDeadline ? `${tipped} von ${model.matches.length} getippt` : model.summary.myRank ? `${model.summary.myRank}. von ${model.summary.totalPlayers}` : 'Noch keine Wertung'}</p><p className="text-hero-foreground/75">{model.summary.insight}</p><p className="text-hero-foreground/75">{joker ? `Joker: ${joker.teams.home} – ${joker.teams.away}` : 'Joker noch frei'}</p></div>}>
-    <p className="mt-3 text-sm text-hero-foreground/75">{beforeDeadline ? plural(days, 'Tag bis zur Tippfrist', 'Tage bis zur Tippfrist') : 'Dein Spieltag'}</p>
-    <div className="mt-6 flex flex-wrap gap-1" aria-label="Tipp-Bilanz">{model.matches.map(match => <span key={match.id} className={cn('h-5 w-5 rounded-sm border border-hero-line', match.myPoints === null ? 'bg-transparent' : match.myPoints >= 4 ? 'bg-lime-300' : match.myPoints === 3 ? 'bg-neon-400' : match.myPoints === 2 ? 'bg-mint' : 'bg-mint/15')} title={`${match.teams.home} gegen ${match.teams.away}: ${match.myPoints ?? 'offen'}`} />)}</div>
-  </HeroPanel>
+  const resultGroups = model.matches.reduce((groups, match) => {
+    if (match.myPoints === null) groups.open++
+    else {
+      const basePoints = match.usedJoker && match.myPoints > 0 ? match.myPoints / 2 : match.myPoints
+      if (basePoints >= 4) groups.exact++
+      else if (basePoints === 3) groups.difference++
+      else if (basePoints === 2) groups.tendency++
+      else groups.missed++
+    }
+    return groups
+  }, { exact: 0, difference: 0, tendency: 0, missed: 0, open: 0 })
+  const insight = (() => {
+    const behind = model.summary.insight.match(/^Du liegst (\d+) Punkte hinter (.+)$/)
+    if (behind) return { value: `${behind[1]} Pkt. zurück`, detail: `hinter ${behind[2]}` }
+    const leader = model.summary.insight.match(/^Bestwert gemeinsam mit (.+)$/)
+    if (leader) return { value: 'Bestwert geteilt', detail: `gemeinsam mit ${leader[1]}` }
+    if (model.summary.insight === 'Aktuell Bestwert im Feld') return { value: 'Tagesbester', detail: 'allein am Bestwert' }
+    return { value: model.summary.insight, detail: '' }
+  })()
+  const jokerBasePoints = joker?.myPoints === null || !joker ? null : joker.usedJoker && joker.myPoints > 0 ? joker.myPoints / 2 : joker.myPoints
+  const statusText = beforeDeadline ? 'Tippen offen' : isLive ? `Live · ${liveCount} ${liveCount === 1 ? 'Spiel läuft' : 'Spiele laufen'}` : 'Endstand'
+  const segments = [
+    { id: 'exact', className: 'summary-segment-exact', label: 'Exakt', count: resultGroups.exact },
+    { id: 'difference', className: 'summary-segment-difference', label: 'Tordifferenz', count: resultGroups.difference },
+    { id: 'tendency', className: 'summary-segment-tendency', label: 'Tendenz', count: resultGroups.tendency },
+    { id: 'missed', className: 'summary-segment-missed', label: 'Daneben', count: resultGroups.missed },
+    ...(resultGroups.open > 0 ? [{ id: 'open', className: 'summary-segment-open', label: 'Noch offen', count: resultGroups.open }] : []),
+  ]
+
+  return <section className="matchday-summary" aria-label="Dein Spieltag">
+    <div className="matchday-summary-heading"><span>Dein Spieltag</span><span className={cn('matchday-summary-state', isLive && 'matchday-summary-live', beforeDeadline && 'matchday-summary-open')}>{isLive && <span className="matchday-live-dot" aria-hidden="true" />}{statusText}</span></div>
+    <div className="matchday-summary-main">
+      <div className="matchday-summary-score"><p className="matchday-summary-value font-wide">{beforeDeadline ? model.header.daysUntilDeadline : model.summary.myPoints}</p><p className="matchday-summary-unit">{beforeDeadline ? 'Tage bis zur Tippfrist' : isLive ? 'Punkte, vorläufig' : 'Punkte am Spieltag'}</p></div>
+      <div className="matchday-summary-facts">
+        {beforeDeadline ? <>
+          <div className="matchday-summary-fact"><span className="matchday-summary-label">Deine Tipps</span><strong>{tipped} / {model.matches.length}</strong><span className="matchday-summary-detail">{tipped ? `${model.matches.length - tipped} fehlen noch` : 'noch keine abgegeben'}</span></div>
+          <div className="matchday-summary-fact"><span className="matchday-summary-label">Saisonrang</span><strong>{model.ranking.findIndex(player => player.isCurrentUser) + 1 || '–'}.</strong><span className="matchday-summary-detail">nach bisheriger Wertung</span></div>
+        </> : <>
+          <div className="matchday-summary-fact"><span className="matchday-summary-label">{isLive ? 'Rang live' : 'Rang'}</span><strong>{model.summary.myRank ? `${model.summary.myRank}.` : '–'}</strong><span className="matchday-summary-detail">von {model.summary.totalPlayers}</span></div>
+          <div className="matchday-summary-fact"><span className="matchday-summary-label">Einordnung</span><strong>{insight.value}</strong><span className="matchday-summary-detail">{insight.detail || model.summary.insight}</span></div>
+        </>}
+        <div className="matchday-summary-fact matchday-summary-joker-fact"><span className="matchday-summary-label">Joker</span><strong>{joker ? `${getClubByName(joker.teams.home)?.shortName ?? joker.teams.home} – ${getClubByName(joker.teams.away)?.shortName ?? joker.teams.away}` : '–'}</strong><span className="matchday-summary-detail">{joker ? jokerBasePoints === null ? 'Punkte offen' : `${jokerBasePoints} × 2 = ${joker.myPoints} Punkte` : 'noch nicht gesetzt'}</span></div>
+      </div>
+    </div>
+    {joker && !beforeDeadline && <div className="matchday-summary-joker-mobile"><JokerMark compact /><span>{getClubByName(joker.teams.home)?.shortName ?? joker.teams.home} – {getClubByName(joker.teams.away)?.shortName ?? joker.teams.away}</span><strong>{jokerBasePoints === null ? '–' : `${jokerBasePoints} × 2 = ${joker.myPoints} Punkte`}</strong></div>}
+    <div className="matchday-summary-balance">
+      <p className="matchday-summary-balance-title">{isLive ? 'Tipp-Bilanz, Zwischenstand' : beforeDeadline ? 'Deine Tipps am Spieltag' : 'Tipp-Bilanz'}</p>
+      <div className="matchday-summary-segments" role="img" aria-label={segments.map(segment => `${segment.label}: ${segment.count}`).join(', ')}>
+        {model.matches.map(match => {
+          const basePoints = match.myPoints === null ? null : match.usedJoker && match.myPoints > 0 ? match.myPoints / 2 : match.myPoints
+          const tone = basePoints === null ? 'open' : basePoints >= 4 ? 'exact' : basePoints === 3 ? 'difference' : basePoints === 2 ? 'tendency' : 'missed'
+          return <span key={match.id} className={`matchday-summary-segment summary-segment-${tone}`} title={`${match.teams.home} gegen ${match.teams.away}: ${match.myPoints ?? 'offen'} Punkte`} />
+        })}
+      </div>
+      <div className="matchday-summary-legend">{segments.map(segment => <span key={segment.id}><i className={segment.className} aria-hidden="true" />{segment.label} <strong>{segment.count}</strong></span>)}</div>
+    </div>
+  </section>
 }
 
 export function MatchdayRanking({ ranking, beforeDeadline }: { ranking: MatchdayRankingEntry[]; beforeDeadline: boolean }) {
