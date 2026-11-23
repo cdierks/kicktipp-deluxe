@@ -1,6 +1,7 @@
 'use client'
 
 import './matchday-summary.css'
+import './matchday-list.css'
 
 import { Fragment, useMemo, useState } from 'react'
 import Link from 'next/link'
@@ -29,7 +30,6 @@ import {
 } from '@/components/app-icons'
 import type {
   MatchdayComparisonType,
-  MatchdayMatchDetails,
   MatchdayMatchRow,
   MatchdayPageViewModel,
   MatchdayRankingEntry,
@@ -214,15 +214,6 @@ export function MatchdayRanking({ ranking, beforeDeadline }: { ranking: Matchday
   return <RankingList players={ranking} mode={mode} onModeChange={setMode} />
 }
 
-function DetailStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg bg-muted px-3 py-2.5">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm font-medium text-foreground">{value}</p>
-    </div>
-  )
-}
-
 function MobileMatchDetails({ match }: { match: MatchdayMatchRow }) {
   const home = getClubByName(match.teams.home)
   const away = getClubByName(match.teams.away)
@@ -358,34 +349,56 @@ export function ParticipantPredictionList({
   )
 }
 
-export function MatchRowDetails({ details }: { details: MatchdayMatchDetails }) {
-  const stats = [
-    { label: 'Feldtrend', value: details.fieldTrend ?? 'Vergleich gesperrt' },
-    { label: 'Häufigster Tipp', value: details.commonPrediction ?? '–' },
-    { label: 'Dein Status', value: details.myStatus },
-    { label: 'Bestwert', value: details.bestScore ?? '–' },
-  ]
+export function MatchRowDetails({ match }: { match: MatchdayMatchRow }) {
+  const { details } = match
+  const outcomes = details.revealComparison
+    ? details.participantPredictions.reduce((totals, player) => {
+        if (!player.prediction) return totals
+        const [home, away] = player.prediction.split(':').map(Number)
+        if (home > away) totals.home++
+        else if (home < away) totals.away++
+        else totals.draw++
+        return totals
+      }, { home: 0, draw: 0, away: 0 })
+    : null
+  const total = outcomes ? outcomes.home + outcomes.draw + outcomes.away : 0
+  const bars = outcomes ? [
+    { label: 'Heimsieg', count: outcomes.home, className: 'home' },
+    { label: 'Remis', count: outcomes.draw, className: 'draw' },
+    { label: 'Auswärts', count: outcomes.away, className: 'away' },
+  ] : []
+  const bestPlayers = details.participantPredictions.filter(player => player.points !== null && player.points > 0)
+  const best = bestPlayers.length ? Math.max(...bestPlayers.map(player => player.points ?? 0)) : null
+  const bestNames = best === null ? [] : bestPlayers.filter(player => player.points === best).map(player => player.nickname)
+  const bestText = best === null ? details.bestScore ?? 'Niemand punktet' : `${best} Punkte · ${bestNames.join(', ')}`
+  const myStatus = match.status === 'LIVE' ? `${details.myStatus} · vorläufig` : details.myStatus
 
-  return (
-    <div className="space-y-3 border-t border-border bg-background px-4 py-4">
-      <div>
-        <p className="text-sm font-semibold text-foreground">Vergleich im Feld</p>
-        <div className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-          {stats.map((stat) => (
-            <DetailStat key={stat.label} label={stat.label} value={stat.value} />
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <p className="text-sm font-semibold text-foreground">Tipps im Feld</p>
-          <p className="text-xs text-muted-foreground">{details.submissionCount} abgegeben</p>
-        </div>
-        <ParticipantPredictionList predictions={details.participantPredictions} revealComparison={details.revealComparison} />
-      </div>
-    </div>
-  )
+  return <div className="matchday-detail-grid">
+    <section className="matchday-detail-card" aria-label="Vergleich im Feld">
+      <div className="matchday-detail-heading"><h3>Vergleich im Feld</h3><span>{details.revealComparison ? details.fieldTrend ?? 'Kein klarer Trend' : 'Ab Tippfrist'}</span></div>
+      {details.revealComparison && total > 0 ? <>
+        <div className="matchday-outcome-labels">{bars.map(bar => <span key={bar.label}>{bar.label} <strong>{bar.count}</strong></span>)}</div>
+        <div className="matchday-outcome-track" role="img" aria-label={bars.map(bar => `${bar.label} ${bar.count}`).join(', ')}>{bars.map(bar => bar.count > 0 && <span key={bar.label} className={`matchday-outcome-${bar.className}`} style={{ width: `${bar.count / total * 100}%` }} />)}</div>
+      </> : <p className="matchday-detail-locked">{details.revealComparison ? 'Noch keine Tipps im Feld' : 'Die Tipps der anderen bleiben bis zum Anpfiff verdeckt'}</p>}
+      <dl className="matchday-detail-stats">
+        <div><dt>Häufigster Tipp</dt><dd>{details.commonPrediction ?? '–'}</dd></div>
+        <div><dt>Dein Status</dt><dd>{myStatus}</dd></div>
+        <div><dt>Bestwert</dt><dd>{bestText}</dd></div>
+      </dl>
+    </section>
+    <section className="matchday-detail-card" aria-label="Tipps im Feld">
+      <div className="matchday-detail-heading"><h3>Tipps im Feld</h3><span>{details.submissionCount} von {details.participantPredictions.length} abgegeben</span></div>
+      {details.revealComparison ? <div className="matchday-player-list">
+        <div className="matchday-player-head"><span>Spieler</span><span>Tipp</span><span>Pkt.</span><span>Marker</span></div>
+        {details.participantPredictions.map(player => <div className="matchday-player-row" key={player.userId}>
+          <div className="matchday-player-name"><PlayerAvatar nickname={player.nickname} favoriteTeam={player.favoriteTeam} color={player.color} small /><Link href={`/spieler/${encodeURIComponent(player.nickname)}`}>{player.nickname}{player.isCurrentUser && <span className="text-secondary-text"> (du)</span>}</Link></div>
+          <strong>{player.prediction ?? '–'}</strong>
+          <PointsToken points={player.points} small />
+          <span className={cn('matchday-player-marker', player.marker === 'Dein Tipp' && 'matchday-marker-you', player.marker === 'Bestwert' && 'matchday-marker-best')}>{player.marker ?? ''}</span>
+        </div>)}
+      </div> : <ParticipantPredictionList predictions={details.participantPredictions} revealComparison={false} />}
+    </section>
+  </div>
 }
 
 function MatchCell({
@@ -401,98 +414,63 @@ function MatchCell({
   const awayClub = getClubByName(match.teams.away)
 
   return (
-    <TableRow className="group bg-transparent">
-      <TableCell className="w-10">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-sm"
-          aria-label={`${isExpanded ? 'Details schließen' : 'Details öffnen'}: ${match.teams.home} gegen ${match.teams.away}`}
-          aria-expanded={isExpanded}
-          aria-controls={`match-details-${match.id}`}
-          onClick={onToggle}
-          className="rounded-full bg-background hover:border-pitch-400 hover:text-primary-readable"
-        >
-          <IconChevronRight className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-90')} strokeWidth={1.5} />
-        </Button>
+    <TableRow className={cn('matchday-game-row', isExpanded && 'matchday-game-row-expanded')}>
+      <TableCell className="matchday-time-cell"><span>{match.kickoffShortLabel}</span><small className={cn(match.status === 'LIVE' && 'matchday-live-status')}>{match.status === 'LIVE' && <i aria-hidden="true" />}{getRowStatusLabel(match.status)}</small></TableCell>
+      <TableCell className="matchday-teams-cell">
+        <div className="matchday-team">{homeClub ? <ClubIcon src={homeClub.iconUrl} fallbackSrc={homeClub.iconSourceUrl} label={match.teams.home} className="matchday-club-icon" /> : <span className="matchday-club-icon" />}<span title={match.teams.home}>{match.teams.home}</span></div>
+        <div className="matchday-team">{awayClub ? <ClubIcon src={awayClub.iconUrl} fallbackSrc={awayClub.iconSourceUrl} label={match.teams.away} className="matchday-club-icon" /> : <span className="matchday-club-icon" />}<span title={match.teams.away}>{match.teams.away}</span></div>
       </TableCell>
-      <TableCell className="w-[7rem] whitespace-normal">
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-foreground">{match.kickoffShortLabel}</p>
-          <p className="text-xs text-muted-foreground">{getRowStatusLabel(match.status)}</p>
-        </div>
-      </TableCell>
-      <TableCell className="whitespace-normal">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            {homeClub ? <ClubIcon src={homeClub.iconUrl} fallbackSrc={homeClub.iconSourceUrl} label={match.teams.home} className="h-5 w-5 shrink-0 object-contain" /> : <span className="h-5 w-5 shrink-0" />}
-            <span className="truncate font-medium text-foreground">{match.teams.home}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            {awayClub ? <ClubIcon src={awayClub.iconUrl} fallbackSrc={awayClub.iconSourceUrl} label={match.teams.away} className="h-5 w-5 shrink-0 object-contain" /> : <span className="h-5 w-5 shrink-0" />}
-            <span className="truncate font-medium text-foreground">{match.teams.away}</span>
-          </div>
-        </div>
-      </TableCell>
-      <TableCell className="w-[5.75rem]">
-        <Scoreboard result={match.result} live={match.status === 'LIVE'} />
-      </TableCell>
-      <TableCell className="w-[5.75rem]">
-        <span className={cn('text-sm font-semibold', match.myPrediction ? 'text-foreground' : 'text-muted-foreground')}>
-          {match.myPrediction ?? '–'}
-        </span>
-      </TableCell>
-      <TableCell className="w-[6.25rem]">
-        <div className="flex flex-col items-start gap-1">
-          {match.usedJoker && <JokerBadge compact />}
-          <PointsBadge points={match.myPoints} isJoker={match.usedJoker} />
-        </div>
-      </TableCell>
-      <TableCell className="w-[8.5rem] whitespace-normal max-[1179px]:hidden">
-        <ComparisonSummaryBadgeOrText type={match.comparisonType} text={match.comparisonSummary} />
-      </TableCell>
+      <TableCell><Scoreboard result={match.result} live={match.status === 'LIVE'} /></TableCell>
+      <TableCell><span className="matchday-own-tip">{match.myPrediction ?? '–'}</span></TableCell>
+      <TableCell><div className="matchday-points-cell"><PointsBadge points={match.myPoints} isJoker={match.usedJoker} />{match.usedJoker && <JokerBadge compact />}</div></TableCell>
+      <TableCell className="matchday-compare-cell"><ComparisonSummaryBadgeOrText type={match.comparisonType} text={match.comparisonSummary} /></TableCell>
+      <TableCell className="matchday-toggle-cell"><button type="button" className="matchday-detail-toggle" aria-label={`${isExpanded ? 'Details schließen' : 'Details öffnen'}: ${match.teams.home} gegen ${match.teams.away}`} aria-expanded={isExpanded} aria-controls={`match-details-${match.id}`} onClick={onToggle}><IconChevronRight className={cn('size-4 transition-transform', isExpanded && '-rotate-90')} strokeWidth={1.5} /></button></TableCell>
     </TableRow>
   )
 }
 
 export function MatchListTableDesktop({ matches }: { matches: MatchdayMatchRow[] }) {
   const [expandedIds, setExpandedIds] = useState<string[]>([])
+  const dayFormatter = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', timeZone: 'Europe/Berlin' })
+  const dayOf = (match: MatchdayMatchRow) => dayFormatter.format(new Date(match.kickoff))
+  const dayCounts = matches.reduce((counts, match) => counts.set(dayOf(match), (counts.get(dayOf(match)) ?? 0) + 1), new Map<string, number>())
+  const firstDay = matches.length ? dayOf(matches[0]).split(',')[0] : ''
+  const lastDay = matches.length ? dayOf(matches[matches.length - 1]).split(',')[0] : ''
 
   function toggle(id: string) {
     setExpandedIds((current) => current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id])
   }
 
   return (
-    <div className="surface-raised hidden rounded-2xl min-[760px]:block">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3"><h2 className="text-xl">Alle Spiele</h2><Button type="button" variant="outline" size="sm" onClick={() => setExpandedIds(expandedIds.length === matches.length ? [] : matches.map(match => match.id))}>{expandedIds.length === matches.length ? "Alle schließen" : "Alle aufklappen"}</Button></div>
-      <div className="overflow-hidden rounded-b-xl">
-        <Table className="table-fixed" containerClassName="overflow-x-auto rounded-none">
+    <section className="matchday-list-desktop surface-raised" aria-label="Alle Spiele im Vergleich">
+      <div className="matchday-list-heading"><div><p>{matches.length} {matches.length === 1 ? 'Partie' : 'Partien'} · {firstDay === lastDay ? firstDay : `${firstDay} bis ${lastDay}`}</p><h2>Alle Spiele im Vergleich</h2></div><Button type="button" variant="outline" size="sm" onClick={() => setExpandedIds(expandedIds.length === matches.length ? [] : matches.map(match => match.id))}><IconChevronRight className="mr-1 size-4 rotate-90" />{expandedIds.length === matches.length ? 'Alle schließen' : 'Alle aufklappen'}</Button></div>
+      <div className="overflow-hidden">
+        <Table className="matchday-table table-fixed" containerClassName="overflow-x-auto rounded-none">
+        <colgroup><col className="matchday-col-time" /><col className="matchday-col-game" /><col className="matchday-col-score" /><col className="matchday-col-tip" /><col className="matchday-col-points" /><col className="matchday-col-comparison" /><col className="matchday-col-toggle" /></colgroup>
         <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="w-10 text-center">
-              <IconChevronRight className="mx-auto h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
-            </TableHead>
-            <TableHead className="w-[7rem]">Zeit/Status</TableHead>
+          <TableRow>
+            <TableHead>Anpfiff</TableHead>
             <TableHead>Spiel</TableHead>
-            <TableHead className="w-[5.75rem]">Ergebnis</TableHead>
-            <TableHead className="w-[5.75rem]">Dein Tipp</TableHead>
-            <TableHead className="w-[6.25rem]">Punkte</TableHead>
-            <TableHead className="w-[8.5rem] max-[1179px]:hidden">Vergleich</TableHead>
+            <TableHead>Ergebnis</TableHead>
+            <TableHead>Dein Tipp</TableHead>
+            <TableHead>Punkte</TableHead>
+            <TableHead>Vergleich im Feld</TableHead>
+            <TableHead><span className="sr-only">Details</span></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {matches.map((match, index) => {
-            const day = new Intl.DateTimeFormat("de-DE", { weekday: "long", day: "2-digit", month: "2-digit", timeZone: "Europe/Berlin" }).format(new Date(match.kickoff))
-            const previousDay = index > 0 ? new Intl.DateTimeFormat("de-DE", { weekday: "long", day: "2-digit", month: "2-digit", timeZone: "Europe/Berlin" }).format(new Date(matches[index - 1].kickoff)) : null
+            const day = dayOf(match)
+            const previousDay = index > 0 ? dayOf(matches[index - 1]) : null
             const isExpanded = expandedIds.includes(match.id)
             return (
               <Fragment key={match.id}>
-                {day !== previousDay && <TableRow className="bg-muted hover:bg-muted"><TableCell colSpan={7} className="text-sm font-medium text-secondary-text">{day}</TableCell></TableRow>}
+                {day !== previousDay && <TableRow className="matchday-day-row"><TableCell colSpan={7}><strong>{day}</strong><span>{dayCounts.get(day)} {dayCounts.get(day) === 1 ? 'Partie' : 'Partien'}</span></TableCell></TableRow>}
                 <MatchCell match={match} isExpanded={isExpanded} onToggle={() => toggle(match.id)} />
                 {isExpanded && (
-                  <TableRow id={`match-details-${match.id}`} className="hover:bg-transparent">
+                  <TableRow id={`match-details-${match.id}`} className="matchday-detail-row">
                     <TableCell colSpan={7} className="p-0">
-                      <MatchRowDetails details={match.details} />
+                      <MatchRowDetails match={match} />
                     </TableCell>
                   </TableRow>
                 )}
@@ -502,7 +480,7 @@ export function MatchListTableDesktop({ matches }: { matches: MatchdayMatchRow[]
         </TableBody>
         </Table>
       </div>
-    </div>
+    </section>
   )
 }
 
@@ -510,14 +488,29 @@ export function MatchListMobile({ matches }: { matches: MatchdayMatchRow[] }) {
   const [selected, setSelected] = useState<MatchdayMatchRow | null>(null)
   const formatter = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', timeZone: 'Europe/Berlin' })
   let previousDay = ''
-  return <div className="space-y-2 min-[760px]:hidden">{matches.map(match => {
-    const day = formatter.format(new Date(match.kickoff))
-    const showDay = previousDay !== day
-    previousDay = day
-    const home = getClubByName(match.teams.home)
-    const away = getClubByName(match.teams.away)
-    return <Fragment key={match.id}>{showDay && <h3 className="pt-4 text-sm text-secondary-text">{day}</h3>}<article className={cn('surface-raised rounded-[18px]', match.usedJoker && 'ring-1 ring-lime-300')}><button type="button" onClick={() => setSelected(match)} aria-label={`Details zu ${match.teams.home} gegen ${match.teams.away} öffnen`} className="w-full min-h-20 px-4 py-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><div className="flex items-center justify-between gap-2"><span className="text-xs text-secondary-text">{match.kickoffShortLabel} · {getRowStatusLabel(match.status)}</span><Scoreboard result={match.result} live={match.status === 'LIVE'} /></div><div className="mt-3 flex items-center gap-2"><span className="flex min-w-0 flex-1 items-center gap-2">{home && <ClubIcon src={home.iconUrl} fallbackSrc={home.iconSourceUrl} label={home.name} className="size-5 shrink-0 object-contain" />}<span className="truncate text-sm">{home?.shortName ?? match.teams.home}</span></span><span className="text-muted-foreground">–</span><span className="flex min-w-0 flex-1 items-center justify-end gap-2"><span className="truncate text-sm">{away?.shortName ?? match.teams.away}</span>{away && <ClubIcon src={away.iconUrl} fallbackSrc={away.iconSourceUrl} label={away.name} className="size-5 shrink-0 object-contain" />}</span></div><div className="mt-3 flex items-center gap-2 text-xs text-secondary-text">Dein Tipp {match.myPrediction ?? '–'}<PointsBadge points={match.myPoints} isJoker={match.usedJoker} />{match.usedJoker && <JokerMark compact />}</div></button></article></Fragment>
-  })}<MobileBottomSheet open={selected !== null} onOpenChange={open => { if (!open) setSelected(null) }} title={selected ? `${selected.teams.home} gegen ${selected.teams.away}` : 'Spiel'} header={selected && <div className="flex items-center justify-between px-5 pb-1 pt-4 text-sm text-secondary-text"><span>{formatAppDate(selected.kickoff, { weekday: 'long', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} · {selected.status === 'FINISHED' ? 'Endstand' : getRowStatusLabel(selected.status)}</span><button type="button" onClick={() => setSelected(null)} aria-label="Details schließen" className="flex size-11 items-center justify-center rounded-lg text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><IconX className="size-5" /></button></div>}>{selected && <MobileMatchDetails match={selected} />}</MobileBottomSheet></div>
+  return <section className="matchday-list-mobile" aria-label="Alle Spiele">
+    <div className="matchday-mobile-list-heading"><h2>Alle Spiele</h2><span>Tippe für Details</span></div>
+    {matches.map(match => {
+      const day = formatter.format(new Date(match.kickoff))
+      const showDay = previousDay !== day
+      previousDay = day
+      const home = getClubByName(match.teams.home)
+      const away = getClubByName(match.teams.away)
+      return <Fragment key={match.id}>
+        {showDay && <h3 className="matchday-mobile-day">{day}</h3>}
+        <button type="button" onClick={() => setSelected(match)} aria-label={`Details zu ${match.teams.home} gegen ${match.teams.away} öffnen`} className="matchday-mobile-game">
+          <span className="matchday-mobile-game-main">
+            <span className="matchday-mobile-time"><span>{match.kickoffShortLabel}</span><small className={cn(match.status === 'LIVE' && 'matchday-live-status')}>{match.status === 'LIVE' && <i aria-hidden="true" />}{getRowStatusLabel(match.status)}</small></span>
+            <span className="matchday-mobile-teams"><span>{home && <ClubIcon src={home.iconUrl} fallbackSrc={home.iconSourceUrl} label={home.name} className="matchday-club-icon" />}<span>{home?.shortName ?? match.teams.home}</span></span><span>{away && <ClubIcon src={away.iconUrl} fallbackSrc={away.iconSourceUrl} label={away.name} className="matchday-club-icon" />}<span>{away?.shortName ?? match.teams.away}</span></span></span>
+            <Scoreboard result={match.result} live={match.status === 'LIVE'} />
+            <span className="matchday-mobile-own"><span>{match.myPrediction ?? '–'}</span><PointsBadge points={match.myPoints} isJoker={match.usedJoker} /></span>
+          </span>
+          <span className="matchday-mobile-game-foot"><ComparisonSummaryBadgeOrText type={match.comparisonType} text={match.comparisonSummary} />{match.usedJoker && <JokerMark compact />}<IconChevronRight className="ml-auto size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" /></span>
+        </button>
+      </Fragment>
+    })}
+    <MobileBottomSheet open={selected !== null} onOpenChange={open => { if (!open) setSelected(null) }} title={selected ? `${selected.teams.home} gegen ${selected.teams.away}` : 'Spiel'} header={selected && <div className="flex items-center justify-between px-5 pb-1 pt-4 text-sm text-secondary-text"><span>{formatAppDate(selected.kickoff, { weekday: 'long', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} · {selected.status === 'FINISHED' ? 'Endstand' : getRowStatusLabel(selected.status)}</span><button type="button" onClick={() => setSelected(null)} aria-label="Details schließen" className="flex size-11 items-center justify-center rounded-lg text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><IconX className="size-5" /></button></div>}>{selected && <MobileMatchDetails match={selected} />}</MobileBottomSheet>
+  </section>
 }
 
 export function MatchdayPanel({ model }: { model: MatchdayPageViewModel }) {

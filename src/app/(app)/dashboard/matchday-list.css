@@ -1,0 +1,101 @@
+.matchday-list-desktop { overflow: hidden; border-radius: 20px; }
+.matchday-list-heading { display: flex; min-height: 82px; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 24px; border-bottom: 1px solid var(--border); }
+.matchday-list-heading p { color: var(--secondary-text); font-size: 13px; }
+.matchday-list-heading h2 { margin-top: 2px; font-size: 21px; line-height: 1.15; }
+.matchday-list-heading button { flex: none; }
+.matchday-table { table-layout: fixed; }
+.matchday-col-time { width: 92px; }
+.matchday-col-game { width: auto; }
+.matchday-col-score { width: 112px; }
+.matchday-col-tip { width: 104px; }
+.matchday-col-points { width: 108px; }
+.matchday-col-comparison { width: 300px; }
+.matchday-col-toggle { width: 48px; }
+.matchday-table thead { background: var(--muted); }
+.matchday-table thead th { height: 40px; padding: 0 12px; color: var(--secondary-text); font-size: 13px; font-weight: 400; }
+.matchday-table thead th:first-child, .matchday-table tbody td:first-child { padding-left: 24px; }
+.matchday-table tbody tr { border-color: var(--border); }
+.matchday-day-row, .matchday-day-row:hover { background: var(--card); }
+.matchday-day-row td { height: 56px; padding-top: 14px; padding-bottom: 4px; }
+.matchday-day-row td strong { font-size: 14px; font-weight: 600; }
+.matchday-day-row td span { float: right; color: var(--secondary-text); font-size: 13px; }
+.matchday-game-row { height: 84px; background: var(--card); }
+.matchday-game-row:hover { background: var(--muted); }
+.matchday-game-row-expanded, .matchday-game-row-expanded:hover { background: var(--muted); }
+.matchday-game-row td { padding: 10px 12px; }
+.matchday-time-cell > span { display: block; font-size: 14px; }
+.matchday-time-cell small { display: flex; align-items: center; gap: 5px; margin-top: 4px; color: var(--secondary-text); font-size: 12px; }
+.matchday-time-cell .matchday-live-status { color: var(--foreground); }
+.matchday-live-status i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--color-neon-400); }
+.matchday-team { display: flex; min-width: 0; align-items: center; gap: 10px; height: 28px; }
+.matchday-team > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.matchday-club-icon { display: block; width: 24px; height: 24px; flex: none; object-fit: contain; }
+.matchday-own-tip { font-size: 16px; font-weight: 600; color: var(--secondary-text); white-space: nowrap; }
+.matchday-points-cell { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.matchday-compare-cell { overflow: hidden; }
+.matchday-compare-cell .compare-chip { max-width: 100%; }
+.matchday-toggle-cell { text-align: center; }
+.matchday-detail-toggle { display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center; border-radius: 10px; color: var(--foreground); }
+.matchday-detail-toggle:hover { background: var(--muted); }
+.matchday-detail-toggle:focus-visible, .matchday-mobile-game:focus-visible { outline: 2px solid var(--ring); outline-offset: -3px; }
+.matchday-detail-row, .matchday-detail-row:hover { background: var(--muted); }
+.matchday-detail-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.15fr); gap: 20px; padding: 0 24px 24px 116px; }
+.matchday-detail-card { min-width: 0; min-height: 310px; padding: 20px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); }
+.matchday-detail-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.matchday-detail-heading h3 { font-size: 15px; }
+.matchday-detail-heading > span { overflow: hidden; color: var(--secondary-text); font-size: 12px; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.matchday-outcome-labels { display: flex; justify-content: space-between; gap: 8px; margin-top: 18px; color: var(--secondary-text); font-size: 12px; }
+.matchday-outcome-labels strong { color: var(--foreground); }
+.matchday-outcome-track { display: flex; height: 12px; gap: 3px; margin-top: 8px; }
+.matchday-outcome-track > span { min-width: 2px; border-radius: 3px; background: var(--color-coral-400); }
+.matchday-outcome-track > .matchday-outcome-draw { opacity: .45; }
+.matchday-outcome-track > .matchday-outcome-away { opacity: .25; }
+.matchday-detail-locked { margin-top: 20px; color: var(--secondary-text); font-size: 13px; line-height: 1.45; }
+.matchday-detail-stats { margin-top: 20px; }
+.matchday-detail-stats > div { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-top: 1px solid var(--border); font-size: 13px; }
+.matchday-detail-stats dt { flex: none; color: var(--secondary-text); }
+.matchday-detail-stats dd { overflow: hidden; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.matchday-player-list { margin-top: 16px; }
+.matchday-player-head, .matchday-player-row { display: grid; grid-template-columns: minmax(0,1.5fr) 60px 48px minmax(70px,1fr); align-items: center; gap: 10px; }
+.matchday-player-head { padding: 0 0 8px; color: var(--secondary-text); font-size: 12px; }
+.matchday-player-row { min-height: 52px; border-top: 1px solid var(--border); font-size: 13px; }
+.matchday-player-row strong { font-weight: 600; }
+.matchday-player-row .points-token { justify-self: start; }
+.matchday-player-name { display: flex; min-width: 0; align-items: center; gap: 10px; }
+.matchday-player-name a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.matchday-player-name a:hover { text-decoration: underline; }
+.matchday-player-name a:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.matchday-player-marker { width: max-content; max-width: 100%; overflow: hidden; padding: 4px 7px; border-radius: 6px; color: var(--secondary-text); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.matchday-marker-you { background: var(--you-soft); color: var(--you); }
+.matchday-marker-best { background: var(--color-neon-400); color: var(--color-board); }
+.matchday-list-mobile { display: none; }
+@media (min-width: 760px) and (max-width: 1179px) {
+  .matchday-col-comparison, .matchday-table thead th:nth-child(6), .matchday-table tbody .matchday-compare-cell { display: none; }
+  .matchday-detail-grid { padding-left: 24px; }
+}
+@media (max-width: 759px) {
+  .matchday-list-desktop { display: none; }
+  .matchday-list-mobile { display: block; margin: 0 -16px; padding: 14px 20px 20px; background: var(--card); color: var(--foreground); }
+  .matchday-mobile-list-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .matchday-mobile-list-heading h2 { font-size: 20px; }
+  .matchday-mobile-list-heading > span { color: var(--secondary-text); font-size: 12px; }
+  .matchday-mobile-day { margin-top: 18px; padding: 2px 0 8px; color: var(--secondary-text); font-size: 13px; font-weight: 600; }
+  .matchday-mobile-game { display: block; width: 100%; min-height: 116px; padding: 4px 0 0; border-bottom: 1px solid var(--border); text-align: left; }
+  .matchday-mobile-game:hover { background: var(--muted); }
+  .matchday-mobile-game-main { display: grid; grid-template-columns: 48px minmax(0,1fr) 60px 36px; align-items: center; gap: 8px; min-height: 62px; }
+  .matchday-mobile-time > span { display: block; font-size: 13px; }
+  .matchday-mobile-time small { display: flex; align-items: center; gap: 4px; margin-top: 5px; color: var(--secondary-text); font-size: 11px; white-space: nowrap; }
+  .matchday-mobile-time small.matchday-live-status { color: var(--foreground); }
+  .matchday-mobile-teams { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+  .matchday-mobile-teams > span { display: flex; min-width: 0; align-items: center; gap: 6px; font-size: 14px; line-height: 1.2; }
+  .matchday-mobile-teams > span > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .matchday-mobile-teams .matchday-club-icon { width: 22px; height: 22px; }
+  .matchday-mobile-game-main .scoreboard { min-width: 58px; height: 36px; padding: 0 4px; font-size: 16px; }
+  .matchday-mobile-game-main .scoreboard-live > span:first-child { display: none; }
+  .matchday-mobile-own { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--secondary-text); font-size: 13px; font-weight: 600; }
+  .matchday-mobile-own .points-token { width: 28px; height: 28px; font-size: 13px; }
+  .matchday-mobile-game-foot { display: flex; min-height: 42px; align-items: center; gap: 8px; }
+  .matchday-mobile-game-foot .compare-chip { max-width: calc(100% - 28px); height: 28px; font-size: 12px; }
+  .matchday-mobile-game-foot .joker-mark { height: 24px; }
+  .matchday-mobile-game-foot > svg { color: var(--secondary-text); }
+}
