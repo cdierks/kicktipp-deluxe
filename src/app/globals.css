@@ -915,3 +915,6 @@ h1,
 
 .mobile-account-trigger, .mobile-account-trigger[data-active="true"], .mobile-account-trigger[data-state="open"] { background: transparent; color: var(--foreground); border: 0; box-shadow: none; }
 .mobile-account-trigger:hover { background: var(--muted); }
+.matrix-cell { background: color-mix(in oklch, var(--color-pitch-700) var(--heat), var(--color-mint)); color: var(--color-board); }
+.dark .matrix-cell { background: color-mix(in oklch, var(--color-lime-300) var(--heat), var(--color-neutral-800)); color: var(--foreground); }
+.dark .matrix-cell[style*="100%"] { color: var(--color-board); }

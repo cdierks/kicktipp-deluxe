@@ -29,6 +29,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { userTone } from '@/lib/user-tone'
+import { HeroPanel, PlayerAvatar } from '@/components/design-primitives'
+import type { CSSProperties } from 'react'
+import { layoutEndLabels } from '@/lib/chart-labels'
 import { IconChartBar, IconTrophy, IconScale, IconPokerChip } from '@/components/app-icons'
 
 /* ── Exported types (used in page.tsx) ── */
@@ -95,17 +99,10 @@ interface Props {
 
 /* ── Constants ── */
 
-// Fallback palette used when a user has no chosen color.
-const CHART_COLORS = [
-  'var(--chart-1)',
-  'var(--chart-2)',
-  'var(--chart-3)',
-  'var(--chart-4)',
-  'var(--chart-5)',
-  'var(--chart-6)',
-  'var(--chart-7)',
-  'var(--chart-8)',
-]
+// For accounts without a selected palette color, generate a stable display hue.
+function fallbackUserColor(index: number): string {
+  return `hsl(${(index * 137.508 + 195) % 360} 65% 48%)`
+}
 
 const HIT_COLORS = {
   exact:   'var(--chart-hit-exact)',
@@ -127,7 +124,6 @@ const TICK_STYLE = {
   fontSize: 12,
   fill: 'var(--muted-foreground)',
   fontFamily: 'var(--font-sans)',
-  fontVariantNumeric: 'tabular-nums',
 } as const
 
 /* ── Helper functions (module-level, no closure over component state) ── */
@@ -350,15 +346,15 @@ export function StatsTab({
     matchdayUnlocked ? 'spieltag' : 'saison',
   )
   const [selectedJokerUserId, setSelectedJokerUserId] = useState(currentUserId)
+  const [focusedUserId, setFocusedUserId] = useState<string | null>(null)
   const shouldReduce = useReducedMotion()
 
   useEffect(() => {
     if (!matchdayUnlocked) setView('saison')
   }, [matchdayUnlocked, matchday.id])
 
-  // Per-user chart color: prefer user's chosen color, fall back to CHART_COLORS by index
   const userColorMap = useMemo(
-    () => new Map(users.map((u, i) => [u.id, u.color ?? CHART_COLORS[i % CHART_COLORS.length]])),
+    () => new Map(users.map((u, i) => [u.id, userTone(u.color ?? fallbackUserColor(i), 'dark')])),
     [users],
   )
 
@@ -533,6 +529,8 @@ export function StatsTab({
   }, [seasonStats, users, seasonPointsMap])
 
   /* ── Derived display values ── */
+  const chartHeight = Math.max(240, users.length * 22 + 20)
+  const endLabels = layoutEndLabels(users.map(user => ({ id: user.id, nickname: user.nickname, value: Number(seasonData.lineData.at(-1)?.[user.id] ?? 0) })), chartHeight - 20)
   const activeAccuracy = view === 'spieltag' ? matchdayAccuracy : seasonData.accuracy
   const pieData = useMemo(() => buildPieData(activeAccuracy), [activeAccuracy])
   const activeRisk = view === 'spieltag' ? mdKpis.risk : seasonData.risk
@@ -543,7 +541,7 @@ export function StatsTab({
   const jokerUserOptions = users.map((u) => ({
     id: u.id,
     nickname: u.nickname,
-    color: userColorMap.get(u.id) ?? CHART_COLORS[0],
+    color: userColorMap.get(u.id) ?? userTone(fallbackUserColor(0), 'dark'),
   }))
   const effectiveJokerUserId =
     jokerUserOptions.some((u) => u.id === selectedJokerUserId)
@@ -619,6 +617,8 @@ export function StatsTab({
           </p>
         </div>
       )}
+
+      {(view === 'spieltag' || seasonStats.length > 0) && <HeroPanel label={view === 'saison' ? 'Saisonrennen' : 'So sind die Punkte entstanden'} value={view === 'saison' ? seasonPointsMap[currentUserId] ?? 0 : matchdayPointsMap[currentUserId] ?? 0} aside={<div className="space-y-4"><p className="text-lg font-wide">{view === 'saison' ? `${seasonStats.length} Spieltage gewertet` : `Spieltag ${matchday.matchdayNumber}`}</p><p className="text-sm text-hero-foreground/75">{view === 'saison' ? `Ø ${seasonData.avg} Punkte pro Spieltag` : `Ø ${mdKpis.avg} Punkte im Feld`}</p><p className="text-sm text-hero-foreground/75">Joker-Bonus +{activeJokers.summary.bonus}</p></div>}><p className="mt-3 text-sm text-hero-foreground/75">Deine Punkte</p></HeroPanel>}
 
       {/* ── KPI-Karten ── */}
       {(view === 'spieltag' || seasonStats.length > 0) && (
@@ -711,45 +711,16 @@ export function StatsTab({
         </motion.div>
       )}
 
-      {/* ── Saison-Verlauf LineChart ── */}
       {view === 'saison' && seasonStats.length > 1 && (
-        <div className="surface-raised rounded-xl p-4">
-          <h2 className="mb-3 text-base font-semibold text-foreground">
-            Saison-Verlauf
-          </h2>
-          <ChartContainer
-            config={{}}
-            className="h-[220px] w-full aspect-auto"
-            role="img"
-            aria-label="Kumulativer Punkteverlauf aller Spieler nach Spieltag"
-          >
-            <LineChart accessibilityLayer={false} data={seasonData.lineData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="st" tick={TICK_STYLE} tickLine={false} axisLine={false} />
-              <YAxis tick={TICK_STYLE} tickLine={false} axisLine={false} />
-              <ChartTooltip content={tooltipContent} />
-              <ChartLegend formatter={legendFormatter} wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-sans)', fontVariantNumeric: 'tabular-nums' }} />
-              {users.map((u, index) => (
-                <Line
-                  key={u.id}
-                  type="monotone"
-                  dataKey={u.id}
-                  name={u.id}
-                  stroke={userColorMap.get(u.id)}
-                  strokeWidth={u.id === currentUserId ? 3 : 2}
-                  strokeDasharray={LINE_PATTERNS[index % LINE_PATTERNS.length]}
-                  dot={false}
-                  activeDot={{ r: 4 }}
-                />
-              ))}
-            </LineChart>
-          </ChartContainer>
-          <AccessibleSeriesTable
-            caption="Kumulativer Punkteverlauf aller Spieler nach Spieltag"
-            data={seasonData.lineData}
-            users={users}
-          />
-        </div>
+        <section className="surface-raised rounded-2xl p-4"><h2 className="mb-3 text-xl">Saisonverlauf</h2>
+          <div className="on-well rounded-xl bg-well-surface p-4 text-neutral-100">
+            <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Spieler im Saisonverlauf">{users.map((u, index) => <button key={u.id} type="button" aria-pressed={focusedUserId === u.id} onClick={() => setFocusedUserId(focusedUserId === u.id ? null : u.id)} className="flex min-h-9 items-center gap-1 rounded-lg border border-neutral-700 px-2 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-300" style={{ '--uc-dark': userColorMap.get(u.id) ?? userTone(fallbackUserColor(index), 'dark') } as CSSProperties}><span className="size-2 rounded-full bg-(--uc-dark)" />{u.nickname}</button>)}</div>
+            <ChartContainer config={{}} className="relative w-full aspect-auto" style={{ height: chartHeight }} role="img" aria-label="Kumulativer Punkteverlauf aller Spieler nach Spieltag">
+              <LineChart accessibilityLayer data={seasonData.lineData} margin={{ top: 8, right: 138, left: -12, bottom: 0 }}><CartesianGrid stroke="var(--color-neutral-700)" strokeOpacity={.35} /><XAxis dataKey="st" tick={{ ...TICK_STYLE, fill: 'var(--color-neutral-300)' }} tickLine={false} axisLine={false} /><YAxis tick={{ ...TICK_STYLE, fill: 'var(--color-neutral-300)' }} tickLine={false} axisLine={false} /><ChartTooltip content={tooltipContent} />{users.map((u, index) => <Line key={u.id} type="monotone" dataKey={u.id} name={u.id} stroke={userColorMap.get(u.id)} strokeOpacity={focusedUserId && focusedUserId !== u.id ? .18 : 1} strokeWidth={u.id === currentUserId || focusedUserId === u.id ? 3 : 2} strokeDasharray={LINE_PATTERNS[index % LINE_PATTERNS.length]} dot={false} activeDot={{ r: 4 }} />)}</LineChart>
+            </ChartContainer>
+            <div className="mt-2 flex flex-wrap gap-3 text-xs">{users.map(u => <span key={u.id} className="max-w-36 truncate">{u.nickname}: {seasonData.lineData.at(-1)?.[u.id] ?? 0}</span>)}</div>
+          </div><AccessibleSeriesTable caption="Kumulativer Punkteverlauf aller Spieler nach Spieltag" data={seasonData.lineData} users={users} />
+        </section>
       )}
 
       {(pieData.length > 0 || selectedJokerUser) && (
@@ -759,7 +730,7 @@ export function StatsTab({
               <h2 className="mb-3 text-base font-semibold text-foreground">
                 Treffer-Verteilung
               </h2>
-              <div className="space-y-3">
+              <div className="space-y-3"><div className="flex h-6 gap-0.5 overflow-hidden rounded-lg bg-muted" aria-label="Treffer-Verteilung">{pieData.filter(entry => entry.value > 0).map(entry => <span key={entry.name} style={{ width: `${entry.pct}%`, backgroundColor: entry.color }} title={`${entry.name}: ${entry.value}`} />)}</div>
                 {pieData.map((entry) => (
                   <div key={entry.name} className="grid grid-cols-[minmax(0,1fr)_3.5rem] items-center gap-3">
                     <div className="min-w-0">
@@ -796,7 +767,7 @@ export function StatsTab({
                     Auswertung für {selectedJokerUser.nickname} in der aktuellen Ansicht
                   </p>
                 </div>
-                <Select value={effectiveJokerUserId} onValueChange={setSelectedJokerUserId}>
+                {jokerUserOptions.length <= 5 ? <div className="flex flex-wrap gap-1" role="group" aria-label="Spieler für Joker-Auswertung">{jokerUserOptions.map(user => <button key={user.id} type="button" aria-pressed={effectiveJokerUserId === user.id} onClick={() => setSelectedJokerUserId(user.id)} className={cn('flex min-h-9 items-center gap-1 rounded-lg border border-border px-2 text-xs focus-visible:outline-2 focus-visible:outline-ring', effectiveJokerUserId === user.id && 'bg-you-soft')}><span className="size-2 rounded-full" style={{ backgroundColor: user.color }} />{user.nickname}</button>)}</div> : <Select value={effectiveJokerUserId} onValueChange={setSelectedJokerUserId}>
                   <SelectTrigger aria-label="Spieler für Joker-Auswertung" className="h-9 w-full sm:w-48">
                     <SelectValue placeholder="Nutzer wählen" />
                   </SelectTrigger>
@@ -807,7 +778,7 @@ export function StatsTab({
                       </SelectItem>
                     ))}
                   </SelectContent>
-                </Select>
+                </Select>}
               </div>
 
               {jokerBreakdownData.length > 0 ? (
@@ -860,46 +831,7 @@ export function StatsTab({
         </div>
       )}
 
-      {/* ── Punkte/Spieltag LineChart ── */}
-      {view === 'saison' && seasonData.barData.length > 0 && (
-        <div className="surface-raised rounded-xl p-4">
-          <h2 className="mb-3 text-base font-semibold text-foreground">
-            Punkte / Spieltag ({seasonData.barData.length})
-          </h2>
-          <ChartContainer
-            config={{}}
-            className="h-[200px] w-full aspect-auto"
-            role="img"
-            aria-label="Punkte aller Spieler pro Spieltag"
-          >
-            <LineChart accessibilityLayer={false} data={seasonData.barData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-              <XAxis dataKey="st" tick={TICK_STYLE} tickLine={false} axisLine={false} />
-              <YAxis tick={TICK_STYLE} tickLine={false} axisLine={false} />
-              <ChartTooltip content={tooltipContent} />
-              <ChartLegend formatter={legendFormatter} wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-sans)', fontVariantNumeric: 'tabular-nums' }} />
-              {users.map((u, index) => (
-                <Line
-                  key={u.id}
-                  type="monotone"
-                  dataKey={u.id}
-                  name={u.id}
-                  stroke={userColorMap.get(u.id)}
-                  strokeWidth={u.id === currentUserId ? 3 : 2}
-                  strokeDasharray={LINE_PATTERNS[index % LINE_PATTERNS.length]}
-                  dot={false}
-                  activeDot={{ r: 4 }}
-                />
-              ))}
-            </LineChart>
-          </ChartContainer>
-          <AccessibleSeriesTable
-            caption="Punkte aller Spieler pro Spieltag"
-            data={seasonData.barData}
-            users={users}
-          />
-        </div>
-      )}
+      {view === 'saison' && seasonData.barData.length > 0 && <section className="surface-raised rounded-2xl p-4"><h2 className="mb-3 text-xl">Punkte pro Spieltag</h2><div className="overflow-x-auto"><table className="w-full border-separate border-spacing-1 text-xs"><caption className="sr-only">Punkte je Spieler und Spieltag</caption><thead><tr><th scope="col" className="min-w-32 text-left">Spieler</th>{seasonData.barData.map(row => <th scope="col" key={String(row.st)} className="min-w-10">{row.st}</th>)}<th scope="col">Ø</th></tr></thead><tbody>{users.map(user => <tr key={user.id}><th scope="row" className="max-w-40 truncate text-left font-medium">{user.nickname}</th>{seasonData.barData.map(row => { const points = Number(row[user.id] ?? 0); const best = Math.max(...users.map(u => Number(row[u.id] ?? 0))); return <td key={String(row.st)} className="p-0"><span className={cn('matrix-cell flex h-10 min-w-10 items-center justify-center rounded-lg font-wide', points === best && 'ring-2 ring-ring')} style={{ '--heat': `${Math.min(100, Math.max(0, points / 24 * 100))}%` } as CSSProperties}>{points}</span></td> })}<td className="text-center font-wide">{(seasonData.barData.reduce((sum, row) => sum + Number(row[user.id] ?? 0), 0) / seasonData.barData.length).toLocaleString('de-DE', { maximumFractionDigits: 1 })}</td></tr>)}</tbody></table></div><AccessibleSeriesTable caption="Punkte aller Spieler pro Spieltag" data={seasonData.barData} users={users} /></section>}
 
       {/* ── Accuracy-Tabelle ── */}
       {(view === 'spieltag' || seasonStats.length > 0) && (
@@ -927,9 +859,9 @@ export function StatsTab({
                 const form = seasonData.formkurve[user.id]
                 const joker = activeJokers.byUser[user.id] ?? { used: 0, hit: 0, bonus: 0 }
                 return (
-                  <TableRow key={user.id} className={user.id === currentUserId ? 'bg-primary-50 hover:bg-primary-100 dark:bg-primary-950 dark:hover:bg-primary-900' : ''}>
+                  <TableRow key={user.id} className={user.id === currentUserId ? 'bg-you-soft hover:bg-you-soft' : ''}>
                     <TableCell className="font-medium font-sans">
-                      <Link
+                      <span className="mr-2 inline-flex align-middle"><PlayerAvatar nickname={user.nickname} favoriteTeam={user.favoriteTeam} color={user.color} small /></span><Link
                         href={`/spieler/${user.nickname}`}
                         className={cn(
                           'hover:underline underline-offset-4 transition-colors',
