@@ -4,6 +4,8 @@ import { Fragment, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { ClubIcon } from '@/components/club-icon'
+import { Scoreboard, PointsToken, JokerMark, CompareChip, RankingList, HeroPanel, StatusPill } from '@/components/design-primitives'
+import { MobileBottomSheet } from '@/components/mobile-bottom-sheet'
 import {
   Table,
   TableBody,
@@ -42,57 +44,13 @@ import {
 } from '@/lib/dashboard-view'
 
 function PointsBadge({ points, isJoker = false }: { points: number | null; isJoker?: boolean }) {
-  const shouldReduce = useReducedMotion()
-  if (points === null) return <span className="text-xs text-muted-foreground">–</span>
-
-  const className = cn(
-    'inline-flex h-7 min-w-[1.85rem] items-center justify-center rounded-xl border px-2 text-xs font-bold tabular-nums shadow-sm',
-    !isJoker && points >= 4 && 'border-primary-700 bg-primary-700 text-neutral-50',
-    !isJoker && points === 3 && 'border-primary-600 bg-primary-600 text-neutral-50',
-    !isJoker && points === 2 && 'border-primary-300 bg-primary-200 text-primary-900',
-    isJoker && points >= 6 && 'border-warning-500 bg-warning-500 text-warning-950',
-    isJoker && points === 4 && 'border-warning-400 bg-warning-200 text-warning-900',
-    isJoker && points <= 1 && 'border-warning-300 bg-warning-100 text-warning-900',
-    !isJoker && points <= 1 && 'border-neutral-300 bg-neutral-200 text-neutral-700',
-  )
-
-  if (points >= 2) {
-    return (
-      <motion.span
-        className={className}
-        variants={popIn}
-        initial="hidden"
-        animate="show"
-        transition={shouldReduce ? { duration: 0 } : undefined}
-      >
-        {points}
-      </motion.span>
-    )
-  }
-
-  return <span className={className}>{points}</span>
+  const base = points === null ? null : isJoker ? points / 2 : points
+  const tier = base === 4 || base === 3 || base === 2 || base === 0 ? base : undefined
+  return <PointsToken points={points} tier={tier} />
 }
 
-function JokerBadge({ compact = false }: { compact?: boolean }) {
-  return (
-    <span className={cn(
-      'inline-flex items-center gap-1 rounded-full border border-warning-300 bg-warning-100 text-warning-900 dark:border-warning-700 dark:bg-warning-900 dark:text-warning-100',
-      compact ? 'px-2 py-0.5 text-xs font-semibold' : 'px-2.5 py-1 text-xs font-semibold',
-    )}>
-      <IconPokerChip className={cn(compact ? 'h-3 w-3' : 'h-3.5 w-3.5')} strokeWidth={1.5} />
-      Joker
-    </span>
-  )
-}
-
-function JokerMetaBadge() {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-warning-300 bg-warning-100 px-2 py-0.5 text-xs font-semibold text-warning-900 dark:border-warning-700 dark:bg-warning-900 dark:text-warning-100">
-      <IconPokerChip className="h-3 w-3" strokeWidth={1.5} />
-      Joker gesetzt
-    </span>
-  )
-}
+function JokerBadge({ compact = false }: { compact?: boolean }) { return <JokerMark compact={compact} /> }
+function JokerMetaBadge() { return <JokerMark /> }
 
 function RankIcon({ rank }: { rank: number }) {
   if (rank === 0) return <IconTrophy className="h-4 w-4 text-warning-500" strokeWidth={1.5} />
@@ -112,27 +70,9 @@ function getRowStatusLabel(status: MatchdayMatchRow['status']) {
   return labels[status]
 }
 
-function ComparisonSummaryBadgeOrText({
-  type,
-  text,
-}: {
-  type: MatchdayComparisonType
-  text: string
-}) {
-  const toneClass = {
-    BESTWERT: 'border-primary-300 bg-primary-100 text-primary-800 dark:border-primary-700 dark:bg-primary-900 dark:text-primary-100',
-    MIT_FELD: 'border-primary-300 bg-primary-100 text-primary-800 dark:border-primary-700 dark:bg-primary-900 dark:text-primary-100',
-    GEGEN_TREND: 'border-warning-300 bg-warning-100 text-warning-900 dark:border-warning-700 dark:bg-warning-900 dark:text-warning-100',
-    ALLEIN: 'border-border bg-background text-foreground',
-    GESPERRT: 'border-border bg-background text-muted-foreground',
-    KEIN_TIPP: 'border-error-300 bg-error-100 text-error-900 dark:border-error-700 dark:bg-error-900 dark:text-error-100',
-  }[type]
-
-  return (
-    <span className={cn('inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold leading-4', toneClass)}>
-      {text}
-    </span>
-  )
+function ComparisonSummaryBadgeOrText({ type, text }: { type: MatchdayComparisonType; text: string }) {
+  const tone = type === 'BESTWERT' ? 'best' : type === 'ALLEIN' ? 'solo' : type === 'KEIN_TIPP' ? 'todo' : 'share'
+  return <CompareChip tone={tone} text={text} />
 }
 
 export function MatchdayHeader({ model, view }: { model: MatchdayPageViewModel; view: DashboardView }) {
@@ -216,97 +156,19 @@ export function MatchdayHeader({ model, view }: { model: MatchdayPageViewModel; 
 }
 
 export function MatchdaySummary({ model }: { model: MatchdayPageViewModel }) {
-  const summaryItems = [
-    {
-      label: 'Deine Punkte',
-      value: `${model.summary.myPoints}`,
-      footnote: 'am Spieltag',
-    },
-    {
-      label: 'Dein Rang',
-      value: model.summary.myRank === null ? '–' : `${model.summary.myRank}.`,
-      footnote: `von ${model.summary.totalPlayers}`,
-    },
-    {
-      label: 'Einordnung',
-      value: model.summary.insight,
-      footnote: 'Vergleich im Feld',
-    },
-  ]
-
-  return (
-    <div className="surface-raised grid overflow-hidden rounded-xl md:grid-cols-[repeat(2,minmax(0,1fr))_minmax(0,1.3fr)] md:divide-x md:divide-border">
-        {summaryItems.map((item) => (
-          <div key={item.label} className="border-b border-border px-4 py-3 last:border-b-0 md:border-b-0">
-            <p className="text-xs font-medium text-muted-foreground">
-              {item.label}
-            </p>
-            <p className="mt-1 text-lg font-semibold leading-tight text-foreground">
-              {item.value}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">{item.footnote}</p>
-          </div>
-        ))}
-    </div>
-  )
+  const beforeDeadline = !model.header.deadlinePassed
+  const days = Math.max(0, Math.ceil((new Date(model.header.deadlineLabel).getTime() - Date.now()) / 86400000))
+  const tipped = model.matches.filter(match => match.myPrediction).length
+  const joker = model.matches.find(match => match.usedJoker)
+  return <HeroPanel label={beforeDeadline ? 'Bis zur Tippfrist' : 'Punkte am Spieltag'} value={beforeDeadline ? days : model.summary.myPoints} aside={<div className="space-y-4 text-sm"><StatusPill status={beforeDeadline ? 'open' : model.matches.every(match => match.status === 'FINISHED') ? 'finished' : 'live'} /><p className="text-lg font-wide">{beforeDeadline ? `${tipped} von ${model.matches.length} getippt` : model.summary.myRank ? `${model.summary.myRank}. von ${model.summary.totalPlayers}` : 'Noch keine Wertung'}</p><p className="text-hero-foreground/75">{model.summary.insight}</p><p className="text-hero-foreground/75">{joker ? `Joker: ${joker.teams.home} – ${joker.teams.away}` : 'Joker noch frei'}</p></div>}>
+    <p className="mt-3 text-sm text-hero-foreground/75">{beforeDeadline ? (days === 1 ? 'Tag bis zur Tippfrist' : 'Tage bis zur Tippfrist') : 'Dein Spieltag'}</p>
+    <div className="mt-6 flex flex-wrap gap-1" aria-label="Tipp-Bilanz">{model.matches.map(match => <span key={match.id} className={cn('h-5 w-5 rounded-sm border border-hero-line', match.myPoints === null ? 'bg-transparent' : match.myPoints >= 4 ? 'bg-lime-300' : match.myPoints === 3 ? 'bg-neon-400' : match.myPoints === 2 ? 'bg-mint' : 'bg-mint/15')} title={`${match.teams.home} gegen ${match.teams.away}: ${match.myPoints ?? 'offen'}`} />)}</div>
+  </HeroPanel>
 }
 
-export function MatchdayRanking({ ranking }: { ranking: MatchdayRankingEntry[] }) {
-  return (
-    <div className="surface-raised overflow-hidden rounded-xl">
-      <div className="border-b border-border px-4 py-3">
-        <p className="text-xs font-medium text-muted-foreground">
-          Spieltagswertung
-        </p>
-        <h2 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
-          Ranking im Feld
-        </h2>
-      </div>
-      <div className="divide-y divide-border/70">
-        {ranking.map((entry, index) => {
-          const club = entry.favoriteTeam ? getClubByName(entry.favoriteTeam) : undefined
-          return (
-            <div
-              key={entry.userId}
-              className={cn(
-                'grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3',
-                entry.isCurrentUser && 'bg-primary-50 dark:bg-primary-950',
-              )}
-            >
-              <span className="flex items-center justify-center">
-                <RankIcon rank={index} />
-              </span>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  {club?.iconUrl ? (
-                    <ClubIcon src={club.iconUrl} fallbackSrc={club.iconSourceUrl} label={club.name} className="h-4 w-4 shrink-0 object-contain" />
-                  ) : entry.color ? (
-                    <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: entry.color }} />
-                  ) : (
-                    <span className="h-3 w-3 shrink-0 rounded-full bg-border" />
-                  )}
-                  <Link
-                    href={`/spieler/${entry.nickname}`}
-                    className={cn(
-                      'truncate text-sm font-medium transition-colors hover:underline underline-offset-4',
-                      entry.isCurrentUser ? 'text-primary-readable' : 'text-foreground',
-                    )}
-                  >
-                    {entry.nickname}
-                    {entry.isCurrentUser && <span className="ml-1 text-xs font-normal text-muted-foreground">(du)</span>}
-                  </Link>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-base font-bold tabular-nums text-foreground">{entry.matchdayPoints}</p>
-                <p className="text-xs tabular-nums text-muted-foreground">{entry.seasonPoints} Saison</p>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
+export function MatchdayRanking({ ranking, beforeDeadline }: { ranking: MatchdayRankingEntry[]; beforeDeadline: boolean }) {
+  const [mode, setMode] = useState<'matchday' | 'season'>(beforeDeadline ? 'season' : 'matchday')
+  return <RankingList players={ranking} mode={mode} onModeChange={setMode} />
 }
 
 function DetailStat({ label, value }: { label: string; value: string }) {
@@ -486,7 +348,7 @@ function MatchCell({
         </div>
       </TableCell>
       <TableCell className="w-[5.75rem]">
-        <span className="text-sm font-semibold tabular-nums text-foreground">{match.result ?? '–:–'}</span>
+        <Scoreboard result={match.result} live={match.status === 'LIVE'} />
       </TableCell>
       <TableCell className="w-[5.75rem]">
         <span className={cn('text-sm font-semibold tabular-nums', match.myPrediction ? 'text-foreground' : 'text-muted-foreground')}>
@@ -499,7 +361,7 @@ function MatchCell({
           <PointsBadge points={match.myPoints} isJoker={match.usedJoker} />
         </div>
       </TableCell>
-      <TableCell className="w-[8.5rem] whitespace-normal">
+      <TableCell className="w-[8.5rem] whitespace-normal max-[1179px]:hidden">
         <ComparisonSummaryBadgeOrText type={match.comparisonType} text={match.comparisonSummary} />
       </TableCell>
     </TableRow>
@@ -514,13 +376,10 @@ export function MatchListTableDesktop({ matches }: { matches: MatchdayMatchRow[]
   }
 
   return (
-    <div className="surface-raised hidden rounded-xl lg:block">
-      <div className="border-b border-border px-4 py-3">
-        <p className="text-xs font-medium text-muted-foreground">Spieltag im Detail</p>
-        <h2 className="mt-1 text-lg font-semibold tracking-tight text-foreground">Alle Spiele im Vergleich</h2>
-      </div>
+    <div className="surface-raised hidden rounded-2xl min-[760px]:block">
+      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3"><h2 className="text-xl">Alle Spiele</h2><Button type="button" variant="outline" size="sm" onClick={() => setExpandedIds(expandedIds.length === matches.length ? [] : matches.map(match => match.id))}>{expandedIds.length === matches.length ? "Alle schließen" : "Alle aufklappen"}</Button></div>
       <div className="overflow-hidden rounded-b-xl">
-        <Table className="table-fixed" containerClassName="overflow-x-hidden rounded-none">
+        <Table className="table-fixed" containerClassName="overflow-x-auto rounded-none">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead className="w-10 text-center">
@@ -531,14 +390,17 @@ export function MatchListTableDesktop({ matches }: { matches: MatchdayMatchRow[]
             <TableHead className="w-[5.75rem]">Ergebnis</TableHead>
             <TableHead className="w-[5.75rem]">Dein Tipp</TableHead>
             <TableHead className="w-[6.25rem]">Punkte</TableHead>
-            <TableHead className="w-[8.5rem]">Vergleich</TableHead>
+            <TableHead className="w-[8.5rem] max-[1179px]:hidden">Vergleich</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {matches.map((match) => {
+          {matches.map((match, index) => {
+            const day = new Intl.DateTimeFormat("de-DE", { weekday: "long", day: "2-digit", month: "2-digit", timeZone: "Europe/Berlin" }).format(new Date(match.kickoff))
+            const previousDay = index > 0 ? new Intl.DateTimeFormat("de-DE", { weekday: "long", day: "2-digit", month: "2-digit", timeZone: "Europe/Berlin" }).format(new Date(matches[index - 1].kickoff)) : null
             const isExpanded = expandedIds.includes(match.id)
             return (
               <Fragment key={match.id}>
+                {day !== previousDay && <TableRow className="bg-muted hover:bg-muted"><TableCell colSpan={7} className="text-sm font-medium text-secondary-text">{day}</TableCell></TableRow>}
                 <MatchCell match={match} isExpanded={isExpanded} onToggle={() => toggle(match.id)} />
                 {isExpanded && (
                   <TableRow id={`match-details-${match.id}`} className="hover:bg-transparent">
@@ -557,147 +419,21 @@ export function MatchListTableDesktop({ matches }: { matches: MatchdayMatchRow[]
   )
 }
 
-function MobileMatchRow({
-  match,
-  isExpanded,
-  onToggle,
-}: {
-  match: MatchdayMatchRow
-  isExpanded: boolean
-  onToggle: () => void
-}) {
-  const homeClub = getClubByName(match.teams.home)
-  const awayClub = getClubByName(match.teams.away)
-  const shouldReduce = useReducedMotion()
-
-  return (
-    <article className="surface-raised overflow-hidden rounded-xl">
-      <Button
-        type="button"
-        variant="ghost"
-        aria-expanded={isExpanded}
-        aria-controls={`mobile-match-details-${match.id}`}
-        onClick={onToggle}
-        className="block h-auto w-full whitespace-normal rounded-none px-4 py-4 text-left"
-      >
-        <div className="min-w-0 w-full space-y-3">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium tabular-nums text-foreground">{match.kickoffShortLabel}</p>
-              <p className="text-xs text-muted-foreground">{getRowStatusLabel(match.status)}</p>
-            </div>
-            <div className="flex shrink-0 items-center gap-1.5 pl-2">
-              <ComparisonSummaryBadgeOrText type={match.comparisonType} text={match.comparisonSummary} />
-              <IconChevronRight className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-90')} strokeWidth={1.5} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              {homeClub ? <ClubIcon src={homeClub.iconUrl} fallbackSrc={homeClub.iconSourceUrl} label={match.teams.home} className="h-5 w-5 shrink-0 object-contain" /> : <span className="h-5 w-5 shrink-0" />}
-              <span className="truncate font-medium text-foreground">{match.teams.home}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {awayClub ? <ClubIcon src={awayClub.iconUrl} fallbackSrc={awayClub.iconSourceUrl} label={match.teams.away} className="h-5 w-5 shrink-0 object-contain" /> : <span className="h-5 w-5 shrink-0" />}
-              <span className="truncate font-medium text-foreground">{match.teams.away}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 divide-x divide-border overflow-hidden rounded-lg bg-muted">
-            <div className="px-3 py-2">
-              <p className="text-xs font-medium text-muted-foreground">Ergebnis</p>
-              <p className="mt-1 text-sm font-semibold tabular-nums leading-none text-foreground">{match.result ?? '–:–'}</p>
-            </div>
-            <div className="px-3 py-2">
-              <p className="text-xs font-medium text-muted-foreground">Dein Tipp</p>
-              <p className="mt-1 text-sm font-semibold tabular-nums leading-none text-foreground">{match.myPrediction ?? '–'}</p>
-            </div>
-            <div className="px-3 py-2">
-              <div className="flex flex-col">
-                <p className="text-xs font-medium text-muted-foreground">Punkte</p>
-                <div className="mt-1"><PointsBadge points={match.myPoints} isJoker={match.usedJoker} /></div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground">{match.kickoffLongLabel}</p>
-            {match.usedJoker && <JokerMetaBadge />}
-          </div>
-        </div>
-      </Button>
-
-      <AnimatePresence initial={false}>
-        {isExpanded && (
-          <motion.div
-            id={`mobile-match-details-${match.id}`}
-            initial={shouldReduce ? false : { height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={shouldReduce ? { duration: 0 } : layoutSpring}
-          >
-            <MatchRowDetails details={match.details} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </article>
-  )
-}
-
 export function MatchListMobile({ matches }: { matches: MatchdayMatchRow[] }) {
-  const [expandedIds, setExpandedIds] = useState<string[]>([])
-
-  function toggle(id: string) {
-    setExpandedIds((current) => current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id])
-  }
-
-  return (
-    <div className="space-y-3 lg:hidden">
-      {matches.map((match) => (
-        <MobileMatchRow
-          key={match.id}
-          match={match}
-          isExpanded={expandedIds.includes(match.id)}
-          onToggle={() => toggle(match.id)}
-        />
-      ))}
-    </div>
-  )
+  const [selected, setSelected] = useState<MatchdayMatchRow | null>(null)
+  const formatter = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', timeZone: 'Europe/Berlin' })
+  let previousDay = ''
+  return <div className="space-y-2 min-[760px]:hidden">{matches.map(match => {
+    const day = formatter.format(new Date(match.kickoff))
+    const showDay = previousDay !== day
+    previousDay = day
+    const home = getClubByName(match.teams.home)
+    const away = getClubByName(match.teams.away)
+    return <Fragment key={match.id}>{showDay && <h3 className="pt-4 text-sm text-secondary-text">{day}</h3>}<article className={cn('surface-raised rounded-[18px]', match.usedJoker && 'ring-1 ring-lime-300')}><button type="button" onClick={() => setSelected(match)} aria-label={`Details zu ${match.teams.home} gegen ${match.teams.away} öffnen`} className="w-full min-h-20 px-4 py-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><div className="flex items-center justify-between gap-2"><span className="text-xs text-secondary-text">{match.kickoffShortLabel} · {getRowStatusLabel(match.status)}</span><Scoreboard result={match.result} live={match.status === 'LIVE'} /></div><div className="mt-3 flex items-center gap-2"><span className="flex min-w-0 flex-1 items-center gap-2">{home && <ClubIcon src={home.iconUrl} label={home.name} className="size-5 shrink-0 object-contain" />}<span className="truncate text-sm">{home?.shortName ?? match.teams.home}</span></span><span className="text-muted-foreground">–</span><span className="flex min-w-0 flex-1 items-center justify-end gap-2"><span className="truncate text-sm">{away?.shortName ?? match.teams.away}</span>{away && <ClubIcon src={away.iconUrl} label={away.name} className="size-5 shrink-0 object-contain" />}</span></div><div className="mt-3 flex items-center gap-2 text-xs text-secondary-text">Dein Tipp {match.myPrediction ?? '–'}<PointsBadge points={match.myPoints} isJoker={match.usedJoker} />{match.usedJoker && <JokerMark compact />}</div></button></article></Fragment>
+  })}<MobileBottomSheet open={selected !== null} onOpenChange={open => { if (!open) setSelected(null) }} title={selected ? `${selected.teams.home} – ${selected.teams.away}` : 'Spiel'}>{selected && <div className="p-4"><div className="mb-4 flex items-center gap-3"><Scoreboard result={selected.result} live={selected.status === 'LIVE'} large /><span className="text-sm">Dein Tipp {selected.myPrediction ?? '–'}</span><PointsBadge points={selected.myPoints} isJoker={selected.usedJoker} /></div><MatchRowDetails details={selected.details} /></div>}</MobileBottomSheet></div>
 }
 
 export function MatchdayPanel({ model }: { model: MatchdayPageViewModel }) {
-  const orderedMatches = useMemo(
-    () => [...model.matches].sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()),
-    [model.matches],
-  )
-
-  if (orderedMatches.length === 0) {
-    return (
-      <div className="flex flex-col gap-6 xl:flex-row xl:items-start 2xl:gap-8">
-        <div className="min-w-0 flex-1 space-y-6 2xl:space-y-8">
-          <MatchdaySummary model={model} />
-          <div className="surface-raised rounded-xl px-5 py-8">
-            <p className="text-base font-semibold text-foreground">Für diesen Spieltag sind noch keine Spiele verfügbar.</p>
-            <p className="mt-2 text-sm text-muted-foreground">Sobald Partien synchronisiert sind, erscheint hier der neue Spieltagsvergleich.</p>
-          </div>
-        </div>
-        <div className="w-full shrink-0 xl:w-80">
-          <MatchdayRanking ranking={model.ranking} />
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex flex-col gap-6 xl:flex-row xl:items-start 2xl:gap-8">
-      <div className="min-w-0 flex-1 space-y-6 2xl:space-y-8">
-        <MatchdaySummary model={model} />
-        <MatchListTableDesktop matches={orderedMatches} />
-        <MatchListMobile matches={orderedMatches} />
-      </div>
-      <div className="w-full shrink-0 xl:w-80">
-        <MatchdayRanking ranking={model.ranking} />
-      </div>
-    </div>
-  )
+  const orderedMatches = useMemo(() => [...model.matches].sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()), [model.matches])
+  return <div className="space-y-6"><div className="grid gap-6 min-[1180px]:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]"><MatchdaySummary model={model} /><MatchdayRanking ranking={model.ranking} beforeDeadline={!model.header.deadlinePassed} /></div>{orderedMatches.length ? <><MatchListTableDesktop matches={orderedMatches} /><MatchListMobile matches={orderedMatches} /><div className="flex flex-wrap gap-3 text-xs text-secondary-text" aria-label="Punkte-Legende"><span>Exakt <PointsToken points={4} small /></span><span>Tordifferenz <PointsToken points={3} small /></span><span>Tendenz <PointsToken points={2} small /></span><span>Daneben <PointsToken points={0} small /></span></div></> : <p className="surface-raised rounded-2xl p-6">Für diesen Spieltag sind noch keine Spiele verfügbar</p>}</div>
 }

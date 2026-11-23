@@ -1,3 +1,4 @@
+import { getSubmissionCounts } from '@/lib/submission-counts'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { getActiveMatchday } from '@/lib/matchday'
@@ -79,7 +80,7 @@ async function MatchdayDashboard({
   const comparisonsUnlocked = isDeadlinePassed(effectiveDeadline, now)
   const evaluatedSeasonMatchdays = await getEvaluatedSeasonMatchdays(matchday.seasonId, now)
   const evaluatedMatchdayIds = evaluatedSeasonMatchdays.map((entry) => entry.id)
-  const [users, visibleTips, navigationSeason] = await Promise.all([
+  const [users, visibleTips, navigationSeason, submissionCounts] = await Promise.all([
     prisma.user.findMany({
       select: { id: true, nickname: true, favoriteTeam: true, color: true },
       orderBy: { nickname: 'asc' },
@@ -104,6 +105,7 @@ async function MatchdayDashboard({
       where: { id: matchday.seasonId },
       include: { matchdays: { orderBy: { matchdayNumber: 'asc' } } },
     }),
+    getSubmissionCounts(matchdayId),
   ])
 
   // Rankings and charts intentionally share the same evaluated matchday set.
@@ -182,6 +184,7 @@ async function MatchdayDashboard({
     seasonPointsMap,
     currentUserId,
     matchdayList,
+    submissionCounts,
     now,
   })
 

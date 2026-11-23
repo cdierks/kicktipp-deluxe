@@ -1,3 +1,4 @@
+import { getSubmissionCounts } from '@/lib/submission-counts'
 import { redirect, notFound } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -59,7 +60,7 @@ export default async function SpieltagPage({ params, searchParams }: Props) {
   const comparisonsUnlocked = isDeadlinePassed(effectiveDeadline, now)
   const evaluatedSeasonMatchdays = await getEvaluatedSeasonMatchdays(navigationSeason.id, now)
   const evaluatedMatchdayIds = evaluatedSeasonMatchdays.map((entry) => entry.id)
-  const [users, visibleTips, allMatchdays] = await Promise.all([
+  const [users, visibleTips, allMatchdays, submissionCounts] = await Promise.all([
     prisma.user.findMany({
       select: { id: true, nickname: true, favoriteTeam: true, color: true },
       orderBy: { nickname: 'asc' },
@@ -84,6 +85,7 @@ export default async function SpieltagPage({ params, searchParams }: Props) {
       where: { seasonId: navigationSeason.id },
       orderBy: { matchdayNumber: 'asc' },
     }),
+    getSubmissionCounts(matchday.id),
   ])
 
   const [seasonPoints, evaluatedMatchdaysRaw] = await Promise.all([
@@ -158,6 +160,7 @@ export default async function SpieltagPage({ params, searchParams }: Props) {
     seasonPointsMap,
     currentUserId: session.user.id,
     matchdayList: allMatchdays,
+    submissionCounts,
     now,
   })
 

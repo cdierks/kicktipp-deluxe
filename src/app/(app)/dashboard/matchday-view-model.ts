@@ -124,6 +124,7 @@ interface BuildMatchdayPageViewModelArgs {
   seasonPointsMap: Record<string, number>
   currentUserId: string
   matchdayList: { matchdayNumber: number }[]
+  submissionCounts?: Record<string, number>
   now?: Date
 }
 
@@ -231,7 +232,9 @@ function buildComparison({
   matchStatus,
   participantPredictions,
   currentUserId,
+  submissionCount,
 }: {
+  submissionCount?: number
   comparisonUnlocked: boolean
   matchStatus: MatchdayMatchRow['status']
   participantPredictions: ParticipantPredictionRow[]
@@ -243,7 +246,7 @@ function buildComparison({
 
   if (!comparisonUnlocked) {
     return {
-      comparisonSummary: 'Vergleich nach Tipp-Deadline',
+      comparisonSummary: myPrediction ? `${submissionCount ?? submittedCount} von ${participantPredictions.length} abgegeben` : 'Tipp fehlt noch',
       comparisonType: 'GESPERRT' as const,
       details: {
         revealComparison: false,
@@ -251,7 +254,7 @@ function buildComparison({
         commonPrediction: null,
         myStatus: myPrediction ? 'Dein Tipp ist fixiert' : 'Noch kein Tipp abgegeben',
         bestScore: null,
-        submissionCount: submittedCount,
+        submissionCount: submissionCount ?? submittedCount,
         participantPredictions: myRow ? [myRow] : [],
       },
     }
@@ -285,7 +288,7 @@ function buildComparison({
         commonPrediction: grouped.uniqueLeader?.[0] ?? null,
         myStatus: 'Kein eigener Tipp',
         bestScore: bestPoints !== null ? `${bestPoints} Punkte` : null,
-        submissionCount: submittedCount,
+        submissionCount: submissionCount ?? submittedCount,
         participantPredictions: withMarkers,
       },
     }
@@ -295,7 +298,7 @@ function buildComparison({
     const otherBest = bestRows.filter((row) => !row.isCurrentUser).map((row) => row.nickname)
     return {
       comparisonSummary:
-        otherBest.length > 0
+        otherBest.length > 1 ? `Bestwert mit ${otherBest.length} anderen` : otherBest.length > 0
           ? `Bestwert: du und ${otherBest[0]}`
           : 'Du liegst am Bestwert',
       comparisonType: 'BESTWERT' as const,
@@ -305,7 +308,7 @@ function buildComparison({
         commonPrediction: grouped.uniqueLeader?.[0] ?? null,
         myStatus: otherBest.length > 0 ? 'Du teilst den Bestwert' : 'Du hältst den Bestwert',
         bestScore: `${bestPoints} Punkte`,
-        submissionCount: submittedCount,
+        submissionCount: submissionCount ?? submittedCount,
         participantPredictions: withMarkers,
       },
     }
@@ -321,23 +324,7 @@ function buildComparison({
         commonPrediction: grouped.uniqueLeader?.[0] ?? null,
         myStatus: 'Du stehst allein',
         bestScore: bestPoints !== null ? `${bestPoints} Punkte` : null,
-        submissionCount: submittedCount,
-        participantPredictions: withMarkers,
-      },
-    }
-  }
-
-  if (grouped.uniqueLeader && grouped.uniqueLeader[0] !== myPrediction) {
-    return {
-      comparisonSummary: `Trend im Feld: ${grouped.uniqueLeader[0]}`,
-      comparisonType: 'GEGEN_TREND' as const,
-      details: {
-        revealComparison: true,
-        fieldTrend: `${grouped.uniqueLeader[1]} von ${submittedCount}`,
-        commonPrediction: grouped.uniqueLeader[0],
-        myStatus: 'Du gehst gegen den Trend',
-        bestScore: bestPoints !== null ? `${bestPoints} Punkte` : null,
-        submissionCount: submittedCount,
+        submissionCount: submissionCount ?? submittedCount,
         participantPredictions: withMarkers,
       },
     }
@@ -352,7 +339,7 @@ function buildComparison({
       commonPrediction: grouped.uniqueLeader?.[0] ?? null,
       myStatus: 'Du liegst mit dem Feld',
       bestScore: bestPoints !== null ? `${bestPoints} Punkte` : null,
-      submissionCount: submittedCount,
+      submissionCount: submissionCount ?? submittedCount,
       participantPredictions: withMarkers,
     },
   }
@@ -366,6 +353,7 @@ export function buildMatchdayPageViewModel({
   seasonPointsMap,
   currentUserId,
   matchdayList,
+  submissionCounts,
   now = new Date(),
 }: BuildMatchdayPageViewModelArgs): MatchdayPageViewModel {
   const sortedMatchdays = [...matchdayList].sort((a, b) => a.matchdayNumber - b.matchdayNumber)
@@ -415,6 +403,7 @@ export function buildMatchdayPageViewModel({
       matchStatus,
       participantPredictions,
       currentUserId,
+      submissionCount: submissionCounts?.[match.id],
     })
 
     const currentUserTip = tips[currentUserId]
