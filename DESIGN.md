@@ -1,356 +1,749 @@
----
-name: Kicktipp Deluxe
-description: A compact Bundesliga match center for private prediction leagues.
-colorRamps:
-  primary:
-    50: "oklch(96.688% 0.00989 267.359)"
-    100: "oklch(93.601% 0.01746 264.484)"
-    200: "oklch(88.687% 0.02958 264.413)"
-    300: "oklch(85.261% 0.04048 269.932)"
-    400: "oklch(80.550% 0.05196 268.036)"
-    500: "oklch(54.342% 0.09676 261.914)"
-    600: "oklch(33.722% 0.11002 262.626)"
-    700: "oklch(30.158% 0.09487 262.296)"
-    800: "oklch(27.676% 0.08054 261.518)"
-    900: "oklch(24.978% 0.06870 261.761)"
-    950: "oklch(20.703% 0.04721 261.566)"
-  secondary:
-    50: "oklch(96.838% 0.01079 256.695)"
-    100: "oklch(94.211% 0.01945 252.881)"
-    200: "oklch(89.293% 0.03542 250.877)"
-    300: "oklch(81.899% 0.05804 251.744)"
-    400: "oklch(73.622% 0.07941 252.958)"
-    500: "oklch(65.517% 0.09237 252.730)"
-    600: "oklch(50.735% 0.10287 251.304)"
-    700: "oklch(43.340% 0.08752 250.993)"
-    800: "oklch(38.594% 0.07204 250.809)"
-    900: "oklch(34.486% 0.05950 250.717)"
-    950: "oklch(27.173% 0.04445 252.093)"
-  neutral:
-    50: "oklch(98.427% 0.00395 106.472)"
-    100: "oklch(95.375% 0.00664 106.525)"
-    200: "oklch(92.735% 0.00678 97.357)"
-    300: "oklch(83.024% 0.01234 106.665)"
-    400: "oklch(69.279% 0.01573 106.803)"
-    500: "oklch(53.197% 0.01374 106.858)"
-    600: "oklch(49.393% 0.01090 106.792)"
-    700: "oklch(40.340% 0.00982 106.832)"
-    800: "oklch(30.775% 0.00701 106.804)"
-    900: "oklch(26.336% 0.00547 106.769)"
-    950: "oklch(22.567% 0.00379 106.700)"
-  success:
-    50: "oklch(97.173% 0.01071 158.849)"
-    100: "oklch(94.045% 0.02153 158.581)"
-    200: "oklch(87.983% 0.04423 160.899)"
-    300: "oklch(80.457% 0.07112 161.696)"
-    400: "oklch(73.126% 0.09014 161.300)"
-    500: "oklch(61.685% 0.09963 164.002)"
-    600: "oklch(52.329% 0.09738 161.703)"
-    700: "oklch(44.961% 0.08141 161.936)"
-    800: "oklch(39.268% 0.06796 162.892)"
-    900: "oklch(34.719% 0.05705 162.774)"
-    950: "oklch(26.761% 0.04042 162.720)"
-  warning:
-    50: "oklch(97.922% 0.01512 90.233)"
-    100: "oklch(95.043% 0.03459 88.776)"
-    200: "oklch(89.330% 0.07004 88.250)"
-    300: "oklch(83.810% 0.10430 85.161)"
-    400: "oklch(79.274% 0.12824 84.163)"
-    500: "oklch(75.041% 0.13648 78.023)"
-    600: "oklch(64.421% 0.12544 75.449)"
-    700: "oklch(53.595% 0.10375 73.810)"
-    800: "oklch(46.154% 0.08445 72.608)"
-    900: "oklch(40.668% 0.06818 72.401)"
-    950: "oklch(28.985% 0.04425 75.542)"
-  error:
-    50: "oklch(96.729% 0.01211 4.745)"
-    100: "oklch(93.497% 0.02492 2.092)"
-    200: "oklch(87.364% 0.04774 3.348)"
-    300: "oklch(78.640% 0.08776 3.794)"
-    400: "oklch(69.768% 0.12701 6.360)"
-    500: "oklch(60.139% 0.16670 8.751)"
-    600: "oklch(51.911% 0.17223 10.828)"
-    700: "oklch(45.502% 0.15252 11.122)"
-    800: "oklch(40.385% 0.12747 9.782)"
-    900: "oklch(36.188% 0.10628 7.817)"
-    950: "oklch(26.068% 0.07385 6.912)"
-typography:
-  display:
-    fontFamily: "Inter, sans-serif"
-    fontSize: "1.875rem"
-    fontWeight: 700
-    lineHeight: 1.15
-    letterSpacing: "-0.025em"
-  headline:
-    fontFamily: "Inter, sans-serif"
-    fontSize: "1.125rem"
-    fontWeight: 650
-    lineHeight: 1.3
-    letterSpacing: "-0.015em"
-  body:
-    fontFamily: "Inter, sans-serif"
-    fontSize: "0.875rem"
-    fontWeight: 400
-    lineHeight: 1.5
-  label:
-    fontFamily: "Inter, sans-serif"
-    fontSize: "0.75rem"
-    fontWeight: 600
-    lineHeight: 1.35
-    letterSpacing: "0"
-  tab-label:
-    fontFamily: "Inter, sans-serif"
-    fontSize: "0.6875rem"
-    fontWeight: 500
-    lineHeight: 1.45
-    letterSpacing: "0"
-rounded:
-  sm: "8px"
-  md: "10px"
-  lg: "12px"
-  surface-max: "14px"
-  navigation-capsule: "24px"
-spacing:
-  xs: "4px"
-  sm: "8px"
-  md: "12px"
-  lg: "16px"
-  xl: "24px"
-  2xl: "32px"
-semanticTokens:
-  light:
-    primary-readable: "{colorRamps.primary.700}"
-    success-readable: "{colorRamps.success.800}"
-    error-readable: "{colorRamps.error.700}"
-    control-border: "{colorRamps.neutral.500}"
-  dark:
-    primary-readable: "{colorRamps.primary.300}"
-    success-readable: "{colorRamps.success.300}"
-    error-readable: "{colorRamps.error.300}"
-    control-border: "{colorRamps.neutral.400}"
-components:
-  button-primary:
-    backgroundColor: "{colorRamps.primary.600}"
-    textColor: "{colorRamps.neutral.50}"
-    rounded: "{rounded.md}"
-    height: "40px"
-    padding: "0 16px"
-  field:
-    backgroundColor: "{colorRamps.neutral.50}"
-    textColor: "{colorRamps.neutral.950}"
-    rounded: "{rounded.md}"
-    height: "40px"
-    padding: "0 12px"
-  panel:
-    backgroundColor: "{colorRamps.neutral.50}"
-    textColor: "{colorRamps.neutral.950}"
-    rounded: "{rounded.lg}"
-    padding: "16px"
+# DESIGN.md · Kicktipp.Deluxe
+
+Version 1.0 · November 2026 · Textfassung des Designguides (PDF „Kicktipp-Deluxe-Designguide.pdf“).
+Referenz-Entwürfe: https://claude.ai/artifact/RCEs1sTwDQm9cyRo3rHwZp (Design-Canvas mit Spieltag, Statistik, Tippen, Mobil, Farben).
+
+Diese Datei ist die verbindliche Quelle für Gestaltung und Tokens. Bei Widersprüchen zwischen Code und dieser Datei gilt diese Datei, bei Widersprüchen zwischen dieser Datei und Fachlogik (Punkteregeln, Daten) gilt die Fachlogik.
+
 ---
 
-# Design System: Kicktipp Deluxe
+## 0. Kurzfassung
 
-## Overview
+- **Ruhige Flächen, laute Inhalte.** Flächen, Ränder, Navigation im Schiefer-Grau. Farbe gehört Ergebnissen, Punkten, Spielern.
+- **Lime heißt du.** Deine Punkte, deine Zeile, deine nächste Aktion. Nirgends sonst als Signal.
+- **Jeder Spieler hat seine Nutzerfarbe** (Admin › Farben, jede nur einmal vergeben). Erscheint als Ring, Balken, Linie, immer mit Namen.
+- **Die Anzeigetafel ist die Signatur.** Spielstände stehen auf einer dunkelgrünen Tafel mit Mint-Ziffern. Nur Spielstände.
+- **Was zählt, steht oben.** Ein grünes Panel pro Screen beantwortet die Hauptfrage.
+- **Mona Sans** in zwei Breiten: 125 % für Zahlen und Überschriften, 100 % für Text. Proportionale Ziffern.
+- **4-px-Raster**, Radien verschachtelt, keine Verläufe, kein Glow, keine Emojis, keine Ausrufezeichen.
 
-**Creative North Star: "Kompaktes Match-Center"**
+---
 
-Kicktipp Deluxe fühlt sich wie eine fokussierte Spieltagsanwendung an: ruhig im Rahmen, dicht in den Daten und lebendig dort, wo Ergebnisse und Mitspieler relevant werden. Die Informationshierarchie folgt dem Spieltag – Kontext, eigene Leistung, Spiele, Feldvergleich und vertiefende Statistiken.
+## 1. Prinzipien
 
-Die Oberfläche ist flach und strukturell. Grenzen und dezente Tonflächen gruppieren Inhalte; Karten werden nur für eigenständige Informationseinheiten eingesetzt. Generische SaaS-Kartenwände, Marketing-Heroes, dekoratives Glassmorphism, verschachtelte Karten und dekorative Kennzahlen sind ausgeschlossen. Die mobile Bottom-Navigation ist die einzige funktionale Liquid-Glass-Ausnahme.
+1. **Ruhige Flächen, laute Inhalte.** Hintergründe, Ränder und Navigation bleiben im Schiefer-Grau. Wenn alles bunt ist, ist nichts wichtig.
+2. **Lime heißt du.** Deine Punkte, deine nächste Aktion, deine Zeile in der Rangliste.
+3. **Jeder Spieler hat seine Farbe.** Die Nutzerfarbe markiert eine Person überall gleich. Der Name steht immer daneben.
+4. **Die Anzeigetafel ist die Signatur.** Dunkelgrüne Tafel, Mint-Ziffern, nur für Spielstände.
+5. **Was zählt, steht oben.** Jeder Screen beantwortet zuerst die eine Frage, wegen der man ihn öffnet.
 
-**Key Characteristics:**
+**Zielgruppe und Ton:** 25–35, sportlich, wenig Geduld am Samstag. Direkt, ein bisschen Stammtisch, nie albern. Wirkt wie ein gutes Stadionheft.
 
-- kompakte, scannbare Informationsdichte;
-- ein klarer primärer Fokus pro Ansicht;
-- vertraute shadcn-Bedienmuster;
-- ruhige neutrale Flächen mit gezielter Markenfarbe;
-- fußballspezifische Tabellen-, Spieler- und Diagrammfarben.
+**Vermeiden:** Farbverläufe, Glow, farbige Schatten · Emojis als Icons oder Deko · Versal-Labels mit weiter Laufweite · Ausrufezeichen · Diagramme, die nur dekorieren · Glas-/Blur-Effekte.
 
-## Colors
+### Hierarchie über Flächen
 
-Die Primary-Rampe führt Aktionen und Auswahl, Secondary liefert Orientierung, und die Neutral-Rampe strukturiert Light- und Dark-Flächen. Success, Warning und Error sind ausschließlich semantischen Zuständen vorbehalten.
+Die Helligkeit der Flächen führt den Blick. Je dunkler, desto wichtiger.
 
-### Primary
-
-- **Marineblau (#16336F):** Primäre Aktionen, aktuelle Navigation, Fokus-Ring und ausgewählte Zustände.
-
-### Secondary
-
-- **Abgestuftes Blau:** Sekundäre Aktionen, Informationszustände und dezente Akzentflächen mit dunkler Schrift.
-
-### Tertiary
-
-- **Success (ruhiges Smaragdgrün):** Abgeschlossene oder erfolgreiche Zustände mit Neutral-950 als Vordergrund.
-- **Warning (Amber):** Fristen, Aufmerksamkeit und riskante Zustände mit Neutral-950 als Vordergrund.
-- **Error (kühles Rot):** Fehler und destruktive Aktionen; Light nutzt Error-600 mit Neutral-50, Dark Error-400 mit Neutral-950.
-
-### Neutral
-
-- **Neutral 50–950:** Vollständige Grundlage für Text, Hintergründe, Borders, Muted-Flächen, Sidebar und Dark-Mode-Abstufungen.
-
-### Corporate-Akzent
-
-Rotorange (#FE492A) ist ausschließlich der Marke vorbehalten: Hintergrund des KD-Zeichens und Punkt in „Kicktipp.Deluxe“. Die Beschriftung des Zeichens nutzt Neutral-950. Der Punkt verwendet im Hellmodus das kontrastreichere #BF351F; im Dunkelmodus nutzen beide Akzente das weichere #F77960. Buttons und Links bleiben blau. Aktive Navigationsflächen verwenden warmes Steingrau mit marineblauer Schrift im Hellmodus sowie helleres Graphit mit warmweißer Schrift im Dunkelmodus. Die Tokens `brand-orange`, `brand-orange-foreground` und `brand-orange-readable` trennen Marke und Fehlerstatus.
-
-### Warmer Graphit
-
-Die Neutral-Rampe nimmt die Temperatur des Creme-Ankers #F0EEDF auf, ohne eine beigefarbene Arbeitsfläche zu erzeugen. Hell: äußerer Rahmen #E8E7E2, Inhaltsfläche #FAFAF7, Sidebar und abgesetzte Flächen #F0F0EB. Dunkel: Hintergrund #1C1C1A, Inhaltsfläche #252522, erhöhte Flächen #30302C. Hellblau #B1BFE2 trägt primäre Aktionen im Dunkelmodus; Fließtext bleibt warmes Fastweiß.
-
-### Named Rules
-
-**The Meaning Before Decoration Rule.** Markenfarben kennzeichnen Aktion, Auswahl oder Status; sie werden nie als unmotivierter Schmuck eingesetzt.
-
-**The Domain Color Rule.** Gespeicherte Spielerfarben und originale Vereinslogos bleiben unangetastet. Tabellenzonen und fachliche Diagrammkategorien verwenden ausschließlich die dokumentierten Rampen.
-
-**The Closed Palette Rule.** Alle UI-, Status-, Tabellen- und Diagrammfarben stammen aus den sechs dokumentierten OKLCH-Rampen und den drei Corporate-Akzent-Tokens. Nur gespeicherte Spielerfarben und originale Vereinslogos sind fachliche Ausnahmen; `transparent`, `currentColor` und funktionale Alpha-Zustände gelten nicht als zusätzliche Farbfamilien.
-
-Diagramme verwenden themeabhängige `chart-1` bis `chart-8` sowie gemeinsame `chart-hit-*`, `chart-joker-*` und `chart-miss`-Tokens. Dadurch bleiben Treffer- und Jokerkategorien in Statistik und Spielerprofil auch auf Graphit erkennbar. Gespeicherte Spielerfarben haben weiterhin Vorrang.
-
-### Semantic Readability Tokens
-
-Gesättigte Flächen und farbiger Text haben unterschiedliche Kontrastaufgaben.
-Die regulären Tokens `primary`, `success` und `error` tragen gefüllte Controls
-oder Statusflächen. Auf neutralen Hintergründen werden ausschließlich die
-stärkeren Texttokens verwendet:
-
-| Token | Light | Dark | Zweck |
+| Ebene | Fläche | Hell | Dunkel |
 |---|---|---|---|
-| `primary-readable` | Primary-700 | Primary-300 | Links, hervorgehobene Werte und Primary-Icons auf Neutral |
-| `success-readable` | Success-800 | Success-300 | positiver Status als Text oder Icon auf Neutral |
-| `error-readable` | Error-700 | Error-300 | Fehlertext und destruktive Hinweise auf Neutral |
-| `control-border` | Neutral-500 | Neutral-400 | sichtbare Begrenzung interaktiver Felder und Auswahlcontrols |
+| 1 Navigation | Seitenleiste | Dark Green `#183132` | Schiefer 950 `#0C1313` |
+| 2 Panel | genau ein Panel „was gerade zählt“ | Green `#004D43` | Green `#004D43` |
+| 3 Seitenfläche | Hintergrund | Schiefer 150 `#DEE5E6` | Schiefer 900 `#151E1E` |
+| 4 Karten | Listen, Details | Schiefer 50 `#F7FDFD` | Schiefer 850 `#202A2A` |
 
-`control-border` ist bewusst kontrastreicher als der strukturelle
-`border`-Token. Dadurch bleiben Input- und Select-Grenzen ohne Schatten
-erkennbar. Für Warning- und Secondary-Flächen bleibt Neutral-950 die
-vorgesehene Vordergrundfarbe; ein zusätzliches Farbfamilien-Token ist nicht
-nötig.
+Lesereihenfolge Spieltag: Dein Spieltag (Panel) → Rangliste → Alle Spiele → Navigation als Anker.
 
-**The Filled-vs-Readable Rule.** Ein Flächentoken wird nicht automatisch als
-Textfarbe wiederverwendet. Farbiger Text auf neutralem Grund nutzt das passende
-`*-readable`; Text auf gefüllten semantischen Flächen nutzt das zugehörige
-`*-foreground`.
+---
 
-## Typography
+## 2. Farbe
 
-**Display Font:** Inter Variable
-**Body Font:** Inter Variable
-**Label/Mono Font:** Inter Variable
+### 2.1 Markenfarben
 
-**Character:** Eine einzige präzise Sans-Familie trägt Navigation, Formulare, Daten und Titel. Variable Gewichte erzeugen Hierarchie; Resultate und Tabellen erhalten tabellarische Ziffern.
+| Name | Hex | Aufgabe | Schrift darauf |
+|---|---|---|---|
+| Dark Green | `#183132` | Navigation, Anzeigetafel, Joker-Marke | Mint `#EBFFF5` |
+| Green | `#004D43` | Panel, „du“ auf hellem Grund, Fokusring hell | Lime oder Mint |
+| Radiant Green · Lime | `#D0FF71` | du, Hauptaktion, 4 Punkte, Joker aktiv | Dark Green |
+| Neon Green | `#27EAA6` | Live, 3 Punkte, Marker „Bestwert“ | Dark Green |
+| Mint | `#EBFFF5` | Schrift auf Grün und Tafel, Basis für 2 Punkte | Green |
+| Coral | `#F57E59` | Abweichung vom Feld, Zähler offener Tipps | Dark Green (5,3 : 1) |
 
-### Hierarchy
+Purple aus der Chiron-Vorlage wird **nicht** verwendet.
 
-- **Display** (700, 1.5–1.875rem, 1.15): Seitentitel, niemals als Marketing-Hero.
-- **Headline** (650, 1–1.125rem, 1.3): Abschnitte und wichtige Paneltitel.
-- **Title** (600, 0.875–1rem, 1.4): Karten, Tabellen und Dialoge.
-- **Body** (400, 0.875rem, 1.5): Beschreibungen mit maximal 65–75 Zeichen pro Zeile.
-- **Label** (600, 0.75–0.8125rem, normaler Zeichenabstand, Satzschreibung): Feldnamen, Spalten und Statusdetails. Versalien bleiben seltenen, kurzen Statuskürzeln vorbehalten.
+- Mengen pro Screen: Green + Dark Green ca. 25 %, Lime ≤ 5 %, Coral < 2 %.
+- **Lime nie als Schrift auf Hell** (1,1 : 1). Auf Hell übernimmt Green `#004D43` die Rolle „du“.
+- **Coral als Schrift:** auf Hell `#A74728` (5,7 : 1), auf Dunkel `#F57E59` (5,6 : 1).
+- Keine Verläufe. Erlaubt: Tonstufe einer Farbe über Deckkraft (z. B. Lime 55 % als hinterlegte Zeile).
 
-### Named Rules
+### 2.2 Schiefer (neutrales Grau)
 
-**The One Inter Rule.** Inter ist die einzige Schrift. Display-, Sans- und Mono-Aliase zeigen auf dieselbe lokale Variable-Font-Datei.
+Abgeleitet aus Dark Green: Farbton 199°, Chroma 0,006–0,016 (in der Mitte am höchsten), Helligkeit OKLCH 0,97 → 0,18.
 
-**The Match Number Rule.** Resultate, Punkte, Tabellenplätze, Uhrzeiten und Diagrammwerte verwenden `tnum`, ohne die globalen Inter-Features zu überschreiben.
+| Stufe | Hex | Hell | Dunkel |
+|---|---|---|---|
+| 50 | `#F7FDFD` | Karten | |
+| 100 | `#E9EFEF` | erhöhte Fläche, offene Zeile | |
+| 150 | `#DEE5E6` | Seitenhintergrund | |
+| 200 | `#D2D9D9` | Matrix-Nullwert, Risiko Remis | |
+| 300 | `#B7C0C0` | | Text sekundär |
+| 400 | `#97A1A1` | | Text leise |
+| 500 | `#788383` | Icons neutral | |
+| 600 | `#5B6768` | Text leise | |
+| 700 | `#445050` | Text sekundär | |
+| 800 | `#2D3838` | | erhöhte Fläche |
+| 850 | `#202A2A` | | Karten |
+| 900 | `#151E1E` | Text | Seitenhintergrund |
+| 950 | `#0C1313` | | Navigation |
 
-**The Route Title Rule.** Der H1 nennt immer das aktuelle Navigationsziel, etwa „Tippen“, „Bundesliga“ oder „Statistiken“. Spieltag, Saison und Status erscheinen als Kontext im Eyebrow oder in der Beschreibung und ersetzen niemals den Seitentitel.
+Text im Dunkelmodus: `#EEF4F4`. Linien sind keine eigene Stufe: Textfarbe mit 10 % (hell) bzw. 8 % (dunkel) Deckkraft.
 
-**The Mobile Matchday Title Rule.** In der mobilen Large-Title-Bar benennt die Ansicht „Spieltag“ abweichend vom Desktop den tatsächlich betrachteten Spieltag, etwa „34. Spieltag“. Beim Wechsel auf historische Spieltage folgt die Zahl der URL; Bundesliga und Statistiken behalten ihre Routentitel.
+### 2.3 Bedeutung
 
-## Elevation
+**Punkte-Stufen** (Farbe = Stufe des Tipps, Zahl = Endpunkte inkl. Joker):
 
-Die App verwendet eine klar begrenzte Ebenenhierarchie. Die Sidebar und die gemeinsame Content-Plane liegen angehoben auf dem neutralen App-Untergrund. Eigenständige Hauptpanels dürfen eine kurze gerichtete Tiefe erhalten; Tabellenzeilen, KPI-Zellen, Formgruppen und andere innere Strukturen bleiben flach und werden durch Tonflächen oder Divider gegliedert.
+| Punkte | Stufe | Token | Hell | Dunkel |
+|---|---|---|---|---|
+| 4 | Exakt | Lime-Fläche, Dark-Green-Ziffer, Kontur Green 18 % | `#D0FF71` | gleich |
+| 3 | Tordifferenz | Neon-Fläche, Dark-Green-Ziffer | `#27EAA6` | gleich |
+| 2 | Tendenz | Mint-Fläche `#E2FBEF`, Ziffer Green, Kontur Green 22 % | | Neon 13 %, Ziffer `#86F3CD` |
+| 0 | Daneben | nur Kontur, Ziffer Text leise | | |
+| – | offen / kein Tipp | nur Kontur, Schnitt 400 | | |
 
-### Shadow Vocabulary
+Ein Tendenz-Tipp mit Joker zeigt „4“, bleibt aber Mint (Stufe 2) und trägt die Joker-Marke „★×2“.
 
-- **Floating overlay** (`0 4px 8px var(--color-neutral-300)`): Ausschließlich Dropdown, Popover, Tooltip und Dialog; im Dark Mode ersetzt Oberflächenhelligkeit den Schatten.
-- **Pressed surface** (`0 1px 2px var(--color-neutral-200)`): Optional für interaktive, nicht verschachtelte Zeilen.
-- **Sidebar raised** (`0 1px 2px` plus `0 3px 6px` aus Neutral): Logo, ausgewähltes Theme-Segment und Kontozugriff erhalten eine kurze gerichtete Tiefe.
-- **Sidebar inset** (`inset 0 1px 3px`): Aktive Navigation und Theme-Schiene wirken gedrückt beziehungsweise eingelassen. Dark Mode nutzt ausschließlich Neutral-700 bis Neutral-950.
-- **Content plane** (`inset 0 1px 0` plus `0 1px 2px` und `0 3px 8px` aus Neutral): Der komplette Desktop-Inhaltsbereich liegt als zusammenhängende Ebene auf dem App-Untergrund.
-- **Raised panel** (`inset 0 1px 0` plus `0 1px 2px` und `0 3px 6px` aus Neutral): Nur abgeschlossene Hauptpanels wie Matchliste, Ranking, Diagramm oder priorisierte Adminaufgabe.
+**Du und das Feld:**
 
-### Named Rules
+| Farbe | Bedeutet |
+|---|---|
+| Lime (auf Hell: Green) | du: deine Punkte, deine Zeile, deine nächste Aktion |
+| Nutzerfarbe | eine bestimmte Person, auch du selbst in Diagrammen |
+| Coral | Abweichung: „Nur du tippst 2:3“, „Gleich wie du“, Feldtrend-Balken, Zähler offener Tipps (Tab-Leiste mobil) |
 
-**The Flat-by-Default Rule.** Ein Panel erhält Border oder kleinen Schatten, niemals eine Border plus breiten Schatten.
+**Status-Pille:** Tippen offen = Lime-Fläche (einzige Lime-Pille) · Live = Neon auf Dark Green mit langsam blinkendem Punkt · Abgeschlossen = neutral, Karte mit Kontur.
 
-**The Two-Level Content Rule.** Content-Plane und eigenständige Hauptpanels bilden die einzigen dauerhaften Inhalts-Ebenen. Innere Zellen und Gruppen erzeugen keine weitere Schattenstufe.
+**Tabellenzonen Bundesliga:** Meister Lime · Champions League Green (dunkel: Neon) · Europa League Neon · Relegation Warnung · Abstieg Fehler. Warnung/Fehler nie als einziger Hinweis, immer mit Text oder Symbol.
 
-## Application frame
+### 2.4 Nutzerfarben
 
-- **Maximale Inhaltsbreite:** 100rem für jede authentifizierte Route.
-- **Desktop-Außenrahmen:** Ab 64rem jeweils 16px Außenrand und sichtbarer Abstand zwischen Sidebar und Content-Plane; ab 90rem jeweils 24px. Die nutzbare Sidebar-Breite bleibt erhalten. Container, Platzhalter und Content-Mindesthöhe berücksichtigen denselben `app-frame-gap`, auch bei eingeklappter Sidebar.
-- **Responsive Gutter:** mobil 12px horizontal und 16px vertikal, ab `sm` 16px, ab `lg` 24px und ab `2xl` 32px.
-- **Seitenrhythmus:** 24px zwischen Hauptgruppen, ab `2xl` 32px; interne Gruppen verwenden 8, 12 oder 16px.
-- **Mobile:** Die Content-Plane bleibt vollflächig und ohne äußeren Schatten. Raised Panels verwenden nur ihre kurze lokale Tiefe.
-- **Compact App Shell:** Unter 64rem ersetzt eine safe-area-fähige Bottom-Navigation die Desktop-Sidebar; der Inhalt erhält ausreichend Scroll-Padding für die schwebende Leiste.
+Jeder Spieler wählt in Admin › Farben eine Farbe, die nur einmal vergeben wird. Die gespeicherte Farbe bleibt unverändert, **angepasst wird nur die Anzeige**:
 
-## Components
+- In OKLCH umrechnen, Farbton (und wo möglich Chroma) behalten, Helligkeit L ins Band legen:
+  - helle Karten: L 0,45–0,70
+  - dunkle Karten, Anzeigetafel, Diagrammgrund: L 0,58–0,88
+- Liegt die Farbe schon im Band, ändert sich nichts. Außerhalb des Gamuts Chroma reduzieren.
 
-### Buttons
+Aktuelle Palette (Stand 23.11.2026):
 
-- **Shape:** kompakt und leicht gerundet (10px).
-- **Primary:** Light nutzt Primary-600 mit Neutral-50, Dark Primary-400 mit Neutral-950; 40px Höhe und 16px horizontaler Innenabstand.
-- **Hover / Focus:** leichte Tonverschiebung, klarer blauer Ring und funktionale 150–200-ms-Übergänge.
-- **Secondary / Ghost:** Secondary-Rampe oder eine feste Neutral-Fläche; inaktive Zustände tragen keine gesättigte Farbe.
+| Name | Original | auf Hell | auf Dunkel | vergeben an |
+|---|---|---|---|---|
+| Blau | `#2B7FFF` | `#2B7FFF` | `#2B7FFF` | frei |
+| Cyan | `#00B8DB` | `#1EB0D0` | `#00B8DB` | frei |
+| Emerald | `#00BC7D` | `#00BB7C` | `#00BC7D` | frei |
+| Limette | `#7CCF00` | `#6FB51D` | `#7CCF00` | frei |
+| Borussia | `#FDE100` | `#B39F16` | `#F3D928` | Michi |
+| Amber | `#FE9A00` | `#DC881B` | `#FE9A00` | frei |
+| Effzeh | `#E20613` | `#E20613` | `#E40C16` | Chrischi |
+| Pink | `#F6339A` | `#F6339A` | `#F6339A` | SachmaMainza |
+| Lila | `#AD46FF` | `#AD46FF` | `#AD46FF` | frei |
+| Indigo | `#615FFF` | `#615FFF` | `#615FFF` | frei |
+| Werder | `#1D9053` | `#1D9053` | `#1E9154` | TheWeedyWatson |
+| Mainza | `#C3141E` | `#C3141E` | `#D83231` | frei |
 
-### Chips
+**Wo die Nutzerfarbe erscheint:** Ring (2 px) um das Vereinswappen überall, wo ein Spieler genannt wird · Balken in der Rangliste · Linie im Saisonverlauf · Punkt in Legenden und Auswahlknöpfen.
 
-- **Style:** pillenförmig nur für Status, Filter oder sehr kurze Metadaten; normaler Zeichenabstand.
-- **State:** Text oder Symbol ergänzt jede farbliche Bedeutung.
+**Wo nie:** als Füllung großer Flächen · als Schriftfarbe · als Hintergrund hinter dem Wappen.
 
-### Cards / Containers
+**Immer mit Namen.** Farben können sich ähneln (Effzeh/Mainza; Rot/Grün bei Farbsehschwäche). Linienenden beschriftet, Tooltips nennen alle Spieler, Tabellen enthalten alle Werte.
 
-- **Corner Style:** 12px, in Ausnahmefällen maximal 14px.
-- **Background:** Card- oder Muted-Token, keine Verläufe und kein Glas.
-- **Shadow Strategy:** flach; Elevation nur für echte Overlays.
-- **Border:** vollständige 1px-Border, keine farbigen Seitenstreifen.
-- **Internal Padding:** 12–16px, 24px nur für leere oder auth-fokussierte Ansichten.
+**Empfehlung Admin › Farben:** beim Hinzufügen prüfen, ob die neue Farbe einer vorhandenen zu nah ist (ΔE in OKLab unter 15), dann Hinweis zeigen.
 
-### Inputs / Fields
+### 2.5 Kontrast (gemessen)
 
-- **Style:** 40px hoch, 10px Radius, klarer Border und lesbarer Placeholder.
-- **Focus:** sichtbarer Primary-Ring, ohne Layoutsprung.
-- **Error / Disabled:** semantische Farbe plus Text beziehungsweise Symbol; niemals nur Farbe.
+| Paar | Farben | Kontrast |
+|---|---|---|
+| Text auf Karte | `#151E1E` / `#F7FDFD` | 16,5 : 1 |
+| Text sekundär auf Karte | `#445050` / `#F7FDFD` | 8,1 : 1 |
+| Text leise auf Karte | `#5B6768` / `#F7FDFD` | 5,7 : 1 |
+| Text leise auf Seitenfläche | `#5B6768` / `#DEE5E6` | 4,6 : 1 |
+| Green-Schrift auf Karte | `#004D43` / `#F7FDFD` | 9,5 : 1 |
+| Coral-Schrift auf Karte | `#A74728` / `#F7FDFD` | 5,7 : 1 |
+| Lime auf Green | `#D0FF71` / `#004D43` | 8,5 : 1 |
+| Mint auf Green | `#EBFFF5` / `#004D43` | 9,4 : 1 |
+| Mint 74 % auf Green | `#AED1C7` / `#004D43` | 5,9 : 1 |
+| Mint auf Anzeigetafel | `#EBFFF5` / `#183132` | 13,2 : 1 |
+| Dark Green auf Lime | `#183132` / `#D0FF71` | 12,0 : 1 |
+| Dark Green auf Neon | `#183132` / `#27EAA6` | 8,8 : 1 |
+| Dark Green auf Coral | `#183132` / `#F57E59` | 5,3 : 1 |
+| Dunkel: Text auf Karte | `#EEF4F4` / `#202A2A` | 13,2 : 1 |
+| Dunkel: Text leise auf Karte | `#97A1A1` / `#202A2A` | 5,6 : 1 |
+| Dunkel: Coral auf Karte | `#F57E59` / `#202A2A` | 5,6 : 1 |
+
+Alle Textpaare ≥ 4,5 : 1. Lime-Flächen und helle Punkte-Tokens auf Hell < 3 : 1, deshalb dunkle Schrift und feine Kontur. Nutzerfarben als Linien ≥ 3 : 1, sonst Name und Wert direkt an der Linie.
+
+---
+
+## 3. Typografie
+
+**Schrift:** Mona Sans (SIL OFL), variabel, Breite 75–125 %, Gewicht 200–900. Ersetzt Inter (bisher) bzw. Aeonik (Vorlage). Einbinden: `@fontsource-variable/mona-sans` mit Breitenachse (`wdth.css`).
+
+| Rolle | Breite | Gewicht |
+|---|---|---|
+| Zahlen, Ergebnisse, Punkte | 125 % | 600 |
+| Überschriften | 125 % | 600 |
+| Fließtext, Bedienelemente | 100 % | 400 / 500 |
+| Hervorhebung im Text | 100 % | 600 (selten) |
+
+| Stufe | Größe px | Zeilenhöhe | Schnitt | Beispiel |
+|---|---|---|---|---|
+| Riesenzahl im Panel | 120 / 96 / 76 mobil | 0,86 | 125 % · 600 | Dein Spieltag, Saisonrennen |
+| Seitentitel | 48 / 36 mobil | 1,04 | 125 % · 600 | Spieltag 10 |
+| Kennzahl | 36 | 1,05 | 125 % · 600 | Kacheln |
+| Kartentitel | 20 (mobil 18) | 1,2 | 125 % · 600 | Rangliste |
+| Fakt im Panel | 22 (mobil 18) | 1,1 | 125 % · 600 | Bestwert |
+| Ergebnis auf der Tafel | 19 (mobil 17) | 1 | 125 % · 600 | 4 : 1 |
+| Fließtext | 15 | 1,45 | 100 % · 400 | |
+| Bedienelement | 14–15 | 1,2 | 100 % · 500 | Buttons, Navigation |
+| Sekundär | 13 | 1,4 | 100 % · 400 | Untertitel, Chips |
+| Klein | 12 | 1,3 | 100 % · 400 | Achsen, Tabellenköpfe |
+| Minimum mobil | 11 | 1 | 100 % · 500 | Tab-Beschriftung |
+
+**Regeln**
+- Hierarchie über Größe, Breite, Farbe. Keine Schnitte ≥ 700.
+- Satzschreibung überall („Alle Spiele“), keine Versal-Labels.
+- Kein Kursiv zur Betonung.
+- Negative Laufweite nur ab 40 px (−0,01 bis −0,02 em).
+- **Ziffern:** Mona Sans setzt standardmäßig gleich breite Ziffern mit Serifen-Eins (wirken wie Code). Global setzen: `font-variant-numeric: lining-nums proportional-nums;`. Die Inter-Features (`cv02 … ss08`) entfallen. `.tabular-nums` nur in echten Ausnahmen.
+
+---
+
+## 4. Raster, Raum, Bewegung
+
+**Abstandsskala (4-px-Raster):** 4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 48 · 64
+
+| Wofür | Wert |
+|---|---|
+| innerhalb eines Elements | 4–12 |
+| zwischen Zeilen einer Liste | 2–8 |
+| zwischen Gruppen | 12–24 |
+| zwischen Abschnitten | 24–40 |
+
+**Desktop (≥ 1180 px):** Seitenleiste 264 px (eingeklappt 80) · Inhalt max. 1360 px · Seitenrand 32 · Kartenabstand 24 · Panel : Rangliste = 2 : 1, Rangliste min. 340 · Kopfleiste 64 · Zeile Spieleliste min. 80 · Navigationseintrag 40, Abstand 2.
+**Tablet (760–1180 px):** Panel und Rangliste stapeln, Spalte „Vergleich im Feld“ wandert in die Details.
+**Mobil (< 760 px):** Seitenrand 16 · Tab-Leiste 4 Ziele, 52 px + Home-Balken (`env(safe-area-inset-bottom)`) · Kopf 68, bleibt stehen · Spielkarte Radius 18, Abstand 8 · Tippfläche ≥ 44 × 44 · Schrift ≥ 11 px.
+
+Gleiche Dinge haben gleiche Maße: alle Zeilen einer Liste gleich hoch, alle Karten einer Reihe gleiche Innenkante. Keine Ausreißer wie 13 oder 11 px.
+
+**Radien:** 6 Tag/Badge · 10 Button, Eingabe, Tafel (`--radius`) · 16 Karte (mobil 18) · 20–24 Panel, Bottom Sheet. Verschachtelt: innen = außen − Innenabstand, nie unter 4.
+
+**Tiefe:**
+- Hell: Karten mit Kontur (Text 10 %) + `0 1px 2px rgb(21 30 30 / .05), 0 8px 24px rgb(21 30 30 / .05)`.
+- Dunkel: keine Schatten. Tiefe über Flächenstufen 900 → 850 → 800 und Kontur 8 %.
+- Schwebend (Tooltip, Sheet): `0 8px 24px` mit 12–28 % Schwarz.
+- Keine farbigen Schatten, kein Glow. Aktive Einträge höchstens helle Kante oben (`inset 0 1px 0` Weiß 6–8 %).
+
+**Bewegung:** Kurve `cubic-bezier(.22, 1, .36, 1)` · Hover/Klick 120–180 ms · Tooltip/Menü 160–220 ms · Sheet/Aufklappen 250–320 ms · Drücken `scale(.97–.985)`. Nur Farbe, Deckkraft, transform animieren. Einzige Dauerbewegung: Live-Punkt. `prefers-reduced-motion`: alles außer Farbwechseln aus.
+
+---
+
+## 5. Komponenten & Zustände
+
+### Anzeigetafel (`Scoreboard`)
+- Nur für Spielstände. Hintergrund `--board`, Ziffern `--board-foreground`, 125 % · 600, 19 px (mobil 17).
+- Höhe 40 (mobil 36), min. Breite 76, Radius 10, Doppelpunkt 45 % Deckkraft.
+- Zustände: **Endstand** · **Live** (Ziffern Lime, daneben Minute „71'“ und Neon-Punkt) · **leer** „–:–“ (nur Kontur, Text leise) · **groß** im Bottom Sheet (52 hoch, 26 px Ziffern, Radius 14).
+
+### Punkte-Token (`PointsToken`)
+- Quadrat 34 px (klein 28), Radius 9 (klein 8), 125 % · 600 · 15 px. Farben siehe 2.3.
+- Joker-Marke: Dark Green, Lime-Stern + „×2“, Höhe 22, Radius 6. Neben dem Token oder als Tag „Joker ×2“. Mobil: feine Lime-Kontur um die ganze Spielkarte.
+- Nicht: Punkte in Nutzerfarben, Ergebnisse ohne Tafel, Tafel für Kennzahlen.
+
+### Vergleichs-Chip
+Höhe 30, Radius 8, Punkt 7 px, 13 px · 500. Prüfreihenfolge:
+1. Bestwert allein → „Du liegst am Bestwert“ (best: Lime 55 %, Punkt `--you`)
+2. Bestwert mit 1 anderem → „Bestwert: du und Michi“; mit mehreren → „Bestwert mit 3 anderen“ (best)
+3. eigener Tipp ist einzigartig (exaktes Ergebnis) → „Nur du tippst 2:3“ (solo: `--field-soft`, Text Coral lesbar)
+4. sonst → „2 von 4 tippen wie du“ (share: Kontur, Text sekundär)
+5. vor der Tippfrist ohne Tipp → „Tipp fehlt noch“ (todo: Lime-Fläche); mit Tipp → „3 von 4 abgegeben“
+
+### Marker in „Tipps im Feld“
+Dein Tipp (Lime 55 %) · Gleich wie du (`--field-soft`, Coral-Text) · Joker ×2 (Dark Green/Lime) · Bestwert (Neon/Dark Green) · Kein Tipp (Kontur) · Abgegeben (neutral, vor der Frist; Tipp selbst verdeckt mit Schloss).
+
+### Avatar mit Farbring
+Kreis 36 (klein 26), neutrale Füllung, Wappen 24 px (klein 18), Ring `0 0 0 2px <userTone>`. Wappen = Lieblingsverein, Ring = Person.
+
+### Ranglisten-Zeile
+Platz (125 %, 20 px) · Avatar · Name + „(du)“ (leise) · Balken 4 px in Nutzerfarbe (Breite relativ zum Ersten) · Punkte rechts (125 %, 22 px) + Unterzeile („131 Saison“ bzw. „13 am Spieltag“). Eigene Zeile hinterlegt (`--muted`). Gleichstand: gleicher Platz, nächster zählt weiter (1, 1, 3). Umschalter Spieltag/Saison.
+
+### Steuerelemente
+| Element | Standard | Hover | Gedrückt | Fokus | Deaktiviert |
+|---|---|---|---|---|---|
+| Hauptaktion (Lime, 44, Radius 12, 600) | Lime | `#DCFF8E` | scale .98 | Ring | 45 % |
+| Werkzeug (Kontur, 36, Radius 10, 500) | Kontur 18 % | Fläche `--muted` | scale .97 | Ring | 45 % |
+| Umschalter (Segmente 30–40) | aktiv: Karte + Kontur + kleiner Schatten | | | Ring | |
+| Symbol-Button (40, mobil 44) | Text sekundär | Fläche Text 10 % | scale .97 | Ring | 40 % |
+
+- **Eine Hauptaktion pro Screen** („9 Tipps abgeben“ vor der Frist, „Joker setzen“ auf Tippen).
+- **Fokusring immer sichtbar:** 2 px, Green (hell) / Lime (dunkel), 2 px Abstand. Nie entfernen.
+- Icons: Lucide, 18 px (klein 16), Strich 1,5, Farbe der Textstufe. Symbol-Buttons immer mit `aria-label`.
+- Achtung CSS-Spezifität: Button-Resets (`button { background: none }`) dürfen Lime-Buttons nicht überschreiben.
+
+### Tipp-Eingabe
+- Torfelder 56 × 56 (mobil 48 × 52), Radius 12, 125 % · 600 · 24 px, `inputmode="numeric"`, max. 2 Ziffern, Platzhalter „–“.
+- Zustände: leer (Fläche `--muted`, Kontur 18 %) · Fokus (Karte, 2 px Ring `--ring`, Schein `--you-soft` 4 px) · ausgefüllt (Karte, Kontur Text leise).
+- Nach einer Ziffer automatisch ins nächste Feld, nach dem Gast-Tor ins nächste Spiel.
+- Autospeichern, Status oben rechts: „Speichert …“ → „Alle Tipps gespeichert · gerade eben“. Kein Speichern-Button.
+- Pro Zeile: Anstoß + Status (✓ Getippt / Offen) · Heim (Name, „6. Platz · 18 Pkt.“, Wappen) · Felder · Gast · Joker-Knopf.
+
+### Joker-Knopf und Joker-Hinweis
+- Knopf 44 × 44, Radius 12. Zustände: **gesperrt** (35 %, Tooltip „Erst beide Tore tippen“) · **wählbar** (Kontur) · **Kandidat** (nach „Joker setzen“: Ring Green 2 px + Lime-Schein) · **aktiv** (Lime, Stern gefüllt, „×2“, Zeile `--you-soft`).
+- Ein Joker pro Spieltag, freiwillig, bis zur Tippfrist verschiebbar. Klick auf anderen Stern verschiebt. Wird ein Tor im Joker-Spiel gelöscht, wird der Joker automatisch frei.
+- **Hinweis im Panel**, solange kein Joker gesetzt ist: Lime-umrandeter Kasten „Joker noch nicht gesetzt“ + Text „Ein Spiel deiner Wahl zählt doppelt, bis zu 8 statt 4 Punkte. Setzen ist freiwillig, du kannst ihn bis zur Tippfrist verschieben.“ + Hauptaktion „Joker setzen“ + „4 Spiele kommen infrage“. Deaktiviert, solange kein Spiel getippt ist („Tippe zuerst ein Spiel“).
+- „Joker setzen“ startet Auswahlmodus: Hinweisband über der Liste („Wähle mit ★ das Spiel, das doppelt zählen soll …“ + „Abbrechen“), Kandidaten hervorgehoben.
+- Nach dem Setzen: Kasten wird Bestätigung (Wappen, Spiel, Tipp in Lime, „Joker entfernen“).
+- Zusätzlich: Badge an „Tippen“ in der Navigation mit Zahl offener Tipps.
 
 ### Navigation
+- **Seitenleiste:** `--sidebar` (hell Dark Green, dunkel Schiefer 950), 264 px. Marke: Lime-Kachel 36 mit Spielfeld-Glyph + „Kicktipp**.Deluxe**“ (Deluxe in Lime). Einträge 40 px, aktiv: Fläche Mint 8 % + Symbol Lime. „Tippen“ mit Lime-Badge. Unten: Darstellung Hell/Dunkel/System (Segmente), Profilkarte mit Farbring. Einklappbar auf 80 px.
+- **Tab-Leiste mobil:** Spieltag · Tippen · Bundesliga · Statistiken. Aktiv: Pille 56 × 30 (`--you-soft`, dunkel Lime 16 % + Lime-Icon). Zähler offener Tipps in Coral. Profil/Verwaltung über eigenes Wappen oben links. Flach, kein Glas/Blur.
+- **Kopf mobil:** Wappen · „Spieltag 10“ + Saison mit Pfeilen · Darstellungs-Knopf (Hell → Dunkel → System). Bleibt beim Scrollen stehen.
+- **Bottom Sheet mobil:** Spiel-Details statt aufklappender Zeilen. Griff, Schließen-Knopf, Tipp auf Hintergrund schließt, max. 88 % Höhe, Radius 24 oben, eigener Scrollbereich, `role="dialog" aria-modal`.
 
-Ab 64rem ist die Sidebar eine eigenständige Layered-Material-Ebene: mit 16.5rem nutzbarer Breite und auf 4rem einklappbar; hinzu kommt der responsive Außenabstand. Spieltag, Tippen, Bundesliga und Statistiken bilden die fachliche Navigation; Profilzugriffe liegen ausschließlich im Kontomenü und Admin erscheint als getrennte Berechtigungsgruppe. Aktive Ziele nutzen eine eingelassene Neutral-200-Fläche mit Primary-600-Schrift (Dark: Neutral-700 mit Neutral-50-Schrift), Hover-Zustände eine kurz angehobene Neutral-Fläche. Tooltips sichern die Erkennbarkeit im eingeklappten Zustand.
+### Diagramme
+- **Form folgt Daten:** Verlauf = Linie · Anteile = ein gestapelter Balken · Spieler × Spieltag = Matrix.
+- Nutzerfarbe für Spieler, Punkte-Stufen für Treffer. Nie vermischen.
+- **Diagramme mit Nutzerfarben auf `--well`** (`#0E1919`, im grünen Panel als „Anzeigetafel“), mit dunklem Band der Nutzerfarben.
+- Direkt beschriften: Namen + Wert am Linienende; bei Überlappung automatisch ≥ 22 px auseinander. Legende als Auswahlknöpfe: Klick hebt eine Linie hervor, andere 18 % Deckkraft.
+- Eigene Linie 3 px, andere 2 px, eigene/fokussierte zuletzt gezeichnet.
+- Raster Text 8 %, Achsen 12 px leise, keine Punkte auf jedem Wert, nur Endpunkte (Ring in Grundfarbe).
+- Tooltip: Hilfslinie gestrichelt, alle Spieler sortiert nach Stand, Wert + Zuwachs; ab Mitte nach links klappen.
+- Matrix „Punkte pro Spieltag“: Zelle 40 hoch, Radius 8, Zahl in der Zelle, sequenzielle Skala 0–24 (hell: Mint → Green, dunkel: Schiefer → Lime), Bestwert des Spieltags mit 2-px-Rahmen, Spalte Ø.
+- Treffer-/Joker-Verteilung: ein Stapelbalken (2 px Lücken, keine 0-Segmente) + Zeilen mit Farbfeld, Label, Punkte, Anzahl, Prozent. Joker: Erfolglos (Schiefer 200) / Tendenz 2×2=4 / Tordifferenz 3×2=6 / Exakt 4×2=8.
+- Nichts auf eine feste Spielerzahl festlegen. Unter jedem Diagramm eine Tabelle mit allen Werten.
 
-Unter 64rem bleiben dieselben vier Ziele als permanente Bottom-Tabs sichtbar. Eine einzige schwebende Regular-Liquid-Glass-Fläche nutzt direkte Alpha-Abstufungen aus Neutral, `backdrop-filter: blur(28px) saturate(135%)` bei 64% Deckkraft. Warmes Milchglas im Hellmodus und warmes Rauchglas im Dunkelmodus erhalten eine obere Lichtkante, einen kurzen Kontaktschatten und einen weichen Schatten (`0 8px 24px -4px`). Nur der aktive Tab erhält eine gemeinsame bewegliche Auswahlfläche aus warmem Steingrau (Neutral-200 bei 85% Deckkraft; Dark: Neutral-700 bei 88% Deckkraft); die Tabs selbst erzeugen keine weiteren Glasflächen. Ohne Filterunterstützung ist die Fläche deckend; reduzierte Transparenz nutzt 96% Deckkraft mit 8px Blur. Erhöhter Kontrast verwendet eine deckende Fläche ohne Blur. Beschriftungen sind immer deckend. Konto, Theme und Admin liegen im Avatar-Sheet der Primary-Kopfzeile.
+---
 
-Die mobile Spieltagsnavigation reserviert die vorherige Position immer für einen 44-px-Pfeilbutton. Am ersten verfügbaren Spieltag bleibt er sichtbar, trägt einen verständlichen Accessible Name und verwendet den nativen Disabled-State; Desktop behält an dieser Stelle seine bestehende Leerstelle.
+## 6. Screens & Abläufe
 
-**The Single Glass Layer Rule.** Liquid Glass ist ausschließlich für die kompakte Bottom-Navigation erlaubt. Content, Karten, Sheet und aktive Tabfläche verwenden kein eigenes `backdrop-filter`, damit niemals Glas auf Glas entsteht.
+### Spieltag (Startseite)
+Beantwortet: Wie läuft es für mich? Wer liegt vorn? Was ist in jedem Spiel passiert?
+1. **Kopf:** Status-Pille, „Saison 2026/27“, Titel „Spieltag 10“ (48 px, 125 %), Tippfrist-Zeile mit Uhr-Icon, Spieltag-Blättern (‹ 10 von 34 ›).
+2. **Panel (`--hero`)** + **Rangliste** nebeneinander (2 : 1):
+   - Riesenzahl Punkte (Lime) + „Punkte am Spieltag“; rechts Faktenliste: Rang („2.“ / „von 4 · geteilt“), Einordnung, Joker („Bayern – Köln“ / „0 × 2 = 0 Punkte“).
+   - Tipp-Bilanz: ein Feld je Spiel in Spielreihenfolge (Lime/Neon/Mint 62 %/Mint 14 %), Legende mit Anzahlen.
+3. **Alle Spiele:** nach Tagen gruppiert („Freitag, 20.11.“ · „1 Partie“). Spalten: Anstoß/Status · Spiel (Heim/Gast mit Wappen 24, Verlierer in Text sekundär/400) · Tafel · Dein Tipp · Punkte (+ Joker) · Vergleich-Chip · Aufklapp-Chevron. „Alle aufklappen“.
+4. **Details** (aufgeklappt, Fläche `--muted`): links „Vergleich im Feld“ (Feldtrend „2 von 4 tippen 4:1“, Verteilungsbalken Heim/Remis/Auswärts in Coral, eigene Tendenz kräftig; Häufigster Tipp; Dein Status; Bestwert), rechts „Tipps im Feld“ (Avatar, Name, Tipp, Punkte, Marker, „4 von 4 abgegeben“).
+5. **Legende** der Punkte-Stufen am Seitenende.
 
-Dashboard-Ansichten sind URL-gesteuert: `/dashboard` zeigt den Spieltag, `?ansicht=bundesliga` die Tabelle und `?ansicht=statistiken` die Auswertung. Historische Spieltagspfade bleiben beim Ansichtswechsel erhalten. Der Inhaltskopf zeigt den aktuellen Seitenkontext; eine zusätzliche Tab-Leiste im Inhalt entfällt.
+**Zustände:**
+- **Vor der Tippfrist:** Panel zeigt Restzeit groß („4 · Tage bis zur Tippfrist“), Fakten „Deine Tipps 0 / 9“, „Saisonrang“, „Joker“, Hauptaktion „9 Tipps abgeben“. Tipps der anderen verdeckt. Rangliste startet auf „Saison“.
+- **Live:** Pille Live, Badge „Live · 5 Spiele laufen“, Punkte „vorläufig“, jede Zeile eigener Status (Endstand / 71' Live / Anstoß), Tipp-Bilanz zeigt offene Spiele als Umriss, Deadline-Zeile „1 beendet, 5 laufen, 3 folgen“.
+- **Abgeschlossen:** neutrale Pille, Endstand.
 
-Die mobile App-Kopfzeile nutzt Primary-700 mit Neutral-50 für WCAG-AA-kontrastreichen Text. Am Seitenanfang zeigt sie als 124-px-Large-Title-Bar den Routentitel, genau eine kontextabhängige Zeile und einen räumlich angehobenen Kontozugriff mit Avatar, Name und Öffnungsindikator. Nach 48px Scrollweg reduziert sie sich funktional auf eine 56-px-Leiste; bei reduzierter Bewegung erfolgt der Zustandswechsel ohne Übergang. Primary-500 beziehungsweise Primary-600 bilden Trenn-, Hover- und Pressed-Stufen. Der Desktop-Header bleibt kompakt und unverändert.
+**Einordnung:** Platz 1 allein → „Tagesbester · 3 Punkte vor Michi“ · Platz 1 geteilt → „Bestwert · gemeinsam mit Michi“ · dahinter → „4 Pkt. zurück · hinter TheWeedyWatson“.
 
-Der Footer verbindet eine eingelassene Hell-/Dunkel-/System-Auswahl mit einem angehobenen Kontozugriff. Translation und Schatten reagieren innerhalb von 120–180ms; bei reduzierter Bewegung entfallen räumliche Translationen.
+### Tippen
+Panel: „Dein Tippstand“ „4 / 9“ + „Spiele getippt · 5 fehlen noch“ + Fortschrittsfelder (getippt/offen/Joker) + Joker-Hinweis bzw. -Bestätigung. Kopf: Tippfrist mit Restzeit, Speicherstatus. Liste nach Tagen gruppiert („3 von 5 getippt“), Werkzeug „Nächstes offenes Spiel“. Rechts Bundesliga-Tabelle (#, Verein mit Wappen, Diff., Pkt.), Vereine des fokussierten Spiels hervorgehoben (`--you-soft`), Zonen als feine Linien. Fuß: „4 von 9 getippt · Joker noch frei“.
 
-### Match Row
+**Joker-Ablauf:** 1 Tippen → 2 Hinweis sehen → 3 „Joker setzen“, Kandidaten hervorgehoben → 4 Bestätigung → 5 Verschieben (anderer Stern) oder „Joker entfernen“.
 
-Die Matchzeile verbindet Uhrzeit und Status, Vereine, Ergebnis, eigenen Tipp, Punkte und Feldvergleich in einer einzigen Ebene. Desktop nutzt tabellarische Spalten, Mobile eine kompakte zweizeilige Anordnung ohne Card-in-Card-Struktur.
+### Statistik
+Umschaltbar Spieltag/Saison (großer Segment-Umschalter im Kopf) + Spieltag-Blättern.
+1. **Panel:** Saison = „Saisonrennen“: Riesenzahl eigener Punkte, „Platz 1 von 4“, Fakten Vorsprung (+5 auf Michi), Form (48, vorher 33), Bester Spieltag (22, Spieltag 9); rechts Saisonverlauf auf `--well`. Spieltag = „So sind die Punkte entstanden“: gestapelte Balken je Spieler (Exakt Lime, Tordifferenz Neon, Tendenz Mint 62 %, Joker-Bonus Lime-Umriss) mit Avatar.
+2. **Kennzahlen:** Ø Punkte, Rekord, Joker-Bonus, Risikofaktor (ein Anteilsbalken Heim/Remis/Auswärts in Schiefer-Stufen, breiteste Kachel).
+3. **Treffer-Verteilung** und **Joker-Verteilung** nebeneinander; Joker mit Spieler-Umschalter (Punkt in Nutzerfarbe; ab > 5 Spielern Dropdown), Zahlen Gesetzt / Erfolgreich / Bonus.
+4. **Punkte pro Spieltag** (nur Saison) als Matrix.
+5. **Spielervergleich:** Spieler (Avatar, Link auf `/spieler/<name>`), Punkte + Mini-Stapelbalken, Exakt, Differenz, Tendenz, Falsch, Joker (erfolgreich/gesetzt), Bonus, Quote, Form (Zahl + Pfeil + Differenz zu den drei Spieltagen davor). Erklärung darunter.
 
-### Tables
+### Mobil
+App-Gefühl: feste Tab-Leiste, stehender Kopf, Spiele als Karten (ganze Karte ist ein `<button>`, öffnet Bottom Sheet), Kurznamen in Listen („Gladbach“), volle Namen im Detail. Panel kompakt (Zahl 76 px, zwei Fakten daneben, Joker-Zeile, Bilanz). Rangliste als Karte. Alle Ziele ≥ 44 px. Zusätzlich in der echten App: Wischen zwischen Spieltagen, Sheet nach unten ziehen, Safe-Area-Abstände.
 
-Die umgebende Hauptfläche besitzt Radius und Tiefe; die Tabelle selbst bleibt rechteckig und flach. Kopfzeilen nutzen `Muted`, Datenzeilen einen neutralen Hover und semantisch markierte Zeilen behalten ihren eigenen Ton. Tabellenzonen werden als kompakte, zur Legende passende Farbmarker neben dem Rang dargestellt – niemals als unterbrochene Seitenstreifen.
+---
 
-## Do's and Don'ts
+## 7. Sprache & Texte
 
-### Do:
+**Ton:** duzen, knapp, direkt, Zahlen vorn. Keine Ausrufezeichen, keine Emojis, keine Werbesprache. Kein Punkt am Ende von Überschriften, Buttons, Chips, Bildunterschriften (nur Absätze mit mehreren Sätzen). Buttons sagen, was passiert. Leere Zustände nennen den nächsten Schritt. Spielernamen nie umformen, nur mit „…“ kürzen.
 
-- **Do** Seitentitel auf 24–30px begrenzen und den Spieltagskontext direkt daneben oder darunter zeigen.
-- **Do** 8/12/16/24px als räumlichen Rhythmus verwenden.
-- **Do** maximal vier zentrale Kennzahlen gleichzeitig hervorheben.
-- **Do** alle sichtbaren Controls aus der gemeinsamen shadcn-Schicht aufbauen.
-- **Do** Inter-Features global und `tnum` gezielt für Daten verwenden.
+| So | Nicht so |
+|---|---|
+| Du liegst am Bestwert | Glückwunsch! Du hast die meisten Punkte!! |
+| Nur du tippst 2:3 | Du bist der einzige Spieler mit diesem Tipp. |
+| 4 Pkt. zurück, hinter TheWeedyWatson | Rang: 2 (Differenz: -4) |
+| Joker noch nicht gesetzt | ACHTUNG: Joker fehlt |
+| 9 Tipps abgeben | Jetzt tippen und gewinnen! |
+| Alle Tipps gespeichert · gerade eben | Erfolgreich gespeichert ✓ |
+| Noch kein Tipp abgegeben | Keine Daten vorhanden |
 
-### Don't:
+**Status im Spiel:** Du hältst den Bestwert · Du teilst den Bestwert · Du liegst mit dem Feld · Du stehst allein · angehängt „· Tendenz richtig“ (Exakt getroffen / Tordifferenz richtig / Tendenz richtig / Daneben) · live „…, vorläufig“ · vor der Frist „Noch kein Tipp abgegeben“.
+**Feld:** „2 von 4 tippen 4:1“ / „Kein klarer Trend“ · „4 Punkte · Michi“ / „Niemand punktet“ · „4 von 4 abgegeben“.
 
-- **Don't** eine generische SaaS-Kartenwand mit austauschbaren Icon-Kacheln bauen.
-- **Don't** Marketing-Heroes, Glassmorphism-, Gradient- oder Grid-Noise-Ästhetik verwenden.
-- **Don't** übergroße Titel, dekorative Kennzahlen oder verschachtelte Karten einsetzen.
-- **Don't** Versal-Kicker mit weitem Zeichenabstand als wiederkehrendes Abschnittsmuster verwenden.
-- **Don't** Inhaltskarten stärker als 14px runden oder Border und breiten Schatten kombinieren.
+**Formate**
+| Was | Format |
+|---|---|
+| Datum lang / kurz | Freitag, 27.11. / Fr. 27.11. |
+| Uhrzeit | 19:30 (ohne „Uhr“) |
+| Frist | Tippfrist Fr. 27.11., 19:30 |
+| Ergebnis, Tipp | 4:2 (Tafel mit Abstand) |
+| Minute | 71' |
+| Dezimal | 11,5 |
+| Differenz | +5 · −4 (echtes Minuszeichen U+2212) |
+| Punkte | 4 Punkte, in Spalten „Pkt.“ |
+| Platz | 2. · 2. Platz |
+| Prozent | 58 % (geschütztes Leerzeichen) |
+| Saison | Saison 2026/27 |
+
+**Labels:** Spieltag · Tippen · Bundesliga · Statistiken · Admin · Tippen offen · Live · Abgeschlossen · Endstand · Anstoß · Exakt · Tordifferenz · Tendenz · Daneben · Joker setzen · Joker entfernen · Joker ×2 · Speichert … · Alle Tipps gespeichert.
+**Mehrzahl** immer über eine Plural-Funktion („1 Spiel kommt infrage“ / „4 Spiele kommen infrage“, „1 Partie“ / „6 Partien“).
+
+---
+
+## 8. Entwickler-Tokens
+
+Struktur bleibt: Tailwind v4, `@theme inline`, shadcn-Namen. Drei Ebenen:
+1. **Grundfarben** in `@theme inline` (`--color-pitch-700`, `--color-neutral-150` …), nie direkt in Komponenten.
+2. **Semantik** in `:root` / `.dark` (`--primary`, `--card`, `--muted-foreground` …).
+3. **Fachtokens** für Tafel, Punkte, Diagramme, Tabelle (`--board`, `--points-4`, `--chart-hit-exact` …).
+
+| Bisher | Neu |
+|---|---|
+| primary (Marine) | pitch (Green) |
+| secondary (Blau) | lime |
+| neutral (warmes Grau) | neutral = Schiefer, mit Stufen 150 und 850 |
+| brand-orange | Coral (Name bleibt) |
+| success | neon als Grundlage |
+| warning, error | bleiben |
+| Inter | Mona Sans, Breite über `font-stretch` |
+| `--radius: 0.625rem` | bleibt |
+
+Skalen (Markenwert jeweils exakt):
+- **pitch:** 50 `#EDFAF7` · 100 `#E3F3EF` · 200 `#CFE3DE` · 300 `#B4CEC8` · 400 `#8AADA6` · 500 `#5C8B81` · 600 `#2E6A5F` · 700 `#004D43` · 800 `#003E34` · 900 `#002F28` · 950 `#00221C`
+- **lime:** 50 `#EFFFCB` · 100 `#E4FFA9` · 200 `#D7FF7A` · 300 `#D0FF71` · 400 `#BFEA67` · 500 `#A8CE5D` · 600 `#88A54F` · 700 `#687E41` · 800 `#4D5B34` · 900 `#384129` · 950 `#262B1F`
+- **coral:** 50 `#FFF1EA` · 100 `#FFE6DC` · 200 `#FFCBB8` · 300 `#FFA385` · 400 `#F57E59` · 500 `#D16A4A` · 600 `#B45A3E` · 700 `#A74728` · 800 `#7F3D28` · 900 `#602C1C` · 950 `#3F1A0E`
+- **neon:** 50 `#D8FFEE` · 100 `#BCFFE1` · 200 `#73FFC6` · 300 `#57F8B8` · 400 `#27EAA6` · 500 `#25C189` · 600 `#22966B` · 700 `#1D7453` · 800 `#195A40` · 900 `#154531` · 950 `#0F2D20`
+
+### globals.css · @theme
+
+```css
+@theme inline {
+  --breakpoint-xs: 480px;
+
+  /* Green, Marke = 700 */
+  --color-pitch-50: #EDFAF7;
+  --color-pitch-100: #E3F3EF;
+  --color-pitch-200: #CFE3DE;
+  --color-pitch-300: #B4CEC8;
+  --color-pitch-400: #8AADA6;
+  --color-pitch-500: #5C8B81;
+  --color-pitch-600: #2E6A5F;
+  --color-pitch-700: #004D43;
+  --color-pitch-800: #003E34;
+  --color-pitch-900: #002F28;
+  --color-pitch-950: #00221C;
+
+  /* Lime, Marke = 300 */
+  --color-lime-50: #EFFFCB;
+  --color-lime-100: #E4FFA9;
+  --color-lime-200: #D7FF7A;
+  --color-lime-300: #D0FF71;
+  --color-lime-400: #BFEA67;
+  --color-lime-500: #A8CE5D;
+  --color-lime-600: #88A54F;
+  --color-lime-700: #687E41;
+  --color-lime-800: #4D5B34;
+  --color-lime-900: #384129;
+  --color-lime-950: #262B1F;
+
+  /* Coral, Marke = 400, lesbar = 700 */
+  --color-coral-50: #FFF1EA;
+  --color-coral-100: #FFE6DC;
+  --color-coral-200: #FFCBB8;
+  --color-coral-300: #FFA385;
+  --color-coral-400: #F57E59;
+  --color-coral-500: #D16A4A;
+  --color-coral-600: #B45A3E;
+  --color-coral-700: #A74728;
+  --color-coral-800: #7F3D28;
+  --color-coral-900: #602C1C;
+  --color-coral-950: #3F1A0E;
+
+  /* Neon, Marke = 400 */
+  --color-neon-50: #D8FFEE;
+  --color-neon-100: #BCFFE1;
+  --color-neon-200: #73FFC6;
+  --color-neon-300: #57F8B8;
+  --color-neon-400: #27EAA6;
+  --color-neon-500: #25C189;
+  --color-neon-600: #22966B;
+  --color-neon-700: #1D7453;
+  --color-neon-800: #195A40;
+  --color-neon-900: #154531;
+  --color-neon-950: #0F2D20;
+
+  /* Schiefer, aus Dark Green abgeleitet */
+  --color-neutral-50: #F7FDFD;
+  --color-neutral-100: #E9EFEF;
+  --color-neutral-150: #DEE5E6;
+  --color-neutral-200: #D2D9D9;
+  --color-neutral-300: #B7C0C0;
+  --color-neutral-400: #97A1A1;
+  --color-neutral-500: #788383;
+  --color-neutral-600: #5B6768;
+  --color-neutral-700: #445050;
+  --color-neutral-800: #2D3838;
+  --color-neutral-850: #202A2A;
+  --color-neutral-900: #151E1E;
+  --color-neutral-950: #0C1313;
+
+  --color-board: #183132;   /* Anzeigetafel, Dark Green */
+  --color-mint: #EBFFF5;
+  --color-well: #0E1919;    /* Grund für Diagramme mit Nutzerfarben */
+
+  --font-sans: "Mona Sans Variable", system-ui, sans-serif;
+  --font-display: var(--font-sans);
+  --font-mono: ui-monospace, Menlo, monospace;
+
+  /* warning-* und error-* Skalen aus der bisherigen Datei unverändert übernehmen */
+
+  /* bestehende Mappings (--color-background: var(--background) usw.) bleiben,
+     zusätzlich: */
+  --color-hero: var(--hero);
+  --color-hero-foreground: var(--hero-foreground);
+  --color-board-surface: var(--board);
+  --color-board-foreground: var(--board-foreground);
+  --color-well-surface: var(--well);
+  --color-you: var(--you);
+  --color-you-soft: var(--you-soft);
+  --color-points-4: var(--points-4);
+  --color-points-3: var(--points-3);
+  --color-points-2: var(--points-2);
+  --color-secondary-text: var(--secondary-text);
+}
+
+@utility font-wide {
+  font-stretch: 125%;
+  font-weight: 600;
+}
+```
+
+### globals.css · :root
+
+```css
+:root {
+  --radius: 0.625rem;
+  --app-frame-gap: 1rem;
+
+  /* Flächen und Text */
+  --background: var(--color-neutral-150);
+  --foreground: var(--color-neutral-900);
+  --card: var(--color-neutral-50);
+  --card-foreground: var(--foreground);
+  --popover: var(--color-neutral-50);
+  --popover-foreground: var(--foreground);
+  --muted: var(--color-neutral-100);
+  --muted-foreground: var(--color-neutral-600);
+  --secondary-text: var(--color-neutral-700);
+  --border: color-mix(in oklch, var(--foreground) 10%, transparent);
+  --input: color-mix(in oklch, var(--foreground) 18%, transparent);
+  --control-border: color-mix(in oklch, var(--foreground) 18%, transparent);
+  --ring: var(--color-pitch-700);
+
+  /* Marke */
+  --primary: var(--color-pitch-700);
+  --primary-foreground: var(--color-neutral-50);
+  --primary-readable: var(--color-pitch-700);
+  --secondary: var(--color-lime-300);
+  --secondary-foreground: var(--color-board);
+  --accent: color-mix(in oklch, var(--color-lime-300) 55%, transparent);
+  --accent-foreground: var(--foreground);
+  --brand-orange: var(--color-coral-400);            /* = Coral */
+  --brand-orange-foreground: var(--color-board);
+  --brand-orange-readable: var(--color-coral-700);
+  --neutral: var(--color-neutral-500);
+
+  /* Status */
+  --success: var(--color-neon-400);
+  --success-foreground: var(--color-board);
+  --success-readable: var(--color-neon-700);
+  --warning: var(--color-warning-500);
+  --warning-foreground: var(--color-neutral-900);
+  --error: var(--color-error-600);
+  --error-foreground: var(--color-neutral-50);
+  --error-readable: var(--color-error-700);
+  --destructive: var(--error);
+  --destructive-foreground: var(--error-foreground);
+  --info: var(--color-pitch-600);
+  --info-foreground: var(--color-neutral-50);
+
+  /* Fachtokens */
+  --hero: var(--color-pitch-700);                    /* grünes Panel, in beiden Modi gleich */
+  --hero-foreground: var(--color-mint);
+  --hero-muted: color-mix(in oklch, var(--color-mint) 74%, transparent);
+  --hero-line: color-mix(in oklch, var(--color-mint) 14%, transparent);
+  --board: var(--color-board);                       /* Anzeigetafel */
+  --board-foreground: var(--color-mint);
+  --well: var(--color-well);                         /* Diagrammgrund */
+  --you: var(--color-pitch-700);                     /* "du" auf hellem Grund */
+  --you-soft: color-mix(in oklch, var(--color-lime-300) 55%, transparent);
+  --field-soft: color-mix(in oklch, var(--color-coral-400) 18%, transparent);
+  --points-4: var(--color-lime-300);
+  --points-3: var(--color-neon-400);
+  --points-2: #E2FBEF;
+  --points-2-foreground: var(--color-pitch-700);
+  --points-0: transparent;
+
+  /* Diagramme */
+  --chart-hit-exact: var(--color-lime-300);
+  --chart-hit-diff: var(--color-neon-400);
+  --chart-hit-outcome: #A9EBCF;
+  --chart-miss: var(--color-neutral-200);
+  --chart-joker: var(--you);                         /* Joker-Bonus nur als Umriss */
+
+  /* Navigation */
+  --sidebar: var(--color-board);
+  --sidebar-foreground: var(--color-mint);
+  --sidebar-muted: #A9BEBD;
+  --sidebar-accent: color-mix(in oklch, var(--color-mint) 8%, transparent);
+  --sidebar-accent-foreground: var(--color-mint);
+  --sidebar-primary: var(--color-lime-300);
+  --sidebar-primary-foreground: var(--color-board);
+  --sidebar-border: color-mix(in oklch, var(--color-mint) 10%, transparent);
+  --sidebar-ring: var(--color-lime-300);
+
+  /* Mobile Navigation: flach statt Glas */
+  --mobile-glass-solid: var(--color-neutral-50);
+  --mobile-glass-background: var(--color-neutral-50);
+  --mobile-glass-background-reduced: var(--color-neutral-50);
+  --mobile-glass-border: var(--border);
+  --mobile-glass-highlight: transparent;
+  --mobile-glass-shadow: transparent;
+  --mobile-lens-background: var(--you-soft);
+  --mobile-lens-highlight: transparent;
+
+  /* Bundesliga-Tabelle */
+  --table-meister: var(--color-lime-300);
+  --table-cl: var(--color-pitch-700);
+  --table-el: var(--color-neon-400);
+  --table-warning: var(--color-warning-500);
+  --table-danger: var(--color-error-500);
+}
+```
+
+### globals.css · .dark
+
+```css
+.dark {
+  --background: var(--color-neutral-900);
+  --foreground: #EEF4F4;
+  --card: var(--color-neutral-850);
+  --popover: var(--color-neutral-800);
+  --muted: var(--color-neutral-800);
+  --muted-foreground: var(--color-neutral-400);
+  --secondary-text: var(--color-neutral-300);
+  --border: color-mix(in oklch, var(--foreground) 8%, transparent);
+  --input: color-mix(in oklch, var(--foreground) 16%, transparent);
+  --control-border: color-mix(in oklch, var(--foreground) 16%, transparent);
+  --ring: var(--color-lime-300);
+
+  --primary: var(--color-lime-300);
+  --primary-foreground: var(--color-board);
+  --primary-readable: var(--color-lime-300);
+  --brand-orange-readable: var(--color-coral-400);
+  --success-readable: var(--color-neon-300);
+  --error: var(--color-error-400);
+  --error-foreground: var(--color-neutral-950);
+  --error-readable: var(--color-error-300);
+  --warning: var(--color-warning-400);
+
+  --you: var(--color-lime-300);
+  --you-soft: color-mix(in oklch, var(--color-lime-300) 16%, transparent);
+  --field-soft: color-mix(in oklch, var(--color-coral-400) 16%, transparent);
+  --points-2: color-mix(in oklch, var(--color-neon-400) 13%, transparent);
+  --points-2-foreground: #86F3CD;
+  --board: var(--color-neutral-950);
+
+  --chart-hit-outcome: #5FAF92;
+  --chart-miss: var(--color-neutral-700);
+
+  --sidebar: var(--color-neutral-950);
+  --sidebar-foreground: #EEF4F4;
+  --sidebar-muted: var(--color-neutral-400);
+
+  --mobile-glass-solid: var(--color-neutral-950);
+  --mobile-glass-background: var(--color-neutral-950);
+  --mobile-glass-background-reduced: var(--color-neutral-950);
+
+  --table-meister: var(--color-lime-300);
+  --table-cl: var(--color-neon-400);
+  --table-el: var(--color-neon-300);
+  --table-warning: var(--color-warning-400);
+  --table-danger: var(--color-error-400);
+  /* --hero bleibt Green: das Panel sieht in beiden Modi gleich aus */
+}
+```
+
+### globals.css · Basis
+
+```css
+@layer base {
+  body {
+    @apply min-h-dvh bg-background font-sans text-foreground antialiased;
+    font-variant-numeric: lining-nums proportional-nums;   /* ersetzt die Inter-Features */
+  }
+  h1, h2, h3, h4 {
+    font-stretch: 125%;
+    font-weight: 600;
+    letter-spacing: 0;          /* bisher -0.025em */
+    text-wrap: balance;
+  }
+}
+
+.surface-raised { /* hell */
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgb(21 30 30 / .05), 0 8px 24px rgb(21 30 30 / .05);
+}
+.dark .surface-raised { box-shadow: none; }
+
+.mobile-liquid-dock { background: var(--mobile-glass-solid); backdrop-filter: none; }
+
+@keyframes live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+```
+
+### Nutzerfarben im Code
+
+```ts
+import { converter, formatHex, clampChroma } from "culori";
+
+const toOklch = converter("oklch");
+const BAND = { light: [0.45, 0.70], dark: [0.58, 0.88] } as const;
+
+/** Nutzerfarbe je Untergrund lesbar machen: Farbton bleibt, Helligkeit ins Band. */
+export function userTone(hex: string, mode: "light" | "dark"): string {
+  const c = toOklch(hex);
+  if (!c) return hex;
+  const [lo, hi] = BAND[mode];
+  const l = Math.min(hi, Math.max(lo, c.l));
+  return formatHex(clampChroma({ ...c, l }, "oklch"));
+}
+```
+
+```tsx
+// pro Spieler einmal berechnen (nicht bei jedem Render)
+<li style={{ "--uc": userTone(user.color, "light"), "--uc-dark": userTone(user.color, "dark") } as React.CSSProperties}>
+```
+
+```css
+.user-ring { box-shadow: 0 0 0 2px var(--uc); }
+.dark .user-ring, .on-well .user-ring { box-shadow: 0 0 0 2px var(--uc-dark); }
+.user-bar { background: var(--uc); }
+.dark .user-bar { background: var(--uc-dark); }
+```
+
+Regeln: gespeicherte Farbe bleibt unverändert · Diagramme mit Nutzerfarben auf `--well` mit `--uc-dark` · nie Text in `--uc` · neue Spieler brauchen keinen Code (Liste und Farben aus den Daten).
+
+---
+
+## 9. Checkliste für neue Screens
+
+- [ ] **Hierarchie:** genau ein grünes Panel, beantwortet die Hauptfrage
+- [ ] **Farbe:** alle Flächen aus Schiefer, jede Farbe nur in ihrer Bedeutung
+- [ ] **Du:** Lime nur für dich und die eine Hauptaktion
+- [ ] **Spieler:** Ring/Balken/Linie in angepasster Nutzerfarbe, Name daneben
+- [ ] **Ergebnisse:** jeder Spielstand auf der Anzeigetafel, nichts anderes darauf
+- [ ] **Zahlen:** 125 % breit, proportionale Ziffern, Formate aus Kapitel 7
+- [ ] **Raster:** alle Maße auf 4 px, gleiche Elemente gleich groß, Radien verschachtelt
+- [ ] **Zustände:** Hover, Gedrückt, Fokus, Deaktiviert, Leer, Laden; Fokusring sichtbar
+- [ ] **Mobil:** Tippflächen ≥ 44 px, Schrift ≥ 11 px, Details im Bottom Sheet
+- [ ] **Dunkel:** eigene Werte statt Umkehrung, keine Schatten, Kontraste geprüft
+- [ ] **Texte:** duzen, keine Ausrufezeichen, kein Punkt in Labels, Vergleiche mit Bezug
+- [ ] **Wachstum:** funktioniert mit 2 und 12 Spielern, mit 1 und 34 Spieltagen

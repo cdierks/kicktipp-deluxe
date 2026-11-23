@@ -1,18 +1,9 @@
 import type { Metadata, Viewport } from 'next'
-import localFont from 'next/font/local'
+import '@fontsource-variable/mona-sans/wdth.css'
 import './globals.css'
 import { Providers } from '@/components/providers'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
-
-const inter = localFont({
-  src: [
-    { path: '../../public/fonts/InterVariable.woff2', weight: '100 900', style: 'normal' },
-    { path: '../../public/fonts/InterVariable-Italic.woff2', weight: '100 900', style: 'italic' },
-  ],
-  variable: '--font-inter',
-  display: 'swap',
-})
 
 export const metadata: Metadata = {
   title: 'Kicktipp Deluxe',
@@ -34,7 +25,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: 'oklch(46.18% 0.15 269.98)',
+  themeColor: '#183132',
   colorScheme: 'light dark',
 }
 
@@ -45,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="de" suppressHydrationWarning>
-      <body className={`${inter.variable} antialiased`}>
+      <body className={"antialiased"}>
         <Providers>
           <TooltipProvider>
             {children}

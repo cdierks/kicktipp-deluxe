@@ -30,6 +30,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@fontsource-variable/mona-sans": "^5.3.0",
     "@phosphor-icons/react": "^2.1.10",
     "@prisma/adapter-mariadb": "^7.8.0",
     "@prisma/client": "^7.8.0",
@@ -37,6 +38,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "culori": "^4.0.2",
     "framer-motion": "^12.34.5",
     "lucide-react": "^0.575.0",
     "next": "^16.2.10",
@@ -52,10 +54,13 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/culori": "^4.0.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.4.6",
     "prisma": "^7.8.0",
     "shadcn": "4.13.1",
     "tailwindcss": "^4",
