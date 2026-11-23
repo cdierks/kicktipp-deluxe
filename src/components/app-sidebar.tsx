@@ -104,9 +104,9 @@ export function AppSidebar({ isAdmin, openTips }: { isAdmin: boolean; openTips: 
                     <Link href={item.href} aria-current={item.active ? 'page' : undefined}>
                       <item.icon strokeWidth={1.6} />
                       <span>{item.label}</span>
-                      {item.key === 'tippen' && openTips > 0 && <span className="ml-auto rounded-md bg-lime-300 px-1.5 py-0.5 text-xs font-semibold text-board-surface group-data-[collapsible=icon]:absolute group-data-[collapsible=icon]:-right-1 group-data-[collapsible=icon]:-top-1">{openTips}</span>}
                     </Link>
                   </SidebarMenuButton>
+                  {item.key === 'tippen' && openTips > 0 && <span aria-label={`${openTips} offene Tipps`} className="pointer-events-none absolute right-2 top-1/2 z-10 inline-flex h-5 min-w-5 -translate-y-1/2 items-center justify-center rounded-md bg-lime-300 px-1.5 text-xs leading-none font-semibold text-board-surface group-data-[collapsible=icon]:-right-1 group-data-[collapsible=icon]:-top-1 group-data-[collapsible=icon]:translate-y-0">{openTips}</span>}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
