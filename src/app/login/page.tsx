@@ -50,8 +50,8 @@ export default function LoginPage() {
   return (
     <AuthShell
       eyebrow="Anmeldung"
-      title="Zurück ins Tippspiel."
-      description="Melde dich an, um Tipps, Tabellen und Spieltage in einer klaren Oberfläche zu steuern."
+      title="Zurück ins Tippspiel"
+      description="Melde dich an und sieh deine Tipps, den Spieltag und die Tabelle."
     >
       <div>
         {registered && (

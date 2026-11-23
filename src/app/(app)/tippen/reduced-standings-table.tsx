@@ -34,8 +34,8 @@ export function ReducedStandingsTable({ table, focusedTeams }: { table: Openliga
           <TableRow>
             <TableHead scope="col" className="w-12 px-4 py-2.5 text-left">#</TableHead>
             <TableHead scope="col" className="px-2 py-2.5 text-left">Verein</TableHead>
-            <TableHead scope="col" className="w-14 px-2 py-2.5 text-right">Diff</TableHead>
-            <TableHead scope="col" className="w-14 px-4 py-2.5 text-right">Pkt</TableHead>
+            <TableHead scope="col" className="w-14 px-2 py-2.5 text-right">Diff.</TableHead>
+            <TableHead scope="col" className="w-14 px-4 py-2.5 text-right">Pkt.</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -61,7 +61,7 @@ export function ReducedStandingsTable({ table, focusedTeams }: { table: Openliga
                 </TableHead>
                 <TableCell
                   className={cn(
-                    'px-2 py-2.5 text-right font-medium tabular-nums',
+                    'px-2 py-2.5 text-right font-medium',
                     diff > 0
                       ? 'text-success-800 dark:text-success-300'
                       : diff < 0

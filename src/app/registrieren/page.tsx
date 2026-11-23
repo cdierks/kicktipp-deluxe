@@ -15,7 +15,7 @@ export default async function RegisterPage() {
     return (
       <AuthShell
         eyebrow="Registrierung"
-        title="Neue Konten sind aktuell pausiert."
+        title="Neue Konten sind aktuell pausiert"
         description="Der Zugang wird momentan administrativ gesteuert. Wenn du bereits Teil der Runde bist, melde dich mit deinem bestehenden Konto an."
       >
         <div className="py-4 text-center sm:py-8">

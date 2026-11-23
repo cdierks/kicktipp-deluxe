@@ -11,6 +11,8 @@ import { LateTipToggle } from './late-tip-toggle'
 import { BackupPanel } from './backup-panel'
 import { PageHeader } from '@/components/page-header'
 import { PageFrame } from '@/components/page-frame'
+import { HeroPanel } from '@/components/design-primitives'
+import { plural } from '@/lib/plural'
 
 export default async function AdminPage() {
   const user = await getVerifiedUser()
@@ -28,6 +30,7 @@ export default async function AdminPage() {
   return (
     <PageFrame>
       <PageHeader eyebrow="Adminbereich" title="Admin" description="Verwalte Spieltage, Ergebnisse, Benutzer und Systemeinstellungen." />
+      <HeroPanel label="Deine Runde" value={userCount} aside={<div className="space-y-3"><p className="text-lg font-wide">{userCount} {plural(userCount, 'Person spielt mit', 'Personen spielen mit')}</p><p className="text-sm text-hero-foreground/75">{matchdayCount} Spieltage · {colorCount} Farben</p></div>}><p className="mt-3 text-sm text-hero-foreground/75">Konten in der Runde</p></HeroPanel>
 
       <section className="surface-raised overflow-hidden rounded-xl">
         <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -53,7 +56,7 @@ export default async function AdminPage() {
             <div key={metric.label} className="flex items-center gap-3 px-4 py-3">
               <metric.icon className="size-4 text-primary-readable" strokeWidth={1.6} />
               <div>
-                <p className="text-xl font-bold tabular-nums text-foreground">{metric.value}</p>
+                <p className="text-xl font-bold text-foreground">{metric.value}</p>
                 <p className="text-xs text-muted-foreground">{metric.label}</p>
               </div>
             </div>
@@ -64,7 +67,7 @@ export default async function AdminPage() {
       <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4 2xl:gap-8">
         <section className="surface rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-100">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-pitch-100 text-pitch-800 dark:bg-pitch-900 dark:text-pitch-100">
               <IconShirt className="h-4 w-4 text-primary-readable" strokeWidth={1.5} />
             </div>
             <div>
@@ -73,7 +76,7 @@ export default async function AdminPage() {
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
-            Aktuell: <span className="font-semibold text-foreground tabular-nums">{CLUBS.length} Vereine</span>
+            Aktuell: <span className="font-semibold text-foreground">{CLUBS.length} Vereine</span>
           </p>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">
             Die statische Liste wird vor einem Release mit <code>npm run generate:clubs -- JJJJ</code> aktualisiert und anschließend neu gebaut.
@@ -82,7 +85,7 @@ export default async function AdminPage() {
 
         <section className="surface rounded-xl p-4">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-100">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-pitch-100 text-pitch-800 dark:bg-pitch-900 dark:text-pitch-100">
               {registrationEnabled
                 ? <IconUserPlus className="h-4 w-4 text-primary-readable" strokeWidth={1.5} />
                 : <IconUserOff className="h-4 w-4 text-primary-readable" strokeWidth={1.5} />}
@@ -97,7 +100,7 @@ export default async function AdminPage() {
 
         <section className="surface rounded-xl p-4">
           <div className="mb-4 flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-100">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-pitch-100 text-pitch-800 dark:bg-pitch-900 dark:text-pitch-100">
               {lateTipEditingEnabled
                 ? <IconPencil className="h-4 w-4 text-primary-readable" strokeWidth={1.5} />
                 : <IconLock className="h-4 w-4 text-primary-readable" strokeWidth={1.5} />}

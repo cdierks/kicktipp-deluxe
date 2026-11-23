@@ -38,9 +38,9 @@ export function StatusPill({ status }: { status: 'open' | 'live' | 'finished' })
   return <span className={cn('status-pill', `status-pill-${status}`)}>{status === 'live' && <span className="size-1.5 rounded-full bg-neon-400 animate-live-pulse" aria-hidden="true" />}{text}</span>
 }
 
-export function PlayerAvatar({ nickname, favoriteTeam, color, small = false }: { nickname: string; favoriteTeam: string | null; color: string | null; small?: boolean }) {
+export function PlayerAvatar({ nickname, favoriteTeam, color, small = false, inheritTone = false }: { nickname: string; favoriteTeam: string | null; color: string | null; small?: boolean; inheritTone?: boolean }) {
   const club = favoriteTeam ? getClubByName(favoriteTeam) : undefined
-  return <span className={cn('player-avatar user-ring', small && 'player-avatar-small')} style={userColorVars(color) as CSSProperties} title={nickname}>
+  return <span className={cn('player-avatar user-ring', small && 'player-avatar-small')} style={inheritTone ? undefined : userColorVars(color) as CSSProperties} title={nickname}>
     {club ? <ClubIcon src={club.iconUrl} fallbackSrc={club.iconSourceUrl} label={club.name} className={cn('size-6 object-contain', small && 'size-[18px]')} /> : <span className="text-xs font-medium text-secondary-text">{nickname.slice(0, 1).toUpperCase()}</span>}
   </span>
 }
@@ -52,8 +52,8 @@ export function RankingList({ players, mode, onModeChange }: { players: RankingP
   const first = Math.max(1, ...sorted.map(value))
   return <section className="surface-raised rounded-2xl overflow-hidden" aria-label="Rangliste">
     <div className="flex items-center justify-between gap-3 p-4 border-b border-border"><h2 className="text-xl">Rangliste</h2><div className="segment-track" role="group" aria-label="Ranglisten-Zeitraum"><button className={cn('segment', mode === 'matchday' && 'segment-active')} onClick={() => onModeChange('matchday')} aria-pressed={mode === 'matchday'}>Spieltag</button><button className={cn('segment', mode === 'season' && 'segment-active')} onClick={() => onModeChange('season')} aria-pressed={mode === 'season'}>Saison</button></div></div>
-    <ol className="divide-y divide-border">{sorted.map((p, index) => { const rank = sorted.findIndex(q => value(q) === value(p)) + 1; return <li key={p.userId} className={cn('ranking-row', p.isCurrentUser && 'bg-you-soft')} style={userColorVars(p.color) as CSSProperties}>
-      <span className="font-wide text-xl text-secondary-text">{rank}.</span><PlayerAvatar nickname={p.nickname} favoriteTeam={p.favoriteTeam} color={p.color} small /><div className="min-w-0"><Link href={`/spieler/${encodeURIComponent(p.nickname)}`} className="block truncate text-sm font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">{p.nickname}{p.isCurrentUser && <span className="ml-1 text-muted-foreground">(du)</span>}</Link><span className="mt-1 block h-1 rounded-full user-bar" style={{ width: `${Math.max(2, value(p) / first * 100)}%` }} /></div><span className="font-wide text-[22px]">{value(p)}</span>
+    <ol className="divide-y divide-border">{sorted.map((p) => { const rank = sorted.findIndex(q => value(q) === value(p)) + 1; return <li key={p.userId} className={cn('ranking-row', p.isCurrentUser && 'bg-you-soft')} style={userColorVars(p.color) as CSSProperties}>
+      <span className="font-wide text-xl text-secondary-text">{rank}.</span><PlayerAvatar nickname={p.nickname} favoriteTeam={p.favoriteTeam} color={p.color} small inheritTone /><div className="min-w-0"><Link href={`/spieler/${encodeURIComponent(p.nickname)}`} className="block truncate text-sm font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">{p.nickname}{p.isCurrentUser && <span className="ml-1 text-muted-foreground">(du)</span>}</Link><span className="mt-1 block h-1 rounded-full user-bar" style={{ width: `${Math.max(2, value(p) / first * 100)}%` }} /></div><span className="font-wide text-[22px]">{value(p)}</span>
     </li> })}</ol>
   </section>
 }

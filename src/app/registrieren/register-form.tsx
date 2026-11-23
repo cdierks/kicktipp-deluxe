@@ -45,7 +45,7 @@ export function RegisterForm() {
   return (
     <AuthShell
       eyebrow="Registrierung"
-      title="Konto für die Tipp-Runde anlegen."
+      title="Konto für die Tipp-Runde anlegen"
       description="Mit einem Konto verwaltest du Tipps, Spielerfarbe und Profil in einer klaren Oberfläche."
     >
       <div>

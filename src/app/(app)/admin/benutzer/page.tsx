@@ -14,6 +14,7 @@ import {
 import { RoleToggle } from './role-toggle'
 import { PageHeader } from '@/components/page-header'
 import { PageFrame } from '@/components/page-frame'
+import { HeroPanel } from '@/components/design-primitives'
 import { formatAppDate } from '@/lib/date-format'
 
 export default async function BenutzerAdminPage() {
@@ -36,6 +37,7 @@ export default async function BenutzerAdminPage() {
   return (
     <PageFrame>
       <PageHeader eyebrow="Adminbereich" title="Benutzerverwaltung" description="Konten, Rollen und Tippaktivität im Überblick." />
+      <HeroPanel label="Konten in der Runde" value={users.length} aside={<p className="text-sm text-hero-foreground/75">Namen, Rollen und Tippaktivität</p>} />
       <div className="surface-raised overflow-hidden rounded-xl">
         <Table>
           <TableHeader>
@@ -64,7 +66,7 @@ export default async function BenutzerAdminPage() {
                     {u.role}
                   </Badge>
                 </TableCell>
-                <TableCell className="hidden sm:table-cell text-right tabular-nums text-sm">{u._count.tips}</TableCell>
+                <TableCell className="hidden sm:table-cell text-right text-sm">{u._count.tips}</TableCell>
                 <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                   {formatAppDate(u.createdAt, { dateStyle: 'short' })}
                 </TableCell>

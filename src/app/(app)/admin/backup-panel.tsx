@@ -105,7 +105,7 @@ export function BackupPanel() {
   return (
     <div className="surface rounded-xl p-4">
       <div className="mb-4 flex items-center gap-2">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-100">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-pitch-100 text-pitch-800 dark:bg-pitch-900 dark:text-pitch-100">
           <IconDatabaseExport className="h-4 w-4 text-primary-readable" strokeWidth={1.5} />
         </div>
         <div>

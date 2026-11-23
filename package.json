@@ -24,7 +24,8 @@
     "localize:clubs": "node scripts/localize-clubs.mjs",
     "mirror:club-icons": "node scripts/mirror-club-icons.mjs",
     "list:missing-club-icons": "node scripts/list-missing-club-icons.mjs",
-    "generate:missing-club-icon-placeholders": "node scripts/generate-missing-club-icon-placeholders.mjs"
+    "generate:missing-club-icon-placeholders": "node scripts/generate-missing-club-icon-placeholders.mjs",
+    "lint": "oxlint src tests"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -59,8 +60,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",
-    "eslint": "^9.39.5",
-    "eslint-config-next": "^16.4.6",
+    "oxlint": "^1.95.0",
     "prisma": "^7.8.0",
     "shadcn": "4.13.1",
     "tailwindcss": "^4",

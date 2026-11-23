@@ -9,6 +9,7 @@ import { MatchdayHeader, MatchdayPanel } from './matchday-panel'
 import type { MatchdayPageViewModel } from './matchday-view-model'
 import { parseDashboardView } from '@/lib/dashboard-view'
 import { PageFrame } from '@/components/page-frame'
+import { HeroPanel } from '@/components/design-primitives'
 
 const StatsTab = dynamic(
   () => import('./stats-tab').then((module) => module.StatsTab),
@@ -103,11 +104,7 @@ export function DashboardContent({
         >
           {activeView === 'spieltag' && <MatchdayPanel model={matchdayPageModel} />}
 
-          {activeView === 'bundesliga' && (
-            <div className="surface-raised overflow-hidden rounded-xl">
-              {standings}
-            </div>
-          )}
+          {activeView === 'bundesliga' && <div className="space-y-6"><HeroPanel label="Bundesliga-Tabelle" value={matchday.matchdayNumber} aside={<div className="space-y-3"><p className="text-lg font-wide">Spieltag {matchday.matchdayNumber}</p><p className="text-sm text-hero-foreground/75">Plätze, Tore und Punkte im Überblick</p></div>}><p className="mt-3 text-sm text-hero-foreground/75">Stand nach Spieltag</p></HeroPanel><div className="surface-raised overflow-hidden rounded-2xl">{standings}</div></div>}
 
           {activeView === 'statistiken' && (
             <StatsTab

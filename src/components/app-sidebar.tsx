@@ -7,9 +7,7 @@ import { signOut, useSession } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import { getAppNavigationItems } from '@/components/app-navigation'
 import { BrandLockup } from '@/components/brand-lockup'
-import { ClubIcon } from '@/components/club-icon'
 import { PlayerAvatar } from '@/components/design-primitives'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -36,7 +34,6 @@ import {
   SidebarSeparator,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { getClubByName } from '@/lib/clubs'
 import {
   IconCheck,
   IconChevronRight,
@@ -56,16 +53,13 @@ const themeItems = [
 
 type ThemeValue = (typeof themeItems)[number]['value']
 
-export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
+export function AppSidebar({ isAdmin, openTips }: { isAdmin: boolean; openTips: number }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { data: session } = useSession()
   const { theme = 'system', resolvedTheme, setTheme } = useTheme()
   const [themeMounted, setThemeMounted] = useState(false)
   const { isMobile } = useSidebar()
-  const favoriteClub = session?.user?.favoriteTeam
-    ? getClubByName(session.user.favoriteTeam)
-    : undefined
   const activeTheme: ThemeValue = themeMounted && themeItems.some((item) => item.value === theme)
     ? (theme as ThemeValue)
     : 'system'
@@ -110,6 +104,7 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
                     <Link href={item.href} aria-current={item.active ? 'page' : undefined}>
                       <item.icon strokeWidth={1.6} />
                       <span>{item.label}</span>
+                      {item.key === 'tippen' && openTips > 0 && <span className="ml-auto rounded-md bg-lime-300 px-1.5 py-0.5 text-xs font-semibold text-board-surface group-data-[collapsible=icon]:absolute group-data-[collapsible=icon]:-right-1 group-data-[collapsible=icon]:-top-1">{openTips}</span>}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

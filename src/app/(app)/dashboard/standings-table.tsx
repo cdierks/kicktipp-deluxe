@@ -59,8 +59,8 @@ export async function StandingsTable({ year }: { year: string }) {
             <TableHead className="hidden sm:table-cell text-right"><abbr title="Unentschieden">U</abbr></TableHead>
             <TableHead className="hidden sm:table-cell text-right"><abbr title="Niederlagen">N</abbr></TableHead>
             <TableHead className="hidden xs:table-cell text-right">Tore</TableHead>
-            <TableHead className="hidden sm:table-cell text-right"><abbr title="Tordifferenz">Diff</abbr></TableHead>
-            <TableHead className="text-right"><abbr title="Punkte">Pkt</abbr></TableHead>
+            <TableHead className="hidden sm:table-cell text-right"><abbr title="Tordifferenz">Diff.</abbr></TableHead>
+            <TableHead className="text-right"><abbr title="Punkte">Pkt.</abbr></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -73,7 +73,7 @@ export async function StandingsTable({ year }: { year: string }) {
             return (
               <TableRow key={team.teamInfoId}>
                 <TableCell
-                  className="w-16 pl-4 text-sm font-bold tabular-nums text-muted-foreground"
+                  className="w-16 pl-4 text-sm font-bold text-muted-foreground"
                   title={q?.label}
                 >
                   <div className="flex items-center gap-2">
@@ -101,28 +101,28 @@ export async function StandingsTable({ year }: { year: string }) {
                   </div>
                 </TableCell>
 
-                <TableCell className="hidden sm:table-cell text-right tabular-nums text-sm">
+                <TableCell className="hidden sm:table-cell text-right text-sm">
                   {team.won + team.draw + team.lost}
                 </TableCell>
-                <TableCell className="hidden sm:table-cell text-right tabular-nums text-sm">{team.won}</TableCell>
-                <TableCell className="hidden sm:table-cell text-right tabular-nums text-sm">{team.draw}</TableCell>
-                <TableCell className="hidden sm:table-cell text-right tabular-nums text-sm">{team.lost}</TableCell>
-                <TableCell className="hidden xs:table-cell text-right tabular-nums text-sm">
+                <TableCell className="hidden sm:table-cell text-right text-sm">{team.won}</TableCell>
+                <TableCell className="hidden sm:table-cell text-right text-sm">{team.draw}</TableCell>
+                <TableCell className="hidden sm:table-cell text-right text-sm">{team.lost}</TableCell>
+                <TableCell className="hidden xs:table-cell text-right text-sm">
                   {team.goals}:{team.opponentGoals}
                 </TableCell>
 
                 <TableCell
                   className={cn(
-                    'hidden text-right text-sm tabular-nums sm:table-cell',
+                    'hidden text-right text-sm sm:table-cell',
                     diff > 0 && 'font-semibold text-success-800 dark:text-success-300',
                     diff < 0 && 'text-error-700 dark:text-error-300',
                     diff === 0 && 'text-muted-foreground',
                   )}
                 >
-                  {diff > 0 ? '+' : ''}{diff}
+                  {diff > 0 ? '+' : ''}{String(diff).replace('-', '−')}
                 </TableCell>
 
-                <TableCell className="text-right text-base font-bold tabular-nums text-foreground">
+                <TableCell className="text-right text-base font-bold text-foreground">
                   {team.points}
                 </TableCell>
               </TableRow>

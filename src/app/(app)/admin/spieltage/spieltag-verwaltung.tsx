@@ -525,7 +525,7 @@ function MatchdayTableRow({
           {row.seasonYear}/{parseInt(row.seasonYear) + 1}
         </div>
       </TableCell>
-      <TableCell className="text-right tabular-nums font-semibold">
+      <TableCell className="text-right font-semibold">
         {row.matchdayNumber}
       </TableCell>
       <TableCell>
@@ -548,7 +548,7 @@ function MatchdayTableRow({
           className="h-9 min-w-48"
         />
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="text-right">
         {row._count.matches}
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">

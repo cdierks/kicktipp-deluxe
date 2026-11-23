@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useCallback, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { listStagger, panelEnter } from '@/lib/motion'
 import Link from 'next/link'
@@ -12,7 +12,7 @@ import {
   CartesianGrid,
 } from 'recharts'
 import { Button } from '@/components/ui/button'
-import { ChartContainer, ChartLegend, ChartTooltip } from '@/components/ui/chart'
+import { ChartContainer, ChartTooltip } from '@/components/ui/chart'
 import {
   Table,
   TableBody,
@@ -33,6 +33,7 @@ import { userTone } from '@/lib/user-tone'
 import { HeroPanel, PlayerAvatar } from '@/components/design-primitives'
 import type { CSSProperties } from 'react'
 import { layoutEndLabels } from '@/lib/chart-labels'
+import { formatDecimal, formatPercent } from '@/lib/number-format'
 import { IconChartBar, IconTrophy, IconScale, IconPokerChip } from '@/components/app-icons'
 
 /* ── Exported types (used in page.tsx) ── */
@@ -165,16 +166,6 @@ function buildPieData(
   ]
 }
 
-function normalizeHexColor(color: string | null | undefined) {
-  if (!color) return null
-  const value = color.trim()
-  if (/^#[0-9a-f]{6}$/i.test(value)) return value
-  if (/^#[0-9a-f]{3}$/i.test(value)) {
-    return `#${value[1]}${value[1]}${value[2]}${value[2]}${value[3]}${value[3]}`
-  }
-  return null
-}
-
 function buildJokerBreakdownData({
   miss,
   outcome,
@@ -239,7 +230,7 @@ function CountUp({ to, duration = 900 }: { to: number; duration?: number }) {
     frameId = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frameId)
   }, [to, duration, shouldReduce])
-  return <>{val}</>
+  return <>{formatDecimal(val)}</>
 }
 
 function KpiCard({
@@ -262,7 +253,7 @@ function KpiCard({
         <p className="text-xs font-medium">{label}</p>
       </div>
       <div className="flex flex-1 flex-col">
-        <p className="text-2xl font-bold leading-none tabular-nums text-foreground">
+        <p className="text-2xl font-bold leading-none text-foreground">
         {typeof value === 'number' ? <CountUp to={value} /> : value}
         </p>
         {sub && <p className="mt-auto pt-3 text-xs font-medium text-muted-foreground truncate">{sub}</p>}
@@ -293,7 +284,7 @@ function ChartTooltipContent({
         <div key={e.name} className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: e.color }} />
           <span className="text-muted-foreground">{userMap.get(e.name) ?? e.name}</span>
-          <span className="ml-auto font-semibold tabular-nums">{e.value}</span>
+          <span className="ml-auto font-semibold">{e.value}</span>
         </div>
       ))}
     </div>
@@ -360,7 +351,6 @@ export function StatsTab({
 
   // O(1) lookups for chart formatters
   const userMap = useMemo(() => new Map(users.map((u) => [u.id, u.nickname])), [users])
-  const legendFormatter = useCallback((value: string) => userMap.get(value) ?? value, [userMap])
 
   // Tooltip element — stable reference since ChartTooltipContent is module-level and userMap is memoized
   const tooltipContent = useMemo(() => <ChartTooltipContent userMap={userMap} />, [userMap])
@@ -618,7 +608,7 @@ export function StatsTab({
         </div>
       )}
 
-      {(view === 'spieltag' || seasonStats.length > 0) && <HeroPanel label={view === 'saison' ? 'Saisonrennen' : 'So sind die Punkte entstanden'} value={view === 'saison' ? seasonPointsMap[currentUserId] ?? 0 : matchdayPointsMap[currentUserId] ?? 0} aside={<div className="space-y-4"><p className="text-lg font-wide">{view === 'saison' ? `${seasonStats.length} Spieltage gewertet` : `Spieltag ${matchday.matchdayNumber}`}</p><p className="text-sm text-hero-foreground/75">{view === 'saison' ? `Ø ${seasonData.avg} Punkte pro Spieltag` : `Ø ${mdKpis.avg} Punkte im Feld`}</p><p className="text-sm text-hero-foreground/75">Joker-Bonus +{activeJokers.summary.bonus}</p></div>}><p className="mt-3 text-sm text-hero-foreground/75">Deine Punkte</p></HeroPanel>}
+      {(view === 'spieltag' || seasonStats.length > 0) && <HeroPanel label={view === 'saison' ? 'Saisonrennen' : 'So sind die Punkte entstanden'} value={view === 'saison' ? seasonPointsMap[currentUserId] ?? 0 : matchdayPointsMap[currentUserId] ?? 0} aside={<div className="space-y-4"><p className="text-lg font-wide">{view === 'saison' ? `${seasonStats.length} Spieltage gewertet` : `Spieltag ${matchday.matchdayNumber}`}</p><p className="text-sm text-hero-foreground/75">{view === 'saison' ? `Ø ${formatDecimal(seasonData.avg)} Punkte pro Spieltag` : `Ø ${formatDecimal(mdKpis.avg)} Punkte im Feld`}</p><p className="text-sm text-hero-foreground/75">Joker-Bonus +{activeJokers.summary.bonus}</p></div>}><p className="mt-3 text-sm text-hero-foreground/75">Deine Punkte</p></HeroPanel>}
 
       {/* ── KPI-Karten ── */}
       {(view === 'spieltag' || seasonStats.length > 0) && (
@@ -669,25 +659,25 @@ export function StatsTab({
                 <div className="px-1 py-1">
                   <div className="mb-1 flex items-center justify-between gap-3 text-xs font-sans">
                     <span className="font-medium text-primary-readable">Heim</span>
-                    <span className="font-semibold tabular-nums text-primary-readable">{activeRisk.home}%</span>
+                    <span className="font-semibold text-primary-readable">{formatPercent(activeRisk.home)}</span>
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-primary-100 dark:bg-primary-900">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-pitch-100 dark:bg-pitch-900">
                     <div className="h-full rounded-full bg-primary" style={{ width: `${activeRisk.home}%` }} />
                   </div>
                 </div>
                 <div className="px-1 py-1">
                   <div className="mb-1 flex items-center justify-between gap-3 text-xs font-sans">
                     <span className="font-medium text-foreground">Auswärts</span>
-                    <span className="font-semibold tabular-nums text-foreground">{activeRisk.away}%</span>
+                    <span className="font-semibold text-foreground">{formatPercent(activeRisk.away)}</span>
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-secondary-100 dark:bg-secondary-900">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-lime-100 dark:bg-lime-900">
                     <div className="h-full rounded-full bg-secondary" style={{ width: `${activeRisk.away}%` }} />
                   </div>
                 </div>
                 <div className="px-1 py-1">
                   <div className="mb-1 flex items-center justify-between gap-3 text-xs font-sans">
                     <span className="font-medium text-muted-foreground">Unentsch.</span>
-                    <span className="font-semibold tabular-nums text-muted-foreground">{activeRisk.draw}%</span>
+                    <span className="font-semibold text-muted-foreground">{formatPercent(activeRisk.draw)}</span>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full bg-muted-foreground/70" style={{ width: `${activeRisk.draw}%` }} />
@@ -713,12 +703,14 @@ export function StatsTab({
 
       {view === 'saison' && seasonStats.length > 1 && (
         <section className="surface-raised rounded-2xl p-4"><h2 className="mb-3 text-xl">Saisonverlauf</h2>
-          <div className="on-well rounded-xl bg-well-surface p-4 text-neutral-100">
-            <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Spieler im Saisonverlauf">{users.map((u, index) => <button key={u.id} type="button" aria-pressed={focusedUserId === u.id} onClick={() => setFocusedUserId(focusedUserId === u.id ? null : u.id)} className="flex min-h-9 items-center gap-1 rounded-lg border border-neutral-700 px-2 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-300" style={{ '--uc-dark': userColorMap.get(u.id) ?? userTone(fallbackUserColor(index), 'dark') } as CSSProperties}><span className="size-2 rounded-full bg-(--uc-dark)" />{u.nickname}</button>)}</div>
-            <ChartContainer config={{}} className="relative w-full aspect-auto" style={{ height: chartHeight }} role="img" aria-label="Kumulativer Punkteverlauf aller Spieler nach Spieltag">
+          <div className="on-well overflow-x-auto rounded-xl bg-well-surface p-4 text-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" role="region" aria-label="Saisonverlauf horizontal scrollen" tabIndex={0}>
+            <div className="min-w-[620px] md:min-w-0">
+            <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Spieler im Saisonverlauf">{users.map((u, index) => <button key={u.id} type="button" aria-pressed={focusedUserId === u.id} onClick={() => setFocusedUserId(focusedUserId === u.id ? null : u.id)} className="flex min-h-11 items-center gap-1 rounded-lg border border-neutral-700 px-2 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-300" style={{ '--uc-dark': userColorMap.get(u.id) ?? userTone(fallbackUserColor(index), 'dark') } as CSSProperties}><span className="size-2 rounded-full bg-(--uc-dark)" />{u.nickname}</button>)}</div>
+            <div className="relative"><ChartContainer config={{}} className="w-full aspect-auto" style={{ height: chartHeight }} role="img" aria-label="Kumulativer Punkteverlauf aller Spieler nach Spieltag">
               <LineChart accessibilityLayer data={seasonData.lineData} margin={{ top: 8, right: 138, left: -12, bottom: 0 }}><CartesianGrid stroke="var(--color-neutral-700)" strokeOpacity={.35} /><XAxis dataKey="st" tick={{ ...TICK_STYLE, fill: 'var(--color-neutral-300)' }} tickLine={false} axisLine={false} /><YAxis tick={{ ...TICK_STYLE, fill: 'var(--color-neutral-300)' }} tickLine={false} axisLine={false} /><ChartTooltip content={tooltipContent} />{users.map((u, index) => <Line key={u.id} type="monotone" dataKey={u.id} name={u.id} stroke={userColorMap.get(u.id)} strokeOpacity={focusedUserId && focusedUserId !== u.id ? .18 : 1} strokeWidth={u.id === currentUserId || focusedUserId === u.id ? 3 : 2} strokeDasharray={LINE_PATTERNS[index % LINE_PATTERNS.length]} dot={false} activeDot={{ r: 4 }} />)}</LineChart>
-            </ChartContainer>
+            </ChartContainer><div className="pointer-events-none absolute right-0 top-2 w-32" style={{ height: chartHeight - 20 }} aria-hidden="true">{endLabels.map(label => <span key={label.id} className="absolute right-0 max-w-32 truncate text-xs" style={{ top: label.top, color: userColorMap.get(label.id) }} title={`${label.nickname}: ${label.value}`}>{label.nickname} {label.value}</span>)}</div></div>
             <div className="mt-2 flex flex-wrap gap-3 text-xs">{users.map(u => <span key={u.id} className="max-w-36 truncate">{u.nickname}: {seasonData.lineData.at(-1)?.[u.id] ?? 0}</span>)}</div>
+            </div>
           </div><AccessibleSeriesTable caption="Kumulativer Punkteverlauf aller Spieler nach Spieltag" data={seasonData.lineData} users={users} />
         </section>
       )}
@@ -737,7 +729,7 @@ export function StatsTab({
                       <div className="mb-1.5 flex items-center gap-2 text-xs font-sans">
                         <span className="h-3 w-3 shrink-0 rounded-sm" style={{ backgroundColor: entry.color }} />
                         <span className="truncate text-foreground">{entry.name}</span>
-                        <span className="ml-auto shrink-0 tabular-nums text-muted-foreground">{entry.value}</span>
+                        <span className="ml-auto shrink-0 text-muted-foreground">{entry.value}</span>
                       </div>
                       <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                         <div
@@ -747,8 +739,8 @@ export function StatsTab({
                         />
                       </div>
                     </div>
-                    <span className="text-right text-xs font-medium tabular-nums text-muted-foreground">
-                      {entry.pct}%
+                    <span className="text-right text-xs font-medium text-muted-foreground">
+                      {formatPercent(entry.pct)}
                     </span>
                   </div>
                 ))}
@@ -767,8 +759,8 @@ export function StatsTab({
                     Auswertung für {selectedJokerUser.nickname} in der aktuellen Ansicht
                   </p>
                 </div>
-                {jokerUserOptions.length <= 5 ? <div className="flex flex-wrap gap-1" role="group" aria-label="Spieler für Joker-Auswertung">{jokerUserOptions.map(user => <button key={user.id} type="button" aria-pressed={effectiveJokerUserId === user.id} onClick={() => setSelectedJokerUserId(user.id)} className={cn('flex min-h-9 items-center gap-1 rounded-lg border border-border px-2 text-xs focus-visible:outline-2 focus-visible:outline-ring', effectiveJokerUserId === user.id && 'bg-you-soft')}><span className="size-2 rounded-full" style={{ backgroundColor: user.color }} />{user.nickname}</button>)}</div> : <Select value={effectiveJokerUserId} onValueChange={setSelectedJokerUserId}>
-                  <SelectTrigger aria-label="Spieler für Joker-Auswertung" className="h-9 w-full sm:w-48">
+                {jokerUserOptions.length <= 5 ? <div className="flex flex-wrap gap-1" role="group" aria-label="Spieler für Joker-Auswertung">{jokerUserOptions.map(user => <button key={user.id} type="button" aria-pressed={effectiveJokerUserId === user.id} onClick={() => setSelectedJokerUserId(user.id)} className={cn('flex min-h-11 items-center gap-1 rounded-lg border border-border px-2 text-xs focus-visible:outline-2 focus-visible:outline-ring', effectiveJokerUserId === user.id && 'bg-you-soft')}><span className="size-2 rounded-full" style={{ backgroundColor: user.color }} />{user.nickname}</button>)}</div> : <Select value={effectiveJokerUserId} onValueChange={setSelectedJokerUserId}>
+                  <SelectTrigger aria-label="Spieler für Joker-Auswertung" className="min-h-11 w-full sm:w-48">
                     <SelectValue placeholder="Nutzer wählen" />
                   </SelectTrigger>
                   <SelectContent>
@@ -793,7 +785,7 @@ export function StatsTab({
                             width: `${entry.pct}%`,
                             backgroundColor: entry.color,
                           }}
-                          title={`${entry.name}: ${entry.value} (${entry.pct}%)`}
+                          title={`${entry.name}: ${entry.value} (${formatPercent(entry.pct)})`}
                         />
                       ))}
                     </div>
@@ -803,24 +795,24 @@ export function StatsTab({
                       <div key={entry.key} className="flex items-center gap-2 text-xs font-sans">
                         <span className="h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: entry.color }} />
                         <span className="text-foreground">{entry.name}</span>
-                        <span className="ml-auto tabular-nums text-muted-foreground">{entry.value}</span>
-                        <span className="w-12 text-right tabular-nums text-muted-foreground">{entry.pct}%</span>
+                        <span className="ml-auto text-muted-foreground">{entry.value}</span>
+                        <span className="w-12 text-right text-muted-foreground">{formatPercent(entry.pct)}</span>
                       </div>
                     ))}
                   </div>
                   <div className="grid grid-cols-2 divide-x divide-border border-t border-border pt-3">
                     <div className="px-3 py-1">
                       <p className="text-xs font-medium text-muted-foreground">Gesetzt</p>
-                      <p className="mt-1 text-lg font-bold tabular-nums text-foreground">{selectedJokerStats.used}</p>
+                      <p className="mt-1 text-lg font-bold text-foreground">{selectedJokerStats.used}</p>
                     </div>
                     <div className="px-3 py-1">
                       <p className="text-xs font-medium text-muted-foreground">Bonus</p>
-                      <p className="mt-1 text-lg font-bold tabular-nums text-foreground">+{selectedJokerStats.bonus}</p>
+                      <p className="mt-1 text-lg font-bold text-foreground">+{selectedJokerStats.bonus}</p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="flex min-h-48 items-center justify-center rounded-xl border border-dashed border-border bg-secondary-100 px-6 text-center dark:bg-secondary-950">
+                <div className="flex min-h-48 items-center justify-center rounded-xl border border-dashed border-border bg-lime-100 px-6 text-center dark:bg-lime-950">
                   <p className="text-sm text-muted-foreground font-sans">
                     {selectedJokerUser.nickname} hat in dieser Ansicht noch keinen Joker gesetzt.
                   </p>
@@ -874,22 +866,22 @@ export function StatsTab({
                         <span className="ml-1 text-xs text-muted-foreground">(du)</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-center tabular-nums">{exact}</TableCell>
-                    <TableCell className="text-center tabular-nums">{diff}</TableCell>
-                    <TableCell className="text-center tabular-nums">{outcome}</TableCell>
-                    <TableCell className="text-center tabular-nums">{miss}</TableCell>
-                    <TableCell className="text-center tabular-nums">
+                    <TableCell className="text-center">{exact}</TableCell>
+                    <TableCell className="text-center">{diff}</TableCell>
+                    <TableCell className="text-center">{outcome}</TableCell>
+                    <TableCell className="text-center">{miss}</TableCell>
+                    <TableCell className="text-center">
                       {joker.used > 0 ? `${joker.hit}/${joker.used}` : '–'}
                     </TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">
+                    <TableCell className="text-right font-medium">
                       {joker.bonus > 0 ? `+${joker.bonus}` : '–'}
                     </TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">{rate}%</TableCell>
+                    <TableCell className="text-right font-medium">{formatPercent(rate)}</TableCell>
                     {view === 'saison' && form && (
                       <TableCell className="text-center">
                         <span
                           className={cn(
-                            'text-xs font-sans tabular-nums whitespace-nowrap',
+                            'text-xs font-sans whitespace-nowrap',
                             form.trend === 'up' && 'text-success-800 dark:text-success-300',
                             form.trend === 'down' && 'text-error-readable',
                             form.trend === 'flat' && 'text-muted-foreground',

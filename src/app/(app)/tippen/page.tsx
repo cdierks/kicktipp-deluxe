@@ -6,7 +6,6 @@ import { TippenContent } from './tippen-content'
 import { fetchTable } from '@/lib/openligadb'
 import { PageHeader } from '@/components/page-header'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { PageFrame } from '@/components/page-frame'
 import { MatchdayContext } from '@/components/matchday-context'
 import { getEffectiveTipDeadline, isDeadlinePassed } from '@/lib/matchday'
@@ -70,7 +69,7 @@ export default async function TippenPage() {
             className={
               deadlinePassed && !lateTipEditingEnabled
                 ? 'rounded-lg border border-error-300 bg-error-100 px-4 py-3 text-error-900 dark:border-error-700 dark:bg-error-900 dark:text-error-100'
-                : 'rounded-lg border border-primary-300 bg-primary-100 px-4 py-3 text-primary-900 dark:border-primary-700 dark:bg-primary-900 dark:text-primary-100'
+                : 'rounded-lg border border-pitch-300 bg-pitch-100 px-4 py-3 text-pitch-900 dark:border-pitch-700 dark:bg-pitch-900 dark:text-pitch-100'
             }
           >
             <p className="text-xs font-medium text-muted-foreground">

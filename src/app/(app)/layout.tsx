@@ -17,12 +17,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       where: { status: 'ACTIVE' },
       orderBy: { matchdayNumber: 'asc' },
       select: {
+        id: true,
+        seasonId: true,
         matchdayNumber: true,
         tippDeadline: true,
         season: { select: { year: true } },
         matches: {
           orderBy: { matchDate: 'asc' },
-          take: 1,
           select: { matchDate: true },
         },
       },
@@ -31,6 +32,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   ])
   if (!currentUser) redirect('/login')
   const defaultOpen = cookieStore.get('sidebar_state')?.value !== 'false'
+  const submittedTips = activeMatchday ? await prisma.tip.count({ where: { userId: currentUser.id, match: { matchdayId: activeMatchday.id } } }) : 0
+  const matchdayNumbers = activeMatchday ? (await prisma.matchday.findMany({ where: { seasonId: activeMatchday.seasonId }, select: { matchdayNumber: true }, orderBy: { matchdayNumber: 'asc' } })).map(row => row.matchdayNumber) : []
+  const openTips = activeMatchday && !isDeadlinePassed(getEffectiveTipDeadline(activeMatchday.tippDeadline, activeMatchday.matches.map(match => match.matchDate))) ? Math.max(0, activeMatchday.matches.length - submittedTips) : 0
   const headerMatchday = activeMatchday
     ? (() => {
         const effectiveDeadline = getEffectiveTipDeadline(
@@ -48,6 +52,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         }).format(effectiveDeadline),
         deadlinePassed: isDeadlinePassed(effectiveDeadline),
         matchdayNumber: activeMatchday.matchdayNumber,
+        matchdayNumbers,
         seasonLabel: `Saison ${activeMatchday.season.year}/${parseInt(activeMatchday.season.year, 10) + 1}`,
         }
       })()
@@ -61,7 +66,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       >
         Zum Inhalt springen
       </a>
-      <AppSidebar isAdmin={currentUser.role === 'ADMIN'} />
+      <AppSidebar isAdmin={currentUser.role === 'ADMIN'} openTips={openTips} />
       <SidebarInset id="main-content" tabIndex={-1} className="content-shell-surface min-h-dvh overflow-clip min-[760px]:overflow-hidden">
         <AppHeader isAdmin={currentUser.role === 'ADMIN'} matchday={headerMatchday} />
         <div className="app-content-body w-full flex-1 px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-4 min-[760px]:px-8 min-[760px]:py-6">
@@ -70,7 +75,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </div>
       </SidebarInset>
-      <MobileBottomNavigation />
+      <MobileBottomNavigation openTips={openTips} />
     </SidebarProvider>
   )
 }

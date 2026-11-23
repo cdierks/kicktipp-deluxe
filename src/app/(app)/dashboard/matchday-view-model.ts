@@ -13,6 +13,7 @@ export type MatchdayComparisonType =
 export interface ParticipantPredictionRow {
   userId: string
   nickname: string
+  favoriteTeam: string | null
   color: string | null
   prediction: string | null
   points: number | null
@@ -74,6 +75,7 @@ export interface MatchdayPageViewModel {
     statusLabel: string
     deadlineLabel: string
     deadlinePassed: boolean
+    daysUntilDeadline: number
     prevMatchdayNumber: number | null
     nextMatchdayNumber: number | null
     showTipCta: boolean
@@ -330,6 +332,22 @@ function buildComparison({
     }
   }
 
+  if (grouped.uniqueLeader && grouped.uniqueLeader[0] !== myPrediction) {
+    return {
+      comparisonSummary: `Trend im Feld: ${grouped.uniqueLeader[0]}`,
+      comparisonType: 'GEGEN_TREND' as const,
+      details: {
+        revealComparison: true,
+        fieldTrend: `${grouped.uniqueLeader[1]} von ${submittedCount}`,
+        commonPrediction: grouped.uniqueLeader[0],
+        myStatus: 'Du gehst gegen den Trend',
+        bestScore: bestPoints !== null ? `${bestPoints} Punkte` : null,
+        submissionCount: submissionCount ?? submittedCount,
+        participantPredictions: withMarkers,
+      },
+    }
+  }
+
   return {
     comparisonSummary: `${matchingCount} von ${submittedCount} tippen wie du`,
     comparisonType: 'MIT_FELD' as const,
@@ -390,6 +408,7 @@ export function buildMatchdayPageViewModel({
       return {
         userId: user.id,
         nickname: user.nickname,
+        favoriteTeam: user.favoriteTeam,
         color: user.color,
         prediction: formatPrediction(tip),
         points: tip?.points ?? null,
@@ -420,7 +439,7 @@ export function buildMatchdayPageViewModel({
         away: match.awayTeam,
       },
       result:
-        match.homeScore !== null && match.awayScore !== null
+        matchStatus === 'FINISHED' && match.homeScore !== null && match.awayScore !== null
           ? `${match.homeScore}:${match.awayScore}`
           : null,
       myPrediction: formatPrediction(currentUserTip),
@@ -440,14 +459,15 @@ export function buildMatchdayPageViewModel({
       statusLabel: getStatusLabel(matchday.status),
       deadlineLabel: matchday.tippDeadline.toISOString(),
       deadlinePassed,
+      daysUntilDeadline: Math.max(0, Math.ceil((matchday.tippDeadline.getTime() - now.getTime()) / 86400000)),
       prevMatchdayNumber,
       nextMatchdayNumber,
       showTipCta: !deadlinePassed && matchday.status === 'ACTIVE',
     },
     summary: {
       myPoints: myEntry?.matchdayPoints ?? 0,
-      myRank: hasMatchdayEvaluation && currentUserRankIndex >= 0
-        ? currentUserRankIndex + 1
+      myRank: hasMatchdayEvaluation && myEntry
+        ? ranking.findIndex(entry => entry.matchdayPoints === myEntry.matchdayPoints) + 1
         : null,
       totalPlayers: ranking.length,
       insight: getInsight({ ranking, currentUserId, hasEvaluation: hasMatchdayEvaluation }),

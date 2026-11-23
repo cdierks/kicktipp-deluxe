@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { ErgebnissePanel } from './ergebnisse-panel'
 import { PageHeader } from '@/components/page-header'
 import { PageFrame } from '@/components/page-frame'
+import { HeroPanel } from '@/components/design-primitives'
 
 export default async function ErgebnisseAdminPage() {
   const user = await getVerifiedUser()
@@ -21,6 +22,7 @@ export default async function ErgebnisseAdminPage() {
   return (
     <PageFrame>
       <PageHeader eyebrow="Adminbereich" title="Ergebnisse überschreiben" description="Spielstände prüfen und bei Bedarf manuell korrigieren." />
+      <HeroPanel label="Spieltage zur Auswertung" value={matchdays.length} aside={<p className="text-sm text-hero-foreground/75">Spielstände prüfen und korrigieren</p>} />
       <ErgebnissePanel matchdays={matchdays} />
     </PageFrame>
   )

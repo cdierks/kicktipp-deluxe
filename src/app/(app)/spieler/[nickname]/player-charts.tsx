@@ -8,6 +8,7 @@ import {
   CartesianGrid,
 } from 'recharts'
 import { ChartContainer, ChartTooltip } from '@/components/ui/chart'
+import { formatPercent } from '@/lib/number-format'
 
 export interface LinePoint {
   st: string
@@ -25,7 +26,6 @@ const TICK_STYLE = {
   fontSize: 12,
   fill: 'var(--muted-foreground)',
   fontFamily: 'var(--font-sans)',
-  fontVariantNumeric: 'tabular-nums',
 } as const
 
 export function PlayerCharts({
@@ -51,18 +51,18 @@ export function PlayerCharts({
                   <div className="mb-1.5 flex items-center gap-2 text-xs">
                     <span className="h-3 w-3 shrink-0 rounded-sm" style={{ backgroundColor: entry.color }} />
                     <span className="truncate text-foreground">{entry.name}</span>
-                    <span className="ml-auto shrink-0 tabular-nums text-muted-foreground">{entry.value}</span>
+                    <span className="ml-auto shrink-0 text-muted-foreground">{entry.value}</span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full rounded-full transition-[width]"
-                      style={{ width: `${entry.pct}%`, backgroundColor: entry.color }}
+                      style={{ width: `${formatPercent(entry.pct)}`, backgroundColor: entry.color }}
                       aria-hidden="true"
                     />
                   </div>
                 </div>
-                <span className="text-right text-xs font-medium tabular-nums text-muted-foreground">
-                  {entry.pct}%
+                <span className="text-right text-xs font-medium text-muted-foreground">
+                  {formatPercent(entry.pct)}
                 </span>
               </div>
             ))}
@@ -93,7 +93,7 @@ export function PlayerCharts({
                       <p className="mb-1 font-semibold text-muted-foreground">
                         {label}
                       </p>
-                      <p className="font-bold tabular-nums text-foreground">
+                      <p className="font-bold text-foreground">
                         {payload[0].value} Pkt gesamt
                       </p>
                     </div>

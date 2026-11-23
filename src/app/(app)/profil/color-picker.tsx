@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import type { CSSProperties } from 'react'
 import { toast } from 'sonner'
 import { setUserColor } from '@/actions/color.actions'
 import { IconCheck, IconX } from '@/components/app-icons'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { userColorVars } from '@/lib/user-tone'
 
 interface PaletteColor {
   hex: string
@@ -68,7 +70,8 @@ export function ColorPicker({ palette, currentColor }: Props) {
                     ? 'border-transparent opacity-25 cursor-not-allowed'
                     : 'border-transparent hover:border-foreground/40 hover:scale-110 cursor-pointer',
               )}
-              style={{ backgroundColor: c.hex }}
+              style={userColorVars(c.hex) as CSSProperties}
+              data-color-preview
             >
               {isActive && (
                 <IconCheck className="size-5 rounded-full bg-neutral-950 p-0.5 text-neutral-50" strokeWidth={3} />

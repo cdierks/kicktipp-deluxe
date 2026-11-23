@@ -2,9 +2,8 @@
 
 import { Fragment, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { ClubIcon } from '@/components/club-icon'
-import { Scoreboard, PointsToken, JokerMark, CompareChip, RankingList, HeroPanel, StatusPill } from '@/components/design-primitives'
+import { Scoreboard, PointsToken, JokerMark, CompareChip, RankingList, HeroPanel, StatusPill, PlayerAvatar } from '@/components/design-primitives'
 import { MobileBottomSheet } from '@/components/mobile-bottom-sheet'
 import {
   Table,
@@ -19,15 +18,12 @@ import { PageHeader } from '@/components/page-header'
 import { MatchdayContext } from '@/components/matchday-context'
 import { cn } from '@/lib/utils'
 import { getClubByName } from '@/lib/clubs'
-import { layoutSpring, panelEnter, popIn } from '@/lib/motion'
 import { formatAppDate } from '@/lib/date-format'
+import { plural } from '@/lib/plural'
 import {
   IconChevronLeft,
   IconChevronRight,
   IconPencil,
-  IconTrophy,
-  IconMedal,
-  IconPokerChip,
 } from '@/components/app-icons'
 import type {
   MatchdayComparisonType,
@@ -50,15 +46,6 @@ function PointsBadge({ points, isJoker = false }: { points: number | null; isJok
 }
 
 function JokerBadge({ compact = false }: { compact?: boolean }) { return <JokerMark compact={compact} /> }
-function JokerMetaBadge() { return <JokerMark /> }
-
-function RankIcon({ rank }: { rank: number }) {
-  if (rank === 0) return <IconTrophy className="h-4 w-4 text-warning-500" strokeWidth={1.5} />
-  if (rank === 1) return <IconMedal className="h-4 w-4 text-neutral-400" strokeWidth={1.5} />
-  if (rank === 2) return <IconMedal className="h-4 w-4 text-warning-700" strokeWidth={1.5} />
-  return <span className="text-sm font-bold tabular-nums text-muted-foreground">{rank + 1}.</span>
-}
-
 function getRowStatusLabel(status: MatchdayMatchRow['status']) {
   const labels: Record<MatchdayMatchRow['status'], string> = {
     OPEN: 'Offen',
@@ -79,7 +66,7 @@ export function MatchdayHeader({ model, view }: { model: MatchdayPageViewModel; 
   const description = view === 'spieltag'
     ? (
         <span suppressHydrationWarning>
-          Deadline: {formatAppDate(model.header.deadlineLabel, {
+          Tippfrist {formatAppDate(model.header.deadlineLabel, {
             weekday: 'short',
             day: '2-digit',
             month: '2-digit',
@@ -157,11 +144,11 @@ export function MatchdayHeader({ model, view }: { model: MatchdayPageViewModel; 
 
 export function MatchdaySummary({ model }: { model: MatchdayPageViewModel }) {
   const beforeDeadline = !model.header.deadlinePassed
-  const days = Math.max(0, Math.ceil((new Date(model.header.deadlineLabel).getTime() - Date.now()) / 86400000))
+  const days = model.header.daysUntilDeadline
   const tipped = model.matches.filter(match => match.myPrediction).length
   const joker = model.matches.find(match => match.usedJoker)
   return <HeroPanel label={beforeDeadline ? 'Bis zur Tippfrist' : 'Punkte am Spieltag'} value={beforeDeadline ? days : model.summary.myPoints} aside={<div className="space-y-4 text-sm"><StatusPill status={beforeDeadline ? 'open' : model.matches.every(match => match.status === 'FINISHED') ? 'finished' : 'live'} /><p className="text-lg font-wide">{beforeDeadline ? `${tipped} von ${model.matches.length} getippt` : model.summary.myRank ? `${model.summary.myRank}. von ${model.summary.totalPlayers}` : 'Noch keine Wertung'}</p><p className="text-hero-foreground/75">{model.summary.insight}</p><p className="text-hero-foreground/75">{joker ? `Joker: ${joker.teams.home} – ${joker.teams.away}` : 'Joker noch frei'}</p></div>}>
-    <p className="mt-3 text-sm text-hero-foreground/75">{beforeDeadline ? (days === 1 ? 'Tag bis zur Tippfrist' : 'Tage bis zur Tippfrist') : 'Dein Spieltag'}</p>
+    <p className="mt-3 text-sm text-hero-foreground/75">{beforeDeadline ? plural(days, 'Tag bis zur Tippfrist', 'Tage bis zur Tippfrist') : 'Dein Spieltag'}</p>
     <div className="mt-6 flex flex-wrap gap-1" aria-label="Tipp-Bilanz">{model.matches.map(match => <span key={match.id} className={cn('h-5 w-5 rounded-sm border border-hero-line', match.myPoints === null ? 'bg-transparent' : match.myPoints >= 4 ? 'bg-lime-300' : match.myPoints === 3 ? 'bg-neon-400' : match.myPoints === 2 ? 'bg-mint' : 'bg-mint/15')} title={`${match.teams.home} gegen ${match.teams.away}: ${match.myPoints ?? 'offen'}`} />)}</div>
   </HeroPanel>
 }
@@ -203,7 +190,7 @@ export function ParticipantPredictionList({
           ) : (
             <span className="font-medium text-foreground">Du</span>
           )}
-          <span className="font-semibold tabular-nums text-foreground">{mine?.prediction ?? '–'}</span>
+          <span className="font-semibold text-foreground">{mine?.prediction ?? '–'}</span>
         </div>
       </div>
     )
@@ -221,7 +208,8 @@ export function ParticipantPredictionList({
         {predictions.map((prediction) => (
           <div key={prediction.userId}>
             <div className="px-3 py-3 sm:hidden">
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <PlayerAvatar nickname={prediction.nickname} favoriteTeam={prediction.favoriteTeam} color={prediction.color} small />
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/spieler/${prediction.nickname}`}
@@ -233,11 +221,6 @@ export function ParticipantPredictionList({
                     {prediction.nickname}
                   </Link>
                 </div>
-                <span
-                  className="mt-0.5 inline-flex h-2.5 w-2.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: prediction.color ?? (prediction.isCurrentUser ? 'var(--color-primary)' : 'var(--color-muted-foreground)') }}
-                  aria-hidden="true"
-                />
               </div>
               <p className="mt-1.5 text-sm leading-5 text-muted-foreground">
                 {prediction.prediction ? `Tipp ${prediction.prediction}` : 'Kein Tipp'}
@@ -249,17 +232,17 @@ export function ParticipantPredictionList({
             </div>
 
             <div className="hidden grid-cols-[minmax(6rem,1.2fr)_4rem_3rem_minmax(5rem,1fr)] gap-3 px-3 py-2.5 text-sm sm:grid">
-              <Link
+              <div className="flex min-w-0 items-center gap-2"><PlayerAvatar nickname={prediction.nickname} favoriteTeam={prediction.favoriteTeam} color={prediction.color} small /><Link
                 href={`/spieler/${prediction.nickname}`}
                 className={cn(
-                  'min-w-0 break-words font-medium leading-5 transition-colors hover:underline underline-offset-4',
+                  'min-w-0 truncate font-medium leading-5 transition-colors hover:underline underline-offset-4',
                   prediction.isCurrentUser ? 'text-primary-readable' : 'text-foreground',
                 )}
               >
                 {prediction.nickname}
-              </Link>
-              <span className="tabular-nums text-foreground">{prediction.prediction ?? '–'}</span>
-              <span className="tabular-nums text-foreground">{prediction.points ?? '–'}</span>
+              </Link></div>
+              <span className="text-foreground">{prediction.prediction ?? '–'}</span>
+              <span className="text-foreground">{prediction.points ?? '–'}</span>
               <span className="min-w-0 break-words text-xs leading-5 text-muted-foreground">
                 {prediction.marker ?? ''}
               </span>
@@ -324,14 +307,14 @@ function MatchCell({
           aria-expanded={isExpanded}
           aria-controls={`match-details-${match.id}`}
           onClick={onToggle}
-          className="rounded-full bg-background hover:border-primary-400 hover:text-primary-readable"
+          className="rounded-full bg-background hover:border-pitch-400 hover:text-primary-readable"
         >
           <IconChevronRight className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-90')} strokeWidth={1.5} />
         </Button>
       </TableCell>
       <TableCell className="w-[7rem] whitespace-normal">
         <div className="space-y-1">
-          <p className="text-sm font-medium tabular-nums text-foreground">{match.kickoffShortLabel}</p>
+          <p className="text-sm font-medium text-foreground">{match.kickoffShortLabel}</p>
           <p className="text-xs text-muted-foreground">{getRowStatusLabel(match.status)}</p>
         </div>
       </TableCell>
@@ -351,7 +334,7 @@ function MatchCell({
         <Scoreboard result={match.result} live={match.status === 'LIVE'} />
       </TableCell>
       <TableCell className="w-[5.75rem]">
-        <span className={cn('text-sm font-semibold tabular-nums', match.myPrediction ? 'text-foreground' : 'text-muted-foreground')}>
+        <span className={cn('text-sm font-semibold', match.myPrediction ? 'text-foreground' : 'text-muted-foreground')}>
           {match.myPrediction ?? '–'}
         </span>
       </TableCell>

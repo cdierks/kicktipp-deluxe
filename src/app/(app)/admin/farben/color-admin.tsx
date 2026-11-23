@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
+import type { CSSProperties } from 'react'
 import { toast } from 'sonner'
 import { addPaletteColor, removePaletteColor } from '@/actions/color.actions'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { IconTrash, IconPlus } from '@/components/app-icons'
+import { userTone, userColorDistance } from '@/lib/user-tone'
 
 interface PaletteColor {
   id: string
@@ -21,6 +23,8 @@ export function ColorAdmin({ colors }: { colors: PaletteColor[] }) {
   const [pending, startTransition] = useTransition()
   const [hex, setHex] = useState('#')
   const [label, setLabel] = useState('')
+  const validHex = /^#[0-9a-f]{6}$/i.test(hex)
+  const similar = validHex ? colors.filter(color => color.claimedBy && color.hex.toLowerCase() !== hex.toLowerCase() && userColorDistance(hex, color.hex) < 15) : []
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault()
@@ -57,6 +61,7 @@ export function ColorAdmin({ colors }: { colors: PaletteColor[] }) {
           <TableHeader>
             <TableRow>
               <TableHead>Farbe</TableHead>
+              <TableHead>Auf Hell / Dunkel</TableHead>
               <TableHead>Hex</TableHead>
               <TableHead>Bezeichnung</TableHead>
               <TableHead>Vergeben an</TableHead>
@@ -65,20 +70,20 @@ export function ColorAdmin({ colors }: { colors: PaletteColor[] }) {
           </TableHeader>
           <TableBody>
             {colors.map((c) => (
-              <TableRow key={c.id} className="bg-card">
+              <TableRow key={c.id} className="bg-card" style={{ '--uc': userTone(c.hex, 'light'), '--uc-dark': userTone(c.hex, 'dark') } as CSSProperties}>
                 <TableCell>
                   <span
-                    className="inline-block h-7 w-7 rounded-full border border-border shadow-sm"
-                    style={{ backgroundColor: c.hex }}
+                    className="inline-block h-7 w-7 rounded-full border border-border bg-(--uc)"
                   />
                 </TableCell>
-                <TableCell className="text-xs text-muted-foreground tabular-nums">{c.hex}</TableCell>
+                <TableCell><div className="flex gap-2"><span className="flex size-8 items-center justify-center rounded-lg bg-neutral-50" title="Auf Hell"><span className="size-5 rounded-full border-2 border-(--uc)" /></span><span className="flex size-8 items-center justify-center rounded-lg bg-neutral-850" title="Auf Dunkel"><span className="size-5 rounded-full border-2 border-(--uc-dark)" /></span></div></TableCell>
+                <TableCell className="text-xs text-muted-foreground">{c.hex}</TableCell>
                 <TableCell className="font-medium text-foreground">{c.label}</TableCell>
                 <TableCell>
                   {c.claimedBy ? (
                     <Link
                       href={`/spieler/${c.claimedBy.nickname}`}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-sans font-medium text-primary-800 transition-colors hover:bg-primary-200 hover:underline underline-offset-4 dark:bg-primary-900 dark:text-primary-100 dark:hover:bg-primary-800"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-pitch-100 px-2.5 py-0.5 text-xs font-sans font-medium text-pitch-800 transition-colors hover:bg-pitch-200 hover:underline underline-offset-4 dark:bg-pitch-900 dark:text-pitch-100 dark:hover:bg-pitch-800"
                     >
                       {c.claimedBy.nickname}
                     </Link>
@@ -90,7 +95,7 @@ export function ColorAdmin({ colors }: { colors: PaletteColor[] }) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-error-readable"
+                    className="size-10 text-muted-foreground hover:text-error-readable" aria-label={`Farbe ${c.label} entfernen`}
                     onClick={() => handleRemove(c.id)}
                     disabled={pending}
                     title="Farbe entfernen"
@@ -110,19 +115,21 @@ export function ColorAdmin({ colors }: { colors: PaletteColor[] }) {
           <p className="mt-1 text-sm text-muted-foreground">Erweitert die verfügbare Spielerpalette.</p>
         </div>
         <div className="space-y-4">
+        {validHex && <div className="grid grid-cols-2 gap-2 text-xs" style={{ '--uc': userTone(hex, 'light'), '--uc-dark': userTone(hex, 'dark') } as CSSProperties}><div className="rounded-lg bg-neutral-50 p-3 text-neutral-900"><span className="mb-2 block">Auf Hell</span><span className="block size-7 rounded-full border-[3px] border-(--uc)" /></div><div className="rounded-lg bg-neutral-850 p-3 text-neutral-50"><span className="mb-2 block">Auf Dunkel</span><span className="block size-7 rounded-full border-[3px] border-(--uc-dark)" /></div></div>}
+        {similar.length > 0 && <p role="status" className="rounded-lg border border-warning-500 bg-warning-50 p-3 text-sm text-warning-800 dark:bg-warning-950 dark:text-warning-200">Diese Farbe ähnelt {similar.map(color => color.label).join(', ')}. Du kannst sie trotzdem hinzufügen</p>}
         <div className="space-y-1.5">
           <Label htmlFor="paletteHex">Hex-Farbe</Label>
           <div className="flex items-center gap-2">
             <span
-              className="h-10 w-10 shrink-0 rounded-lg border border-border"
-              style={{ backgroundColor: /^#[0-9a-f]{6}$/i.test(hex) ? hex : 'transparent' }}
+              className="h-10 w-10 shrink-0 rounded-lg border border-border bg-(--uc)"
+              style={{ '--uc': validHex ? userTone(hex, 'light') : 'transparent' } as CSSProperties}
             />
             <Input
               id="paletteHex"
               value={hex}
               onChange={(e) => setHex(e.target.value)}
-              placeholder="#394eab"
-              className="min-w-0 flex-1 text-sm tabular-nums"
+              placeholder="#2b7fff"
+              className="min-w-0 flex-1 text-sm"
               required
             />
           </div>

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { ColorAdmin } from './color-admin'
 import { PageHeader } from '@/components/page-header'
 import { PageFrame } from '@/components/page-frame'
+import { HeroPanel } from '@/components/design-primitives'
 
 export default async function FarbenAdminPage() {
   const user = await getVerifiedUser()
@@ -35,6 +36,7 @@ export default async function FarbenAdminPage() {
         title="Farbpalette"
         description="Nutzer können eine eindeutige Farbe für Avatar und Diagramme auswählen. Jede Farbe kann nur einmal vergeben werden."
       />
+      <HeroPanel label="Farben in der Palette" value={colors.length} aside={<p className="text-sm text-hero-foreground/75">{colors.filter((color) => color.claimedBy).length} vergeben · {colors.filter((color) => !color.claimedBy).length} frei</p>} />
       <ColorAdmin colors={colors} />
     </PageFrame>
   )

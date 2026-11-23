@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { getAppNavigationItems } from '@/components/app-navigation'
 import { cn } from '@/lib/utils'
 
-export function MobileBottomNavigation() {
+export function MobileBottomNavigation({ openTips }: { openTips: number }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const navigationItems = getAppNavigationItems(pathname, searchParams.get('ansicht'))
@@ -26,7 +26,7 @@ export function MobileBottomNavigation() {
                 item.active && 'font-semibold text-you',
               )}
             >
-              <item.icon aria-hidden={true} className="relative z-10 size-[22px]" strokeWidth={1.7} />
+              <span className="relative z-10">{item.key === 'tippen' && openTips > 0 && <span className="absolute -right-3 -top-2 rounded-full bg-coral-400 px-1 text-[10px] font-semibold text-board-surface">{openTips}</span>}<item.icon aria-hidden={true} className="size-[22px]" strokeWidth={1.5} /></span>
               <span className="relative z-10 max-w-full truncate text-[11px] leading-4">
                 {item.label}
               </span>

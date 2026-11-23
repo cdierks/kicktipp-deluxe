@@ -1,5 +1,5 @@
 import {
-  ArrowDownUp, ArrowRight, Bookmark, CalendarDays,
+  ArrowDownUp, Bookmark, CalendarDays,
   ChartColumn, Check, ChevronDown, ChevronLeft, ChevronRight, CircleAlert,
   CircleCheck, CircleDot, Database, Download, Flame, LayoutDashboard,
   LoaderCircle, Lock, LogOut, Mail, Medal, Monitor, Moon, Palette, Pencil,

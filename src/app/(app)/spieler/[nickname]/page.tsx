@@ -13,9 +13,11 @@ import {
   IconFlame,
   IconScale,
   IconPokerChip,
-  IconUser,
 } from '@/components/app-icons'
 import { PlayerCharts } from './player-charts'
+import { PlayerAvatar, HeroPanel } from '@/components/design-primitives'
+import { userTone } from '@/lib/user-tone'
+import { formatDecimal, formatPercent } from '@/lib/number-format'
 import type { LinePoint, QualitySlice } from './player-charts'
 import { PageFrame } from '@/components/page-frame'
 import { PageHeader } from '@/components/page-header'
@@ -68,7 +70,7 @@ export default async function SpielerPage({
 
   const isMe = session.user.id === user.id
   const club = user.favoriteTeam ? getClubByName(user.favoriteTeam) : undefined
-  const playerColor = normalizeHexColor(user.color) ?? 'var(--chart-1)'
+  const playerColor = userTone(normalizeHexColor(user.color) ?? 'var(--color-neutral-500)', 'dark')
 
   const activeSeason = await prisma.season.findFirst({
     where: { active: true },
@@ -236,18 +238,7 @@ export default async function SpielerPage({
       <PageHeader
         eyebrow="Spielerprofil"
         title={user.nickname}
-        leading={
-          <div
-            className="flex h-16 w-16 items-center justify-center rounded-xl text-neutral-50 ring-1 ring-neutral-50/25"
-            style={{ backgroundColor: playerColor }}
-          >
-            {club?.iconUrl ? (
-              <ClubIcon src={club.iconUrl} fallbackSrc={club.iconSourceUrl} label={club.name} className="h-11 w-11 object-contain" />
-            ) : (
-              <IconUser className="h-9 w-9 text-neutral-50" />
-            )}
-          </div>
-        }
+        leading={<PlayerAvatar nickname={user.nickname} favoriteTeam={user.favoriteTeam} color={user.color} />}
         description={
           <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <span>{user.name}</span>
@@ -274,6 +265,7 @@ export default async function SpielerPage({
 
       {activeSeason ? (
         <>
+          <HeroPanel label="Saisonpunkte" value={seasonTotal} aside={<div className="space-y-3"><p className="text-lg font-wide">{rank > 0 ? `${rank}. Platz` : 'Noch kein Rang'}</p><p className="text-sm text-hero-foreground/75">Ø {formatDecimal(avgPerMatchday)} Punkte pro Spieltag</p><p className="text-sm text-hero-foreground/75">Joker-Bonus +{jokerSummary.bonus}</p></div>}><p className="mt-3 text-sm text-hero-foreground/75">{user.nickname}</p></HeroPanel>
           <div className="flex items-center gap-2 px-1">
             <span className="text-sm font-medium text-muted-foreground">
               Saison {activeSeason.year}/{parseInt(activeSeason.year) + 1}
@@ -283,7 +275,7 @@ export default async function SpielerPage({
           <div className="surface-raised grid overflow-hidden rounded-xl sm:grid-cols-2 xl:grid-cols-4 [&>*]:border-b [&>*]:border-border sm:[&>*]:border-r xl:[&>*]:border-b-0">
             <KpiCard icon={<IconTrophy className="h-3.5 w-3.5" />} label="Saisonpunkte" value={seasonTotal} highlight />
             <KpiCard icon={<IconMedal className="h-3.5 w-3.5" />} label="Rang" value={rank > 0 ? `${rank}.` : '–'} />
-            <KpiCard icon={<IconChartBar className="h-3.5 w-3.5" />} label="Ø / Spieltag" value={avgPerMatchday} />
+            <KpiCard icon={<IconChartBar className="h-3.5 w-3.5" />} label="Ø / Spieltag" value={formatDecimal(avgPerMatchday)} />
             <KpiCard
               icon={<IconFlame className="h-3.5 w-3.5" />}
               label="Rekord"
@@ -306,9 +298,9 @@ export default async function SpielerPage({
                   </p>
                 </div>
                 <div className="grid gap-3">
-                  <MetricRow label="Trefferquote" value={total > 0 ? `${hitRate}%` : '–'} tone="text-primary-readable" />
-                  <MetricRow label="Fehlquote" value={total > 0 ? `${missPct}%` : '–'} tone="text-muted-foreground" />
-                  <MetricRow label="Exaktquote" value={total > 0 ? `${exactPct}%` : '–'} tone="text-primary-600 dark:text-primary-300" />
+                  <MetricRow label="Trefferquote" value={total > 0 ? formatPercent(hitRate) : '–'} tone="text-primary-readable" />
+                  <MetricRow label="Fehlquote" value={total > 0 ? formatPercent(missPct) : '–'} tone="text-muted-foreground" />
+                  <MetricRow label="Exaktquote" value={total > 0 ? formatPercent(exactPct) : '–'} tone="text-primary-readable" />
                   <MetricRow label="Getippte Spiele" value={`${total}`} tone="text-foreground" />
                 </div>
                 <div className="mt-4 grid gap-2">
@@ -333,7 +325,7 @@ export default async function SpielerPage({
                     <div className="mb-4 grid grid-cols-3 gap-2">
                       <SummaryChip label="Gesetzt" value={jokerTotal} tone="gray" compact />
                       <SummaryChip label="Bonus" value={`+${jokerSummary.bonus}`} tone="amber" compact />
-                      <SummaryChip label="Erfolg" value={`${jokerSuccessPct}%`} tone="blue" compact />
+                      <SummaryChip label="Erfolg" value={formatPercent(jokerSuccessPct)} tone="blue" compact />
                     </div>
                     <div className="space-y-2.5">
                       {jokerData.map((entry) => (
@@ -342,18 +334,18 @@ export default async function SpielerPage({
                             <div className="mb-1.5 flex items-center gap-2 text-xs">
                               <span className="h-3 w-3 shrink-0 rounded-sm" style={{ backgroundColor: entry.color }} />
                               <span className="truncate text-foreground">{entry.label}</span>
-                              <span className="ml-auto shrink-0 tabular-nums text-muted-foreground">{entry.value}</span>
+                              <span className="ml-auto shrink-0 text-muted-foreground">{entry.value}</span>
                             </div>
                             <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                               <div
                                 className="h-full rounded-full transition-[width]"
-                                style={{ width: `${entry.pct}%`, backgroundColor: entry.color }}
+                                style={{ width: `${formatPercent(entry.pct)}`, backgroundColor: entry.color }}
                                 aria-hidden="true"
                               />
                             </div>
                           </div>
-                          <span className="text-right text-xs font-medium tabular-nums text-muted-foreground">
-                            {entry.pct}%
+                          <span className="text-right text-xs font-medium text-muted-foreground">
+                            {formatPercent(entry.pct)}
                           </span>
                         </div>
                       ))}
@@ -400,7 +392,7 @@ function KpiCard({
           {label}
         </p>
       </div>
-      <p className={cn('text-3xl leading-none tabular-nums text-foreground', highlight && 'text-primary-readable')}>
+      <p className={cn('text-3xl leading-none text-foreground', highlight && 'text-primary-readable')}>
         {value}
       </p>
       {sub && <p className="mt-auto pt-2 text-xs text-muted-foreground">{sub}</p>}
@@ -420,7 +412,7 @@ function SummaryChip({
   compact?: boolean
 }) {
   const toneClass = {
-    blue: 'bg-primary-50 text-primary-800 dark:bg-primary-950 dark:text-primary-200',
+    blue: 'bg-pitch-50 text-pitch-800 dark:bg-pitch-950 dark:text-pitch-200',
     amber: 'bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-200',
     gray: 'bg-muted text-neutral-600 dark:text-neutral-300',
   }[tone]
@@ -428,7 +420,7 @@ function SummaryChip({
   return (
     <div className={cn('rounded-lg px-3 py-3', toneClass, compact && 'px-2.5 py-2.5')}>
       <p className="text-xs font-medium opacity-80">{label}</p>
-      <p className={cn('mt-1 tabular-nums text-2xl leading-none', compact && 'text-xl')}>{value}</p>
+      <p className={cn('mt-1 text-2xl leading-none', compact && 'text-xl')}>{value}</p>
     </div>
   )
 }
@@ -445,7 +437,7 @@ function MetricRow({
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg bg-muted px-3 py-2 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className={cn('font-semibold tabular-nums', tone)}>{value}</span>
+      <span className={cn('font-semibold', tone)}>{value}</span>
     </div>
   )
 }
@@ -462,13 +454,13 @@ function RiskBar({
   const labelClass = tone === 'primary'
     ? 'text-primary-readable'
     : tone === 'accent'
-      ? 'text-secondary-700 dark:text-secondary-300'
+      ? 'text-lime-700 dark:text-lime-300'
       : 'text-muted-foreground'
 
   const trackClass = tone === 'primary'
-    ? 'bg-primary-100 dark:bg-primary-900'
+    ? 'bg-pitch-100 dark:bg-pitch-900'
     : tone === 'accent'
-      ? 'bg-secondary-100 dark:bg-secondary-900'
+      ? 'bg-lime-100 dark:bg-lime-900'
       : 'bg-neutral-200 dark:bg-neutral-700'
 
   const fillClass = tone === 'primary'
@@ -481,7 +473,7 @@ function RiskBar({
     <div className="rounded-lg bg-muted px-3 py-2">
       <div className="mb-1 flex items-center justify-between gap-3 text-xs">
         <span className={cn('font-medium', labelClass)}>{label}</span>
-        <span className={cn('font-semibold tabular-nums', labelClass)}>{value}%</span>
+        <span className={cn('font-semibold', labelClass)}>{formatPercent(value)}</span>
       </div>
       <div className={cn('h-1.5 overflow-hidden rounded-full', trackClass)}>
         <div className={cn('h-full rounded-full', fillClass)} style={{ width: `${value}%` }} />

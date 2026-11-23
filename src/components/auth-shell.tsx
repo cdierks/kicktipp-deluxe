@@ -17,19 +17,19 @@ export function AuthShell({
       <div className="w-full max-w-xl">
         <Card className="relative overflow-hidden gap-0 py-0">
           <CardContent className="p-5 sm:p-7">
-          <div className="flex items-start justify-between gap-4 border-b border-border pb-5">
+          <div className="flex items-start justify-between gap-4 rounded-2xl bg-hero p-5 text-hero-foreground">
             <div>
-              <p className="text-sm font-medium text-primary-readable">
+              <p className="text-sm font-medium text-lime-300">
                 {eyebrow}
               </p>
-              <h1 className="mt-1 max-w-md text-2xl font-bold leading-tight text-foreground sm:text-3xl">
+              <h1 className="mt-1 max-w-md text-2xl font-wide leading-tight text-hero-foreground sm:text-3xl">
                 {title}
               </h1>
-              <p className="mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
+              <p className="mt-2 max-w-lg text-sm leading-6 text-hero-foreground/75">
                 {description}
               </p>
             </div>
-            <div className="hidden rounded-lg bg-muted px-3 py-2 sm:inline-flex">
+            <div className="hidden rounded-lg bg-board-surface px-3 py-2 sm:inline-flex">
               <BrandLockup compact />
             </div>
           </div>
