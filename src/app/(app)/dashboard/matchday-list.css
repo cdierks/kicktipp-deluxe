@@ -70,7 +70,16 @@
 .matchday-marker-best { background: var(--color-neon-400); color: var(--color-board); }
 .matchday-list-mobile { display: none; }
 @media (min-width: 760px) and (max-width: 1179px) {
-  .matchday-col-comparison, .matchday-table thead th:nth-child(6), .matchday-table tbody .matchday-compare-cell { display: none; }
+  .matchday-col-time { width: 76px; }
+  .matchday-col-score { width: 84px; }
+  .matchday-col-tip { width: 76px; }
+  .matchday-col-points { width: 80px; }
+  .matchday-col-toggle { width: 44px; }
+  .matchday-col-comparison { width: 0; }
+  .matchday-table thead th:nth-child(6), .matchday-table tbody .matchday-compare-cell { display: none; }
+  .matchday-table thead th, .matchday-table tbody td { padding-right: 8px; padding-left: 8px; }
+  .matchday-table thead th:first-child, .matchday-table tbody td:first-child { padding-left: 12px; }
+  .matchday-points-cell { flex-direction: column; gap: 2px; }
   .matchday-detail-grid { padding-left: 24px; }
 }
 @media (max-width: 759px) {
