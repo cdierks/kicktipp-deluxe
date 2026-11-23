@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useTheme } from 'next-themes'
@@ -26,6 +27,7 @@ export function AppHeader({ isAdmin, matchday }: { isAdmin: boolean; matchday?: 
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { theme = 'system', setTheme } = useTheme()
+  const [themeMounted, setThemeMounted] = useState(false)
   const segments = pathname.split('/').filter(Boolean)
   const root = segments[0] ?? 'dashboard'
   const view = parseDashboardView(searchParams.get('ansicht'))
@@ -39,13 +41,15 @@ export function AppHeader({ isAdmin, matchday }: { isAdmin: boolean; matchday?: 
   const previous = matchdayIndex > 0 ? matchday?.matchdayNumbers[matchdayIndex - 1] : null
   const next = matchdayIndex >= 0 && matchdayIndex < (matchday?.matchdayNumbers.length ?? 0) - 1 ? matchday?.matchdayNumbers[matchdayIndex + 1] : null
   const matchdayHref = (number: number) => getDashboardViewHref(number === matchday?.matchdayNumber ? '/dashboard' : `/dashboard/${number}`, view)
-  const ThemeIcon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Monitor
+  const displayedTheme = themeMounted ? theme : 'system'
+  const ThemeIcon = displayedTheme === 'light' ? Sun : displayedTheme === 'dark' ? Moon : Monitor
   const cycleTheme = () => setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light')
+  useEffect(() => setThemeMounted(true), [])
   return <header className="app-content-header sticky top-0 z-30 border-b">
     <div className="flex h-[68px] items-center gap-3 px-4 min-[760px]:hidden">
       <MobileAccountSheet isAdmin={isAdmin} />
       {root === 'dashboard' && matchdayNumber ? <div className="flex min-w-0 flex-1 items-center gap-0.5">{previous ? <Link href={matchdayHref(previous)} className="flex size-11 shrink-0 items-center justify-center rounded-lg text-secondary-text hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" aria-label={`Spieltag ${previous} anzeigen`}><ChevronLeft className="size-5" /></Link> : <span className="size-11 shrink-0" aria-hidden="true" />}<span className="min-w-0 flex-1 truncate text-center text-base font-wide">{mobileTitle}</span>{next ? <Link href={matchdayHref(next)} className="flex size-11 shrink-0 items-center justify-center rounded-lg text-secondary-text hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" aria-label={`Spieltag ${next} anzeigen`}><ChevronRight className="size-5" /></Link> : <span className="size-11 shrink-0" aria-hidden="true" />}</div> : <div className="min-w-0 flex-1"><p className="truncate text-lg font-wide">{mobileTitle}</p><p className="truncate text-xs text-secondary-text">{matchday?.seasonLabel ?? 'Kicktipp Deluxe'}</p></div>}
-      <button type="button" onClick={cycleTheme} className="flex size-11 items-center justify-center rounded-lg text-secondary-text hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" aria-label={`Darstellung ändern, aktuell ${theme === 'light' ? 'Hell' : theme === 'dark' ? 'Dunkel' : 'System'}`}><ThemeIcon className="size-5" strokeWidth={1.5} /></button>
+      <button type="button" onClick={cycleTheme} className="flex size-11 items-center justify-center rounded-lg text-secondary-text hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" aria-label={`Darstellung ändern, aktuell ${displayedTheme === 'light' ? 'Hell' : displayedTheme === 'dark' ? 'Dunkel' : 'System'}`}><ThemeIcon className="size-5" strokeWidth={1.5} /></button>
     </div>
     <div className="hidden h-16 items-center gap-3 px-8 min-[760px]:flex">
       <SidebarTrigger className="size-10" aria-label="Seitenleiste ein- oder ausklappen" />
