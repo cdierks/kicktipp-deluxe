@@ -88,7 +88,7 @@ export function MatchdayHeader({ model, view }: { model: MatchdayPageViewModel; 
           matchdayNumber={model.header.matchdayNumber}
         />
       }
-      title={dashboardViewLabels[view]}
+      title={view === 'spieltag' ? `Spieltag ${model.header.matchdayNumber}` : dashboardViewLabels[view]}
       description={description}
       aside={
         <div className="flex flex-wrap items-center gap-2">

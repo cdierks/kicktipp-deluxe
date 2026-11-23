@@ -35,7 +35,7 @@ export function PageHeader({
               {eyebrow}
             </div>
           )}
-          <h1 className={cn('text-2xl font-bold text-foreground sm:text-3xl', eyebrow && 'mt-1')}>
+          <h1 className={cn('text-4xl font-wide leading-[1.04] text-foreground sm:text-5xl', eyebrow && 'mt-1')}>
             {title}
           </h1>
           {description && (
